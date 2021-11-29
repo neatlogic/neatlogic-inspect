@@ -5,7 +5,7 @@ import codedriver.framework.auth.core.AuthBase;
 import java.util.Collections;
 import java.util.List;
 
-public class INSECT_MODIFY extends AuthBase {
+public class INSPECT_MODIFY extends AuthBase {
     @Override
     public String getAuthDisplayName() {
         return "巡检管理员权限";
