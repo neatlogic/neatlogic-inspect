@@ -15,7 +15,7 @@
 		http://codedriver.techsure.com/schema/codedriver
 		http://codedriver.techsure.com/schema/codedriver.xsd">
 
-	<codedriver:module id="inspect" name="巡检模块" groupName="巡检" group="inspect" groupSort="3" groupDescription="巡检管理平台" />
+	<codedriver:module id="inspect" name="巡检模块" groupName="巡检" group="inspect" groupSort="14" groupDescription="巡检模块" />
 
 	<context:component-scan base-package="codedriver.module.inspect" />
 
