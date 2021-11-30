@@ -57,10 +57,14 @@ public class InspectReportGetApi extends PrivateApiComponentBase {
         // TODO 通过 Query 的方式 搜不到结果集
         //JSONObject inspectReport = mongoTemplate.findOne(new Query(Criteria.where("MGMT_IP").is("192.168.0.33")), JSONObject.class, "INSPECT_REPORTS");
         if (MapUtils.isNotEmpty(reportDoc)) {
-            String name = reportDoc.getString("_name");
-            CollectionVo collectionVo = mongoTemplate.findOne(new Query(Criteria.where("name").is(name)), CollectionVo.class, "_dictionary");
-            if (collectionVo != null) {
-                reportDoc.put("fields", collectionVo.getFields());
+            JSONObject reportJson = JSONObject.parseObject(reportDoc.toJson());
+            JSONObject inspectResult = reportJson.getJSONObject("_inspect_result");
+            if(MapUtils.isNotEmpty(inspectResult)) {
+                String name = inspectResult.getString("name");
+                CollectionVo collectionVo = mongoTemplate.findOne(new Query(Criteria.where("name").is(name)), CollectionVo.class, "_dictionary");
+                if (collectionVo != null) {
+                    reportDoc.put("fields", collectionVo.getFields());
+                }
             }
         }
         return reportDoc;
