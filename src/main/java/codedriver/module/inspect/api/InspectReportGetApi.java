@@ -51,7 +51,7 @@ public class InspectReportGetApi extends PrivateApiComponentBase {
     public Object myDoService(JSONObject paramObj) throws Exception {
         MongoCollection<Document> collection = mongoTemplate.getDb().getCollection("INSPECT_REPORTS");
         Document doc = new Document();
-        doc.put("RESOURCE_ID",497544521900032L);
+        doc.put("RESOURCE_ID", paramObj.getLong("resourceId"));
         FindIterable<Document> findIterable = collection.find(doc);
         Document reportDoc = findIterable.first();
         // TODO 通过 Query 的方式 搜不到结果集
