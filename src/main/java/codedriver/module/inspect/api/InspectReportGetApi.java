@@ -16,7 +16,10 @@ import codedriver.framework.restful.constvalue.OperationTypeEnum;
 import codedriver.framework.restful.core.privateapi.PrivateApiComponentBase;
 import codedriver.module.inspect.auth.label.INSPECT_BASE;
 import com.alibaba.fastjson.JSONObject;
+import com.mongodb.client.FindIterable;
+import com.mongodb.client.MongoCollection;
 import org.apache.commons.collections4.MapUtils;
+import org.bson.Document;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
@@ -46,15 +49,21 @@ public class InspectReportGetApi extends PrivateApiComponentBase {
     @Description(desc = "根据resourceId 获取对应的巡检报告")
     @Override
     public Object myDoService(JSONObject paramObj) throws Exception {
-        JSONObject inspectReport = mongoTemplate.findOne(new Query(Criteria.where("RESOURCE_ID").is(paramObj.getLong("resourceId"))), JSONObject.class, "_inspectdef");
-        if (MapUtils.isNotEmpty(inspectReport)) {
-            String name = inspectReport.getString("_name");
+        MongoCollection<Document> collection = mongoTemplate.getDb().getCollection("INSPECT_REPORTS");
+        Document doc = new Document();
+        doc.put("RESOURCE_ID",497544521900032L);
+        FindIterable<Document> findIterable = collection.find(doc);
+        Document reportDoc = findIterable.first();
+        // TODO 通过 Query 的方式 搜不到结果集
+        //JSONObject inspectReport = mongoTemplate.findOne(new Query(Criteria.where("MGMT_IP").is("192.168.0.33")), JSONObject.class, "INSPECT_REPORTS");
+        if (MapUtils.isNotEmpty(reportDoc)) {
+            String name = reportDoc.getString("_name");
             CollectionVo collectionVo = mongoTemplate.findOne(new Query(Criteria.where("name").is(name)), CollectionVo.class, "_dictionary");
             if (collectionVo != null) {
-                inspectReport.put("fields", collectionVo.getFields());
+                reportDoc.put("fields", collectionVo.getFields());
             }
         }
-        return inspectReport;
+        return reportDoc;
     }
 
     @Override
