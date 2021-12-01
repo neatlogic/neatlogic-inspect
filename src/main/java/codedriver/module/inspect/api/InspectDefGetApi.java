@@ -9,19 +9,23 @@ import codedriver.framework.restful.constvalue.OperationTypeEnum;
 import codedriver.framework.restful.core.privateapi.PrivateApiComponentBase;
 import codedriver.module.inspect.auth.label.INSPECT_MODIFY;
 import com.alibaba.fastjson.JSONObject;
-import org.springframework.beans.factory.annotation.Autowired;
+import com.mongodb.client.FindIterable;
+import com.mongodb.client.MongoCollection;
+import org.bson.Document;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Service;
 
+import javax.annotation.Resource;
+
 @Service
 @AuthAction(action = INSPECT_MODIFY.class)
 @OperationType(type = OperationTypeEnum.SEARCH)
-public class CollectionGetApi extends PrivateApiComponentBase {
+public class InspectDefGetApi extends PrivateApiComponentBase {
 
 
-    @Autowired
+    @Resource
     private MongoTemplate mongoTemplate;
 
     @Override
@@ -36,14 +40,27 @@ public class CollectionGetApi extends PrivateApiComponentBase {
 
     @Override
     public String getToken() {
-        return "inspect/collection/get";
+        return "inspect/collection/def/get";
     }
 
-    @Input({@Param(name = "name", type = ApiParamType.STRING, desc = "唯一标识"),
-            @Param(name = "collection", type = ApiParamType.JSONOBJECT,  desc = "集合列表")})
+    @Input({@Param(name = "name", type = ApiParamType.STRING, desc = "唯一标识")})
     @Override
     public Object myDoService(JSONObject paramObj) throws Exception {
-        Object object = mongoTemplate.findOne(new Query(Criteria.where("name").is(paramObj.getString("name"))), JSONObject.class, "_collection_test");
+        JSONObject object = new JSONObject();
+        String label = paramObj.getString("name");
+        //获取数据结构
+        JSONObject fieldsJson = mongoTemplate.findOne(new Query(Criteria.where("name").is(label)), JSONObject.class, "_dictionary");
+        //获取规则
+        MongoCollection<Document> collection = mongoTemplate.getDb().getCollection("_inspectdef");
+        Document doc = new Document();
+        Document proDoc = new Document();
+        doc.put("name", label);
+        proDoc.put("thresholds", true);
+        proDoc.put("_id", false);
+        FindIterable<Document> inspectdef = collection.find(doc).projection(proDoc);
+        Document thresholds = inspectdef.first();
+        object.put("fields", fieldsJson);
+        object.put("thresholds", thresholds);
         return object;
     }
 

@@ -9,20 +9,19 @@ import codedriver.framework.restful.annotation.Param;
 import codedriver.framework.restful.constvalue.OperationTypeEnum;
 import codedriver.framework.restful.core.privateapi.PrivateApiComponentBase;
 import codedriver.module.inspect.auth.label.INSPECT_MODIFY;
+import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
+import org.bson.Document;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.core.MongoTemplate;
-import org.springframework.data.mongodb.core.query.BasicUpdate;
-import org.springframework.data.mongodb.core.query.Criteria;
-import org.springframework.data.mongodb.core.query.Query;
-import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.stereotype.Service;
+
+import java.util.Map;
 
 @Service
 @AuthAction(action = INSPECT_MODIFY.class)
 @OperationType(type = OperationTypeEnum.UPDATE)
 public class InspectCombopSaveApi extends PrivateApiComponentBase {
-
 
     @Autowired
     private MongoTemplate mongoTemplate;
@@ -43,17 +42,27 @@ public class InspectCombopSaveApi extends PrivateApiComponentBase {
     }
 
     @Input({
-            @Param(name = "collection", type = ApiParamType.JSONOBJECT,isRequired  = true,desc = "集合数据结构"),
-            @Param(name = "collectionDef", type = ApiParamType.JSONOBJECT,isRequired  = true,desc = "集合数据定义")})
-    @Description(desc = "保存巡检规则接口，用于巡检模块的巡检规则保存，需要依赖mongodb")
+            @Param(name = "inspectCombopList", type = ApiParamType.JSONARRAY, isRequired = true, desc = "集合和组合工具关系列表")})
+    @Description(desc = "保存巡检规则接口，用于巡检模块的巡检工具保存，需要依赖mongodb")
     @Override
     public Object myDoService(JSONObject paramObj) throws Exception {
-        String name =paramObj.getString("name");
-        JSONObject collection = paramObj.getJSONObject("collection");
-        JSONObject collectionDef = paramObj.getJSONObject("collection");
-        Update update = new BasicUpdate(collectionDef.toJSONString());
+        JSONArray inspectCombopList = paramObj.getJSONArray("inspectCombopList");
+        if (inspectCombopList == null) {
+            return null;
+        }
+        for (int i = 0; i < inspectCombopList.size(); i++) {
+            Map<String, String> map = (Map<String, String>) inspectCombopList.get(i);
+            String name = map.get("name");
+            Integer combopId = Integer.valueOf(map.get("combopId"));
 
-        mongoTemplate.updateMulti(new Query(Criteria.where("name").is(name)),update, "_collection_test");
+            Document doc = new Document();
+            Document updateDoc = new Document();
+            Document setDocument = new Document();
+            doc.put("name", name);
+            updateDoc.put("combop_id", combopId);
+            setDocument.put("$set", updateDoc);
+            mongoTemplate.getCollection("_inspectdef").updateOne(doc, setDocument);
+        }
         return null;
     }
 }
