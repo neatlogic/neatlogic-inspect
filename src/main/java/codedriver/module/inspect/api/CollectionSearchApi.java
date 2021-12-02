@@ -53,7 +53,7 @@ public class CollectionSearchApi extends PrivateApiComponentBase {
     public Object myDoService(JSONObject paramObj) throws Exception {
         String name = paramObj.getString("name");
         JSONObject result = new JSONObject();
-        MongoCollection<Document> collection = mongoTemplate.getCollection("_inspectdef");
+        MongoCollection<Document> collection = mongoTemplate.getDb().getCollection("_inspectdef");
         Document doc = new Document();
         if (StringUtils.isNotBlank(name)) {
             doc.put("name", name);

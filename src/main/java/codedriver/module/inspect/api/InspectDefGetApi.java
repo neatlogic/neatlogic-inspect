@@ -49,18 +49,15 @@ public class InspectDefGetApi extends PrivateApiComponentBase {
         JSONObject object = new JSONObject();
         String label = paramObj.getString("name");
         //获取数据结构
-        JSONObject fieldsJson = mongoTemplate.findOne(new Query(Criteria.where("name").is(label)), JSONObject.class, "_dictionary");
+        JSONObject dictionary = mongoTemplate.findOne(new Query(Criteria.where("name").is(label)), JSONObject.class, "_dictionary");
         //获取规则
         MongoCollection<Document> collection = mongoTemplate.getDb().getCollection("_inspectdef");
         Document doc = new Document();
-        Document proDoc = new Document();
         doc.put("name", label);
-        proDoc.put("thresholds", true);
-        proDoc.put("_id", false);
-        FindIterable<Document> inspectdef = collection.find(doc).projection(proDoc);
-        Document thresholds = inspectdef.first();
-        object.put("collection", fieldsJson);
-        object.put("thresholds", thresholds);
+        FindIterable<Document> inspectdef = collection.find(doc);
+        Document inspectdefDoc = inspectdef.first();
+        object.put("dictionary", dictionary);
+        object.put("inspectdef", inspectdefDoc);
         return object;
     }
 
