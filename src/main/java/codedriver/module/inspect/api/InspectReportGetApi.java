@@ -8,7 +8,6 @@ package codedriver.module.inspect.api;
 import codedriver.framework.auth.core.AuthAction;
 import codedriver.framework.cmdb.dto.sync.CollectionVo;
 import codedriver.framework.common.constvalue.ApiParamType;
-import codedriver.framework.exception.type.ParamIrregularException;
 import codedriver.framework.restful.annotation.Description;
 import codedriver.framework.restful.annotation.Input;
 import codedriver.framework.restful.annotation.OperationType;
@@ -48,7 +47,7 @@ public class InspectReportGetApi extends PrivateApiComponentBase {
     }
 
     @Input({
-            @Param(name = "resourceId", type = ApiParamType.LONG, desc = "资产id"),
+            @Param(name = "resourceId", type = ApiParamType.LONG, desc = "资产id", isRequired = true),
             @Param(name = "id", type = ApiParamType.STRING, desc = "id")
     })
 
@@ -59,18 +58,13 @@ public class InspectReportGetApi extends PrivateApiComponentBase {
         Long resourceId = paramObj.getLong("resourceId");
         String id = paramObj.getString("id");
         Document doc = new Document();
-        //如果传resourceId则查该资产对应的最新当前报告
-        if (resourceId != null) {
+        //如果没有Id则查该资产对应的最新当前报告
+        if (StringUtils.isBlank(id)) {
             collection = mongoTemplate.getDb().getCollection("INSPECT_REPORTS");
             doc.put("RESOURCE_ID", paramObj.getLong("resourceId"));
-        }
-        //如果传id则查对应资产的历史报告
-        if (MapUtils.isEmpty(doc) && StringUtils.isNotBlank(id)) {
+        }else{
             collection = mongoTemplate.getDb().getCollection("INSPECT_REPORTS_HIS");
             doc.put("_id", new ObjectId(id));
-        }
-        if (collection == null) {
-            throw new ParamIrregularException("resourceId | id");
         }
 
         FindIterable<Document> findIterable = collection.find(doc);
