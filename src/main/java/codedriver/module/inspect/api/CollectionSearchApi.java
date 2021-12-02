@@ -9,7 +9,6 @@ import codedriver.framework.restful.annotation.OperationType;
 import codedriver.framework.restful.annotation.Param;
 import codedriver.framework.restful.constvalue.OperationTypeEnum;
 import codedriver.framework.restful.core.privateapi.PrivateApiComponentBase;
-import codedriver.module.inspect.dao.mapper.InspectMapper;
 import com.alibaba.fastjson.JSONObject;
 import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoCollection;
@@ -25,9 +24,6 @@ import java.util.ArrayList;
 @AuthAction(action = INSPECT_MODIFY.class)
 @OperationType(type = OperationTypeEnum.SEARCH)
 public class CollectionSearchApi extends PrivateApiComponentBase {
-
-    @Autowired
-    InspectMapper inspectMapper;
 
     @Autowired
     private MongoTemplate mongoTemplate;
