@@ -49,16 +49,16 @@ public class InspectCombopSaveApi extends PrivateApiComponentBase {
             return null;
         }
         for (int i = 0; i < inspectCombopList.size(); i++) {
-            JSONObject o = JSONObject.parseObject(String.valueOf(inspectCombopList.get(i)));
-            String name = String.valueOf(o.get("name"));
-            Long combopId = (Long) o.get("combop_id");
-            Document doc = new Document();
+            JSONObject inspectCombop = inspectCombopList.getJSONObject(i);
+            String name = inspectCombop.getString("name");
+            Long combopId =inspectCombop.getLong("combop_id");
+            Document whereDoc = new Document();
             Document updateDoc = new Document();
             Document setDocument = new Document();
-            doc.put("name", name);
+            whereDoc.put("name", name);
             updateDoc.put("combop_id", combopId);
             setDocument.put("$set", updateDoc);
-            mongoTemplate.getCollection("_inspectdef").updateOne(doc, setDocument);
+            mongoTemplate.getCollection("_inspectdef").updateOne(whereDoc, setDocument);
         }
         return null;
     }

@@ -40,7 +40,7 @@ public class InspectDefGetApi extends PrivateApiComponentBase {
 
     @Override
     public String getToken() {
-        return "inspect/collection/def/get";
+        return "inspect/collection/get";
     }
 
     @Input({@Param(name = "name", type = ApiParamType.STRING, desc = "唯一标识")})
