@@ -51,7 +51,7 @@ public class InspectCombopSaveApi extends PrivateApiComponentBase {
         for (int i = 0; i < inspectCombopList.size(); i++) {
             JSONObject o = JSONObject.parseObject(String.valueOf(inspectCombopList.get(i)));
             String name = String.valueOf(o.get("name"));
-            Integer combopId = (Integer) o.get("combop_id");
+            Long combopId = (Long) o.get("combop_id");
             Document doc = new Document();
             Document updateDoc = new Document();
             Document setDocument = new Document();
