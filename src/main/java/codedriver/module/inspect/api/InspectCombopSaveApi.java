@@ -2,7 +2,7 @@ package codedriver.module.inspect.api;
 
 import codedriver.framework.auth.core.AuthAction;
 import codedriver.framework.common.constvalue.ApiParamType;
-import codedriver.framework.inspect.auth.label.INSPECT_MODIFY;
+import codedriver.framework.inspect.auth.INSPECT_MODIFY;
 import codedriver.framework.restful.annotation.Description;
 import codedriver.framework.restful.annotation.Input;
 import codedriver.framework.restful.annotation.OperationType;
@@ -15,8 +15,6 @@ import org.bson.Document;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.stereotype.Service;
-
-import java.util.Map;
 
 @Service
 @AuthAction(action = INSPECT_MODIFY.class)
@@ -51,9 +49,9 @@ public class InspectCombopSaveApi extends PrivateApiComponentBase {
             return null;
         }
         for (int i = 0; i < inspectCombopList.size(); i++) {
-            Map<String, Object> map = (Map<String, Object>) inspectCombopList.get(i);
-            String name = (String) map.get("name");
-            Integer combopId = (Integer) map.get("combopId");
+            JSONObject o = JSONObject.parseObject(String.valueOf(inspectCombopList.get(i)));
+            String name = String.valueOf(o.get("name"));
+            Integer combopId = (Integer) o.get("combop_id");
             Document doc = new Document();
             Document updateDoc = new Document();
             Document setDocument = new Document();

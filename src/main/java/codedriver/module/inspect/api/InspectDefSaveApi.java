@@ -3,7 +3,7 @@ package codedriver.module.inspect.api;
 import codedriver.framework.asynchronization.threadlocal.UserContext;
 import codedriver.framework.auth.core.AuthAction;
 import codedriver.framework.common.constvalue.ApiParamType;
-import codedriver.framework.inspect.auth.label.INSPECT_MODIFY;
+import codedriver.framework.inspect.auth.INSPECT_MODIFY;
 import codedriver.framework.restful.annotation.Description;
 import codedriver.framework.restful.annotation.Input;
 import codedriver.framework.restful.annotation.OperationType;
