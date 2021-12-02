@@ -50,15 +50,15 @@ public class InspectDefSaveApi extends PrivateApiComponentBase {
     public Object myDoService(JSONObject paramObj) throws Exception {
         String name = paramObj.getString("name");
         JSONArray thresholds = paramObj.getJSONArray("thresholds");
-        Document doc = new Document();
+        Document whereDoc = new Document();
         Document updateDoc = new Document();
         Document setDocument = new Document();
-        doc.put("name", name);
+        whereDoc.put("name", name);
         updateDoc.put("thresholds", thresholds);
         updateDoc.put("lcu", UserContext.get().getUserUuid());
         updateDoc.put("lcd", new Date());
         setDocument.put("$set", updateDoc);
-        mongoTemplate.getCollection("_inspectdef").updateOne(doc,setDocument);
+        mongoTemplate.getCollection("_inspectdef").updateOne(whereDoc,setDocument);
         return null;
     }
 }
