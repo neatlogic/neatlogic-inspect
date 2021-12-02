@@ -59,7 +59,7 @@ public class InspectDefGetApi extends PrivateApiComponentBase {
         proDoc.put("_id", false);
         FindIterable<Document> inspectdef = collection.find(doc).projection(proDoc);
         Document thresholds = inspectdef.first();
-        object.put("fields", fieldsJson);
+        object.put("collection", fieldsJson);
         object.put("thresholds", thresholds);
         return object;
     }

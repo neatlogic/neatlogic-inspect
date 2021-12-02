@@ -2,10 +2,13 @@ package codedriver.module.inspect.api;
 
 import codedriver.framework.autoexec.dao.mapper.AutoexecTypeMapper;
 import codedriver.framework.autoexec.dto.AutoexecTypeVo;
+import codedriver.framework.common.constvalue.SystemUser;
 import codedriver.framework.startup.IStartup;
+import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
 
+@Service
 public class InpectAutoexecTypeSaveApi implements IStartup {
 
     @Resource
@@ -19,9 +22,10 @@ public class InpectAutoexecTypeSaveApi implements IStartup {
     @Override
     public void executeForCurrentTenant() {
         AutoexecTypeVo typeVo = new AutoexecTypeVo();
-        typeVo.setId(445566778899L);
+        typeVo.setId(1L);
         typeVo.setDescription("巡检");
         typeVo.setName("INSPECTION");
+        typeVo.setLcu(SystemUser.SYSTEM.getUserUuid());
         autoexecTypeMapper.replaceType(typeVo);
     }
 
