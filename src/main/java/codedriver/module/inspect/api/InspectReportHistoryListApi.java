@@ -14,7 +14,6 @@ import codedriver.framework.restful.annotation.Param;
 import codedriver.framework.restful.constvalue.OperationTypeEnum;
 import codedriver.framework.restful.core.privateapi.PrivateApiComponentBase;
 import codedriver.module.inspect.auth.label.INSPECT_BASE;
-import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoCollection;
@@ -23,6 +22,7 @@ import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
+import java.util.ArrayList;
 
 @AuthAction(action = INSPECT_BASE.class)
 @OperationType(type = OperationTypeEnum.SEARCH)
@@ -55,8 +55,8 @@ public class InspectReportHistoryListApi extends PrivateApiComponentBase {
         doc.put("RESOURCE_ID", paramObj.getLong("resourceId"));
         Document sortDoc = new Document();
         sortDoc.put("_report_time", -1);
-        FindIterable<Document> findIterable = collection.find(doc).sort(sortDoc).skip(paramObj.getInteger("currentPage")).limit(paramObj.getInteger("pageSize"));
-        return findIterable.map(o -> JSONObject.parseObject(o.toJson())).into(new JSONArray());
+        FindIterable<Document> findIterable = collection.find(doc).sort(sortDoc).skip(paramObj.getInteger("currentPage")-1).limit(paramObj.getInteger("pageSize"));
+        return findIterable.into(new ArrayList<>());
     }
 
     @Override
