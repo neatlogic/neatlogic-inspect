@@ -50,8 +50,6 @@ public class InspectReportGetApi extends PrivateApiComponentBase {
         Long resourceId = paramObj.getLong("resourceId");
         String id = paramObj.getString("id");
         Document reportDoc = inspectReportService.getInspectReport(resourceId, id);
-        JSONObject object = JSONObject.parseObject(reportDoc.toJson());
-        System.out.println(object);
         return reportDoc;
     }
 

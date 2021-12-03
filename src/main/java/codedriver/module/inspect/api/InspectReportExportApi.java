@@ -19,7 +19,9 @@ import codedriver.framework.restful.constvalue.OperationTypeEnum;
 import codedriver.framework.restful.core.privateapi.PrivateBinaryStreamApiComponentBase;
 import codedriver.framework.util.DocType;
 import codedriver.framework.util.ExportUtil;
+import codedriver.framework.util.TimeUtil;
 import codedriver.module.inspect.service.InspectReportService;
+import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import org.apache.commons.collections4.CollectionUtils;
@@ -87,8 +89,7 @@ public class InspectReportExportApi extends PrivateBinaryStreamApiComponentBase 
         Document reportDoc = inspectReportService.getInspectReport(resourceId, id);
         if (MapUtils.isNotEmpty(reportDoc)) {
             Map<String, String> translationMap = new HashMap<>();
-            JSONObject reportJson = JSONObject.parseObject(reportDoc.toJson());
-            JSONArray fields = reportJson.getJSONArray("fields");
+            JSONArray fields = JSON.parseArray(reportDoc.get("fields").toString());
             if (CollectionUtils.isNotEmpty(fields)) {
                 for (int i = 0; i < fields.size(); i++) {
                     JSONObject obj = fields.getJSONObject(i);
@@ -103,12 +104,12 @@ public class InspectReportExportApi extends PrivateBinaryStreamApiComponentBase 
                     response.setContentType("application/x-download");
                     response.setHeader("Content-Disposition",
                             " attachment; filename=\"" + URLEncoder.encode(fileName, StandardCharsets.UTF_8.name()) + ".docx\"");
-                    ExportUtil.getWordFileByHtml(getHtmlContent(reportJson, translationMap), os, true, false);
+                    ExportUtil.getWordFileByHtml(getHtmlContent(reportDoc, translationMap), os, true, false);
                 } else if (DocType.PDF.getValue().equals(type)) {
                     response.setContentType("application/pdf");
                     response.setHeader("Content-Disposition",
                             " attachment; filename=\"" + URLEncoder.encode(fileName, StandardCharsets.UTF_8.name()) + ".pdf\"");
-                    ExportUtil.getPdfFileByHtml(getHtmlContent(reportJson, translationMap), os, true, true);
+                    ExportUtil.getPdfFileByHtml(getHtmlContent(reportDoc, translationMap), os, true, true);
                 }
             } catch (Exception e) {
                 logger.error(e.getMessage(), e);
@@ -118,7 +119,7 @@ public class InspectReportExportApi extends PrivateBinaryStreamApiComponentBase 
         return null;
     }
 
-    private String getHtmlContent(JSONObject reportJson, Map<String, String> translationMap) throws Exception {
+    private String getHtmlContent(Map<String, Object> reportJson, Map<String, String> translationMap) throws Exception {
         StringWriter out = new StringWriter();
         out.write("<html xmlns:v=\"urn:schemas-microsoft-com:vml\" xmlns:o=\"urn:schemas-microsoft-com:office:office\" xmlns:x=\"urn:schemas-microsoft-com:office:excel\" xmlns=\"http://www.w3.org/TR/REC-html40\">\n");
         out.write("<head>\n");
@@ -129,7 +130,7 @@ public class InspectReportExportApi extends PrivateBinaryStreamApiComponentBase 
         StringBuilder sb = new StringBuilder();
         sb.append("<table style=\"" + tableStyle + "\">");
         sb.append("<tbody>");
-        Map<String, JSONArray> map = new LinkedHashMap<>();
+        Map<String, List> map = new LinkedHashMap<>();
         int i = 1;
         // 渲染非JSONArray数据
         for (Map.Entry<String, Object> entry : reportJson.entrySet()) {
@@ -137,17 +138,29 @@ public class InspectReportExportApi extends PrivateBinaryStreamApiComponentBase 
             Object value = entry.getValue();
             String name = translationMap.get(key);
             if (name != null) {
-                if (value instanceof JSONArray) {
-                    map.put(key, (JSONArray) value);
+                if (value instanceof List) {
+                    map.put(key, (List) value);
                 } else if (i % 2 != 0) {
                     if (i != 1) {
                         sb.append("</tr>");
+                    }
+                    if (value == null) {
+                        value = "暂无数据";
+                    }
+                    if (value instanceof Date) {
+                        value = TimeUtil.convertDateToString((Date) value, TimeUtil.YYYY_MM_DD_HH_MM_SS);
                     }
                     sb.append("<tr style=\"" + trStyle + "\">");
                     sb.append("<td style=\"" + tdStyle + "\">").append(name).append("</td>");
                     sb.append("<td style=\"" + tdStyle + "\">").append(value.toString()).append("</td>");
                     i++;
                 } else {
+                    if (value == null) {
+                        value = "暂无数据";
+                    }
+                    if (value instanceof Date) {
+                        value = TimeUtil.convertDateToString((Date) value, TimeUtil.YYYY_MM_DD_HH_MM_SS);
+                    }
                     sb.append("<td style=\"" + tdStyle + "\">").append(name).append("</td>");
                     sb.append("<td style=\"" + tdStyle + "\">").append(value.toString()).append("</td>");
                     i++;
@@ -159,7 +172,7 @@ public class InspectReportExportApi extends PrivateBinaryStreamApiComponentBase 
         }
         // 渲染JSONArray数据为table
         if (!map.isEmpty()) {
-            for (Map.Entry<String, JSONArray> entry : map.entrySet()) {
+            for (Map.Entry<String, List> entry : map.entrySet()) {
                 sb.append("<tr style=\"" + trStyle + "\">");
                 sb.append("<td style=\"" + tdStyle + "\">").append(translationMap.get(entry.getKey())).append("</td>");
                 if (CollectionUtils.isNotEmpty(entry.getValue())) {
@@ -212,11 +225,12 @@ public class InspectReportExportApi extends PrivateBinaryStreamApiComponentBase 
      * @param key
      * @param array
      */
-    private void recursionForTable(StringBuilder sb, Map<String, String> translationMap, String key, JSONArray array) {
+    private void recursionForTable(StringBuilder sb, Map<String, String> translationMap, String key, List array) {
         sb.append("<table style=\"" + tableStyle + "\">");
         Set<String> headSet = new LinkedHashSet<>();
         for (int i = 0; i < array.size(); i++) {
-            headSet.addAll(array.getJSONObject(i).keySet());
+            Map map = (Map) array.get(i);
+            headSet.addAll(map.keySet());
         }
         sb.append("<thead><tr>");
         Iterator<String> iterator = headSet.iterator();
@@ -232,17 +246,20 @@ public class InspectReportExportApi extends PrivateBinaryStreamApiComponentBase 
         sb.append("<tbody>");
 
         for (int i = 0; i < array.size(); i++) {
-            JSONObject object = array.getJSONObject(i);
+            Map object = (Map) array.get(i);
             sb.append("<tr style=\"" + trStyle + "\">");
             for (String head : headSet) {
                 Object obj = object.get(head);
                 if (obj != null) {
-                    if (obj instanceof JSONArray) {
-                        JSONArray _array = (JSONArray) obj;
+                    if (obj instanceof List) {
+                        List _array = (List) obj;
                         if (CollectionUtils.isNotEmpty(_array)) {
                             recursionForTable(sb, translationMap, key + "." + head, _array);
                         }
                     } else {
+                        if (obj instanceof Date) {
+                            obj = TimeUtil.convertDateToString((Date) obj, TimeUtil.YYYY_MM_DD_HH_MM_SS);
+                        }
                         sb.append("<td>").append(obj.toString()).append("</td>");
                     }
                 } else {
