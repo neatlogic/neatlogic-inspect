@@ -80,9 +80,11 @@ public class InspectCombopSearchApi extends PrivateApiComponentBase {
             }
             String keyword = paramObj.getString("keyword");
             if (StringUtils.isNotBlank(keyword)) {
+                keyword = keyword.toLowerCase(Locale.ROOT);
                 List<CiVo> allCiList = new ArrayList<>();
-                List<CiVo> labelCiList = ciList.stream().filter(o -> o.getLabel().contains(keyword)).collect(toList());
-                List<CiVo> nameCiList = ciList.stream().filter(o -> o.getName().contains(keyword)).collect(toList());
+                String finalKeyword = keyword;
+                List<CiVo> labelCiList = ciList.stream().filter(o -> o.getLabel().toLowerCase(Locale.ROOT).contains(finalKeyword)).collect(toList());
+                List<CiVo> nameCiList = ciList.stream().filter(o -> o.getName().toLowerCase(Locale.ROOT).contains(finalKeyword)).collect(toList());
                 if (CollectionUtils.isNotEmpty(labelCiList)) {
                     allCiList.addAll(labelCiList);
                 }
