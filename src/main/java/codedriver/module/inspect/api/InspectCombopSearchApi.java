@@ -18,10 +18,12 @@ import codedriver.framework.restful.constvalue.OperationTypeEnum;
 import codedriver.framework.restful.core.privateapi.PrivateApiComponentBase;
 import com.alibaba.fastjson.JSONObject;
 import com.alibaba.nacos.common.utils.CollectionUtils;
+import com.alibaba.nacos.common.utils.StringUtils;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @AuthAction(action = INSPECT_MODIFY.class)
@@ -46,7 +48,7 @@ public class InspectCombopSearchApi extends PrivateApiComponentBase {
         return null;
     }
 
-    @Input({@Param(name = "ciType", type = ApiParamType.STRING, desc = "ciType")})
+    @Input({@Param(name = "name", type = ApiParamType.STRING, desc = "名称")})
     @Override
     public Object myDoService(JSONObject paramObj) throws Exception {
 
@@ -74,6 +76,10 @@ public class InspectCombopSearchApi extends PrivateApiComponentBase {
                 if (CollectionUtils.isNotEmpty(ciListTmp)) {
                     ciList.addAll(ciListTmp);
                 }
+            }
+            String name = paramObj.getString("name");
+            if (StringUtils.isNotBlank(name)) {
+                ciList = ciList.stream().filter(o -> Objects.equals(o.getLabel(), name)).collect(Collectors.toList());
             }
             //将List<CIVo>换成List<InspectCiCombopVo>
             for (CiVo ciVo : ciList) {
