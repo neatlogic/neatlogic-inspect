@@ -19,6 +19,7 @@ import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 
 @Service
 @AuthAction(action = INSPECT_MODIFY.class)
@@ -43,18 +44,22 @@ public class CollectionSearchApi extends PrivateApiComponentBase {
         return null;
     }
 
-    @Input({@Param(name = "name", type = ApiParamType.STRING, desc = "名称")})
+    @Input({@Param(name = "keyword", type = ApiParamType.STRING, desc = "关键字（name、label）")})
     @Description(desc = "查询巡检模块集合列表接口，用于巡检模块的巡检定义的查询，需要依赖mongodb")
     @Override
     public Object myDoService(JSONObject paramObj) throws Exception {
-        String name = paramObj.getString("name");
+        String keyword = paramObj.getString("keyword");
         JSONObject result = new JSONObject();
         MongoCollection<Document> collection = mongoTemplate.getDb().getCollection("_inspectdef");
-        Document doc = new Document();
-        if (StringUtils.isNotBlank(name)) {
-            doc.put("name", name);
+        Document orDoc  = new Document();
+        if (StringUtils.isNotBlank(keyword)) {
+            Document nameDoc = new Document();
+            nameDoc.put("name" , keyword);
+            Document labelDoc = new Document();
+            labelDoc.put("label" , keyword);
+            orDoc.put("$or", Arrays.asList(nameDoc,labelDoc));
         }
-        FindIterable<Document> collectionList = collection.find(doc);
+        FindIterable<Document> collectionList = collection.find(orDoc);
         result.put("tbodyList", collectionList.into(new ArrayList<>()));
         return result;
 

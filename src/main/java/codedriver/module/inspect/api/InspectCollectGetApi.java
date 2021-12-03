@@ -22,7 +22,7 @@ import javax.annotation.Resource;
 @Service
 @AuthAction(action = INSPECT_MODIFY.class)
 @OperationType(type = OperationTypeEnum.SEARCH)
-public class InspectDefGetApi extends PrivateApiComponentBase {
+public class InspectCollectGetApi extends PrivateApiComponentBase {
 
 
     @Resource
