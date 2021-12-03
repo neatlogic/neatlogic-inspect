@@ -16,7 +16,6 @@ import codedriver.framework.restful.constvalue.OperationTypeEnum;
 import codedriver.framework.restful.core.privateapi.PrivateBinaryStreamApiComponentBase;
 import codedriver.framework.util.ExportUtil;
 import codedriver.module.inspect.service.InspectReportService;
-import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import org.apache.commons.collections4.CollectionUtils;
@@ -96,10 +95,6 @@ public class InspectReportExportApi extends PrivateBinaryStreamApiComponentBase 
             } catch (Exception e) {
                 logger.error(e.getMessage(), e);
             }
-
-            System.out.println(translationMap);
-            Object o = JSON.toJSON(translationMap);
-            System.out.println(o);
         }
 
         return null;
@@ -120,12 +115,12 @@ public class InspectReportExportApi extends PrivateBinaryStreamApiComponentBase 
         int i = 1;
         // 渲染非JSONArray数据
         for (Map.Entry<String, Object> entry : reportJson.entrySet()) {
-            Object key = entry.getKey();
+            String key = entry.getKey();
             Object value = entry.getValue();
-            String name = translationMap.get(key.toString());
+            String name = translationMap.get(key);
             if (name != null) {
-                if (value instanceof JSONArray) { // todo 会有非对象数组吗？
-                    map.put(key.toString(), (JSONArray) value);
+                if (value instanceof JSONArray) {
+                    map.put(key, (JSONArray) value);
                 } else if (i % 2 != 0) {
                     if (i != 1) {
                         sb.append("</tr>");
@@ -151,7 +146,7 @@ public class InspectReportExportApi extends PrivateBinaryStreamApiComponentBase 
                 sb.append("<td style=\"" + tdStyle + "\">").append(translationMap.get(entry.getKey())).append("</td>");
                 if (CollectionUtils.isNotEmpty(entry.getValue())) {
                     sb.append("<td style=\"" + tdStyle + "\">");
-                    recursionForTable(sb, translationMap, entry.getValue(), entry.getKey());
+                    recursionForTable(sb, translationMap, entry.getKey(), entry.getValue());
                     sb.append("</td>");
                 }
                 sb.append("</tr>");
@@ -170,19 +165,7 @@ public class InspectReportExportApi extends PrivateBinaryStreamApiComponentBase 
 
     /**
      * 递归抽取字段译文，如果存在嵌套数组，则转为链式结构
-     * 例如：
-     * {
-     *     "name": "DNS_SERVERS",
-     *     "type": "JsonArray",
-     *     "subset": [
-     *         {
-     *             "name": "VALUE",
-     *             "type": "String",
-     *             "desc": "IP"
-     *         }
-     *      ],
-     *      "desc": "DNS服务器"
-     * }
+     * 例如：{"name":"DNS_SERVERS","type":"JsonArray","subset":[{"name":"VALUE","type":"String","desc":"IP"}],"desc":"DNS服务器"}
      * 将转为：
      * "DNS_SERVERS" -> "DNS服务器"
      * "DNS_SERVERS.VALUE" -> "IP"
@@ -193,8 +176,8 @@ public class InspectReportExportApi extends PrivateBinaryStreamApiComponentBase 
      */
     private void recursionForTranslation(Map<String, String> translationMap, String name, JSONArray subset) {
         if (CollectionUtils.isNotEmpty(subset)) {
-            for (int j = 0; j < subset.size(); j++) {
-                JSONObject _obj = subset.getJSONObject(j);
+            for (int i = 0; i < subset.size(); i++) {
+                JSONObject _obj = subset.getJSONObject(i);
                 String _name = _obj.getString("name");
                 String _desc = _obj.getString("desc");
                 translationMap.put(name + "." + _name, _desc);
@@ -208,14 +191,14 @@ public class InspectReportExportApi extends PrivateBinaryStreamApiComponentBase 
      *
      * @param sb
      * @param translationMap
-     * @param array
      * @param key
+     * @param array
      */
-    private void recursionForTable(StringBuilder sb, Map<String, String> translationMap, JSONArray array, String key) {
+    private void recursionForTable(StringBuilder sb, Map<String, String> translationMap, String key, JSONArray array) {
         sb.append("<table style=\"" + tableStyle + "\">");
         Set<String> headSet = new LinkedHashSet<>();
-        for (int j = 0; j < array.size(); j++) {
-            headSet.addAll(array.getJSONObject(j).keySet());
+        for (int i = 0; i < array.size(); i++) {
+            headSet.addAll(array.getJSONObject(i).keySet());
         }
         sb.append("<thead><tr>");
         Iterator<String> iterator = headSet.iterator();
@@ -239,7 +222,7 @@ public class InspectReportExportApi extends PrivateBinaryStreamApiComponentBase 
                     if (obj instanceof JSONArray) {
                         JSONArray _array = (JSONArray) obj;
                         if (CollectionUtils.isNotEmpty(_array)) {
-                            recursionForTable(sb, translationMap, _array, key + "." + head);
+                            recursionForTable(sb, translationMap, key + "." + head, _array);
                         }
                     } else {
                         sb.append("<td>").append(obj.toString()).append("</td>");
