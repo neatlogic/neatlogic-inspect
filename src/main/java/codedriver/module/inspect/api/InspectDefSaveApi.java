@@ -13,14 +13,13 @@ import codedriver.framework.restful.constvalue.OperationTypeEnum;
 import codedriver.framework.restful.core.privateapi.PrivateApiComponentBase;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
-import org.apache.commons.lang3.StringUtils;
 import org.bson.Document;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
-import java.util.Date;
+import java.util.*;
 
 @Service
 @AuthAction(action = INSPECT_MODIFY.class)
@@ -46,19 +45,21 @@ public class InspectDefSaveApi extends PrivateApiComponentBase {
     }
 
     @Input({
-            @Param(name = "name", type = ApiParamType.STRING,isRequired  = true,desc = "唯一标识"),
-            @Param(name = "thresholds", type = ApiParamType.JSONARRAY,desc = "集合数据定义")})
+            @Param(name = "name", type = ApiParamType.STRING, isRequired = true, desc = "唯一标识"),
+            @Param(name = "thresholds", type = ApiParamType.JSONARRAY, desc = "集合数据定义")})
     @Description(desc = "保存巡检规则接口，用于巡检模块的巡检规则保存，需要依赖mongodb")
     @Override
     public Object myDoService(JSONObject paramObj) throws Exception {
         String name = paramObj.getString("name");
         JSONArray thresholds = paramObj.getJSONArray("thresholds");
         if (!CollectionUtils.isEmpty(thresholds)) {
-            String nameTmp = thresholds.getJSONObject(0).getString("name");
-            for (int i = 1; i < thresholds.size(); i++) {
-                if (StringUtils.equals(thresholds.getJSONObject(0).getString("name"), nameTmp)) {
+            List<String> nameList = new ArrayList<>();
+            for (int i = 0; i < thresholds.size(); i++) {
+                String nameTmp = thresholds.getJSONObject(i).getString("name");
+                if (nameList.contains(nameTmp)) {
                     throw new InspectDefRoleNameRepeatException(nameTmp);
                 }
+                nameList.add(thresholds.getJSONObject(i).getString("name"));
             }
         }
         Document whereDoc = new Document();
@@ -69,7 +70,7 @@ public class InspectDefSaveApi extends PrivateApiComponentBase {
         updateDoc.put("lcu", UserContext.get().getUserUuid());
         updateDoc.put("lcd", new Date());
         setDocument.put("$set", updateDoc);
-        mongoTemplate.getCollection("_inspectdef").updateOne(whereDoc,setDocument);
+        mongoTemplate.getCollection("_inspectdef").updateOne(whereDoc, setDocument);
         return null;
     }
 }

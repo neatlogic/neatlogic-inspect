@@ -23,7 +23,8 @@ import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
 import java.util.*;
-import java.util.stream.Collectors;
+
+import static java.util.stream.Collectors.toList;
 
 @Service
 @AuthAction(action = INSPECT_MODIFY.class)
@@ -48,7 +49,7 @@ public class InspectCombopSearchApi extends PrivateApiComponentBase {
         return null;
     }
 
-    @Input({@Param(name = "name", type = ApiParamType.STRING, desc = "名称")})
+    @Input({@Param(name = "keyword", type = ApiParamType.STRING, desc = "关键字（name、label）")})
     @Override
     public Object myDoService(JSONObject paramObj) throws Exception {
 
@@ -77,9 +78,20 @@ public class InspectCombopSearchApi extends PrivateApiComponentBase {
                     ciList.addAll(ciListTmp);
                 }
             }
-            String name = paramObj.getString("name");
-            if (StringUtils.isNotBlank(name)) {
-                ciList = ciList.stream().filter(o -> o.getLabel().contains(name)).collect(Collectors.toList());
+            String keyword = paramObj.getString("keyword");
+            if (StringUtils.isNotBlank(keyword)) {
+                keyword = keyword.toLowerCase(Locale.ROOT);
+                List<CiVo> allCiList = new ArrayList<>();
+                String finalKeyword = keyword;
+                List<CiVo> labelCiList = ciList.stream().filter(o -> o.getLabel().toLowerCase(Locale.ROOT).contains(finalKeyword)).collect(toList());
+                List<CiVo> nameCiList = ciList.stream().filter(o -> o.getName().toLowerCase(Locale.ROOT).contains(finalKeyword)).collect(toList());
+                if (CollectionUtils.isNotEmpty(labelCiList)) {
+                    allCiList.addAll(labelCiList);
+                }
+                if (CollectionUtils.isNotEmpty(nameCiList)) {
+                    allCiList.addAll(nameCiList);
+                }
+                ciList = allCiList.stream().distinct().collect(toList());
             }
             //将List<CIVo>换成List<InspectCiCombopVo>
             for (CiVo ciVo : ciList) {
@@ -93,7 +105,7 @@ public class InspectCombopSearchApi extends PrivateApiComponentBase {
         }
         //若cmdb的ciType列表为空，直接返回
         if (CollectionUtils.isEmpty(ciList)) {
-            return null;
+            return Collections.emptyList();
         }
         //把关系表的combopId、combopName set到对应的InspectCiCombopVo里面
         for (InspectCiCombopVo ciCombopVo : ciCombopVoList) {
