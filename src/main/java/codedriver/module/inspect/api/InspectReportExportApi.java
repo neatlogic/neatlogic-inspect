@@ -25,6 +25,8 @@ import org.apache.commons.lang3.StringUtils;
 import org.bson.Document;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Entities;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
@@ -39,6 +41,8 @@ import java.util.*;
 @OperationType(type = OperationTypeEnum.SEARCH)
 @Service
 public class InspectReportExportApi extends PrivateBinaryStreamApiComponentBase {
+
+    static Logger logger = LoggerFactory.getLogger(InspectReportExportApi.class);
 
     @Resource
     private InspectReportService inspectReportService;
@@ -90,7 +94,7 @@ public class InspectReportExportApi extends PrivateBinaryStreamApiComponentBase 
                 doc.outputSettings().syntax(org.jsoup.nodes.Document.OutputSettings.Syntax.xml).escapeMode(Entities.EscapeMode.xhtml);
                 ExportUtil.saveDocx(ExportUtil.xhtml2word(doc, true), os);
             } catch (Exception e) {
-
+                logger.error(e.getMessage(), e);
             }
 
             System.out.println(translationMap);
@@ -112,37 +116,46 @@ public class InspectReportExportApi extends PrivateBinaryStreamApiComponentBase 
         StringBuilder sb = new StringBuilder();
         sb.append("<table style=\"" + tableStyle + "\">");
         sb.append("<tbody>");
+        Map<String, JSONArray> map = new LinkedHashMap<>();
         int i = 1;
+        // 渲染非JSONArray数据
         for (Map.Entry<String, Object> entry : reportJson.entrySet()) {
             Object key = entry.getKey();
             Object value = entry.getValue();
-            String name = translationMap.get(key);
+            String name = translationMap.get(key.toString());
             if (name != null) {
-                // todo 补充tr标签
                 if (value instanceof JSONArray) { // todo 会有非对象数组吗？
-                    sb.append("<tr style=\"" + trStyle + "\">");
-                    sb.append("<td style=\"" + tdStyle + "\">").append(name).append("</td>");
-                    JSONArray array = (JSONArray) value;
-                    if (CollectionUtils.isNotEmpty(array)) {
-                        sb.append("<td style=\"" + tdStyle + "\">");
-                        recursionForTable(sb, translationMap, array, key.toString());
-                        sb.append("</td>");
-                    }
-                    sb.append("</tr>");
+                    map.put(key.toString(), (JSONArray) value);
                 } else if (i % 2 != 0) {
+                    if (i != 1) {
+                        sb.append("</tr>");
+                    }
                     sb.append("<tr style=\"" + trStyle + "\">");
                     sb.append("<td style=\"" + tdStyle + "\">").append(name).append("</td>");
                     sb.append("<td style=\"" + tdStyle + "\">").append(value.toString()).append("</td>");
+                    i++;
                 } else {
                     sb.append("<td style=\"" + tdStyle + "\">").append(name).append("</td>");
                     sb.append("<td style=\"" + tdStyle + "\">").append(value.toString()).append("</td>");
+                    i++;
                 }
-                i++;
-
             }
         }
         if (sb.lastIndexOf("</tr>") != sb.length() - 1) {
             sb.append("</tr>");
+        }
+        // 渲染JSONArray数据为table
+        if (!map.isEmpty()) {
+            for (Map.Entry<String, JSONArray> entry : map.entrySet()) {
+                sb.append("<tr style=\"" + trStyle + "\">");
+                sb.append("<td style=\"" + tdStyle + "\">").append(translationMap.get(entry.getKey())).append("</td>");
+                if (CollectionUtils.isNotEmpty(entry.getValue())) {
+                    sb.append("<td style=\"" + tdStyle + "\">");
+                    recursionForTable(sb, translationMap, entry.getValue(), entry.getKey());
+                    sb.append("</td>");
+                }
+                sb.append("</tr>");
+            }
         }
 
         sb.append("</tbody>");
@@ -155,6 +168,29 @@ public class InspectReportExportApi extends PrivateBinaryStreamApiComponentBase 
         return out.toString();
     }
 
+    /**
+     * 递归抽取字段译文，如果存在嵌套数组，则转为链式结构
+     * 例如：
+     * {
+     *     "name": "DNS_SERVERS",
+     *     "type": "JsonArray",
+     *     "subset": [
+     *         {
+     *             "name": "VALUE",
+     *             "type": "String",
+     *             "desc": "IP"
+     *         }
+     *      ],
+     *      "desc": "DNS服务器"
+     * }
+     * 将转为：
+     * "DNS_SERVERS" -> "DNS服务器"
+     * "DNS_SERVERS.VALUE" -> "IP"
+     *
+     * @param translationMap
+     * @param name
+     * @param subset
+     */
     private void recursionForTranslation(Map<String, String> translationMap, String name, JSONArray subset) {
         if (CollectionUtils.isNotEmpty(subset)) {
             for (int j = 0; j < subset.size(); j++) {
@@ -167,6 +203,14 @@ public class InspectReportExportApi extends PrivateBinaryStreamApiComponentBase 
         }
     }
 
+    /**
+     * 将JSONArray结构的字段渲染成Table
+     *
+     * @param sb
+     * @param translationMap
+     * @param array
+     * @param key
+     */
     private void recursionForTable(StringBuilder sb, Map<String, String> translationMap, JSONArray array, String key) {
         sb.append("<table style=\"" + tableStyle + "\">");
         Set<String> headSet = new LinkedHashSet<>();
@@ -176,18 +220,18 @@ public class InspectReportExportApi extends PrivateBinaryStreamApiComponentBase 
         sb.append("<thead><tr>");
         Iterator<String> iterator = headSet.iterator();
         while (iterator.hasNext()) {
-            String _name = translationMap.get(key + "." + iterator.next());
-            if (_name != null) {
-                sb.append("<th>").append(_name).append("</th>");
+            String name = translationMap.get(key + "." + iterator.next());
+            if (name != null) {
+                sb.append("<th>").append(name).append("</th>");
             } else {
                 iterator.remove(); // 抛弃没有译文的字段
             }
         }
-
         sb.append("</tr></thead>");
         sb.append("<tbody>");
-        for (int j = 0; j < array.size(); j++) {
-            JSONObject object = array.getJSONObject(j);
+
+        for (int i = 0; i < array.size(); i++) {
+            JSONObject object = array.getJSONObject(i);
             sb.append("<tr style=\"" + trStyle + "\">");
             for (String head : headSet) {
                 Object obj = object.get(head);
