@@ -43,14 +43,14 @@ public class InspectCombopSaveApi extends PrivateApiComponentBase {
     }
 
     @Input({
-            @Param(name = "cmdbCiList", type = ApiParamType.JSONARRAY, isRequired = true, desc = "集合和组合工具关系列表")})
+            @Param(name = "inspectCiCombopList", type = ApiParamType.JSONARRAY, isRequired = true, desc = "集合和组合工具关系列表")})
     @Description(desc = "保存巡检规则接口，用于巡检模块的巡检工具保存")
     @Override
     public Object myDoService(JSONObject paramObj) throws Exception {
-        JSONArray cmdbCiList = paramObj.getJSONArray("cmdbCiList");
+        JSONArray inspectCiCombopList = paramObj.getJSONArray("inspectCiCombopList");
         List<CiVo> ciVoList = null;
-        if (CollectionUtils.isNotEmpty(cmdbCiList)) {
-            ciVoList = cmdbCiList.toJavaList(CiVo.class);
+        if (CollectionUtils.isNotEmpty(inspectCiCombopList)) {
+            ciVoList = inspectCiCombopList.toJavaList(CiVo.class);
         }
         inspectMapper.replaceInspectCiCombopList(ciVoList);
 
