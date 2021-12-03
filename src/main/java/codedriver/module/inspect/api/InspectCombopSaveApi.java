@@ -1,10 +1,10 @@
 package codedriver.module.inspect.api;
 
 import codedriver.framework.auth.core.AuthAction;
-import codedriver.framework.cmdb.dto.ci.CiVo;
 import codedriver.framework.common.constvalue.ApiParamType;
 import codedriver.framework.inspect.auth.INSPECT_MODIFY;
 import codedriver.framework.inspect.dao.mapper.InspectMapper;
+import codedriver.framework.inspect.dto.InspectCiCombopVo;
 import codedriver.framework.restful.annotation.Description;
 import codedriver.framework.restful.annotation.Input;
 import codedriver.framework.restful.annotation.OperationType;
@@ -48,9 +48,9 @@ public class InspectCombopSaveApi extends PrivateApiComponentBase {
     @Override
     public Object myDoService(JSONObject paramObj) throws Exception {
         JSONArray inspectCiCombopList = paramObj.getJSONArray("inspectCiCombopList");
-        List<CiVo> ciVoList = null;
+        List<InspectCiCombopVo> ciVoList = null;
         if (CollectionUtils.isNotEmpty(inspectCiCombopList)) {
-            ciVoList = inspectCiCombopList.toJavaList(CiVo.class);
+            ciVoList = inspectCiCombopList.toJavaList(InspectCiCombopVo.class);
         }
         inspectMapper.replaceInspectCiCombopList(ciVoList);
 
