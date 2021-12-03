@@ -79,7 +79,7 @@ public class InspectCombopSearchApi extends PrivateApiComponentBase {
             }
             String name = paramObj.getString("name");
             if (StringUtils.isNotBlank(name)) {
-                ciList = ciList.stream().filter(o -> Objects.equals(o.getLabel(), name)).collect(Collectors.toList());
+                ciList = ciList.stream().filter(o -> o.getLabel().contains(name)).collect(Collectors.toList());
             }
             //将List<CIVo>换成List<InspectCiCombopVo>
             for (CiVo ciVo : ciList) {
