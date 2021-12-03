@@ -53,11 +53,11 @@ public class CollectionSearchApi extends PrivateApiComponentBase {
         MongoCollection<Document> collection = mongoTemplate.getDb().getCollection("_inspectdef");
         Document orDoc  = new Document();
         if (StringUtils.isNotBlank(keyword)) {
-            Document nameDoc = new Document();//条件1
+            Document nameDoc = new Document();
             nameDoc.put("name" , keyword);
-            Document labelDoc = new Document();//条件2
+            Document labelDoc = new Document();
             labelDoc.put("label" , keyword);
-            orDoc.put("$or", Arrays.asList(nameDoc,labelDoc));//组合
+            orDoc.put("$or", Arrays.asList(nameDoc,labelDoc));
         }
         FindIterable<Document> collectionList = collection.find(orDoc);
         result.put("tbodyList", collectionList.into(new ArrayList<>()));
