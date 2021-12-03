@@ -14,19 +14,25 @@ import codedriver.framework.restful.annotation.OperationType;
 import codedriver.framework.restful.annotation.Param;
 import codedriver.framework.restful.constvalue.OperationTypeEnum;
 import codedriver.framework.restful.core.privateapi.PrivateBinaryStreamApiComponentBase;
+import codedriver.framework.util.ExportUtil;
 import codedriver.module.inspect.service.InspectReportService;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.MapUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.bson.Document;
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Entities;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.io.OutputStream;
 import java.io.StringWriter;
+import java.net.URLEncoder;
 import java.util.*;
 
 @AuthAction(action = INSPECT_BASE.class)
@@ -76,7 +82,16 @@ public class InspectReportExportApi extends PrivateBinaryStreamApiComponentBase 
                     recursion(translationMap, name, obj.getJSONArray("subset"));
                 }
             }
-            getHtmlContent(reportJson, translationMap);
+            try (OutputStream os = response.getOutputStream()) {
+                response.setContentType("application/x-download");
+                response.setHeader("Content-Disposition",
+                        " attachment; filename=\"" + URLEncoder.encode(resourceId.toString(), "utf-8") + ".docx\"");
+                org.jsoup.nodes.Document doc = Jsoup.parse(getHtmlContent(reportJson, translationMap));
+                doc.outputSettings().syntax(org.jsoup.nodes.Document.OutputSettings.Syntax.xml).escapeMode(Entities.EscapeMode.xhtml);
+                ExportUtil.saveDocx(ExportUtil.xhtml2word(doc, true), os);
+            } catch (Exception e) {
+
+            }
 
             System.out.println(translationMap);
             Object o = JSON.toJSON(translationMap);
@@ -103,6 +118,7 @@ public class InspectReportExportApi extends PrivateBinaryStreamApiComponentBase 
             Object value = entry.getValue();
             String name = translationMap.get(key);
             if (name != null) {
+                // todo 补充tr标签
                 if (value instanceof JSONArray) { // todo 会有非对象数组吗？
                     if (i - 1 % 2 != 0) {
                         sb.append("</tr>");
@@ -117,15 +133,14 @@ public class InspectReportExportApi extends PrivateBinaryStreamApiComponentBase 
                         for (int j = 0; j < array.size(); j++) {
                             headSet.addAll(array.getJSONObject(j).keySet());
                         }
-                        // todo 注意值要和头对上
                         sb.append("<thead><tr>");
                         Iterator<String> iterator = headSet.iterator();
                         while (iterator.hasNext()) {
-                            String _name = translationMap.get(key + "." + iterator.next()); // todo 没有中文的值应该抛弃
+                            String _name = translationMap.get(key + "." + iterator.next());
                             if (_name != null) {
                                 sb.append("<th>").append(_name).append("</th>");
                             } else {
-                                iterator.remove();
+                                iterator.remove(); // 抛弃没有译文的字段
                             }
                         }
 
@@ -134,12 +149,14 @@ public class InspectReportExportApi extends PrivateBinaryStreamApiComponentBase 
                         for (int j = 0; j < array.size(); j++) {
                             JSONObject object = array.getJSONObject(j);
                             sb.append("<tr style=\"" + trStyle + "\">");
-                            for (Map.Entry<String, Object> _entry : object.entrySet()) {
-                                if (headSet.contains(_entry.getKey())) {
-                                    sb.append("<td>").append(_entry.getValue()).append("</td>");
+                            for (String head : headSet) {
+                                Object o = object.get(head);
+                                if (o != null) {
+                                    sb.append("<td>").append(o).append("</td>");
+                                } else {
+                                    sb.append("<td>").append(StringUtils.EMPTY).append("</td>");
                                 }
                             }
-
                             sb.append("</tr>");
                         }
                         sb.append("</tbody>");
@@ -159,6 +176,9 @@ public class InspectReportExportApi extends PrivateBinaryStreamApiComponentBase 
                 i++;
 
             }
+        }
+        if (sb.lastIndexOf("</tr>") != sb.length() - 1) {
+            sb.append("</tr>");
         }
 
         sb.append("</tbody>");
