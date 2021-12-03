@@ -27,10 +27,7 @@ import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.StringWriter;
-import java.util.HashMap;
-import java.util.LinkedHashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 @AuthAction(action = INSPECT_BASE.class)
 @OperationType(type = OperationTypeEnum.SEARCH)
@@ -122,18 +119,27 @@ public class InspectReportExportApi extends PrivateBinaryStreamApiComponentBase 
                         }
                         // todo 注意值要和头对上
                         sb.append("<thead><tr>");
-                        for (String head : headSet) {
-                            String _name = translationMap.get(key + "." + head); // todo 没有中文的值应该抛弃
-                            sb.append("<th>").append(_name != null ? _name : head).append("</th>");
+                        Iterator<String> iterator = headSet.iterator();
+                        while (iterator.hasNext()) {
+                            String _name = translationMap.get(key + "." + iterator.next()); // todo 没有中文的值应该抛弃
+                            if (_name != null) {
+                                sb.append("<th>").append(_name).append("</th>");
+                            } else {
+                                iterator.remove();
+                            }
                         }
+
                         sb.append("</tr></thead>");
                         sb.append("<tbody>");
                         for (int j = 0; j < array.size(); j++) {
                             JSONObject object = array.getJSONObject(j);
                             sb.append("<tr style=\"" + trStyle + "\">");
-                            for (Object _value : object.values()) {
-                                sb.append("<td>").append(_value).append("</td>");
+                            for (Map.Entry<String, Object> _entry : object.entrySet()) {
+                                if (headSet.contains(_entry.getKey())) {
+                                    sb.append("<td>").append(_entry.getValue()).append("</td>");
+                                }
                             }
+
                             sb.append("</tr>");
                         }
                         sb.append("</tbody>");
@@ -149,8 +155,6 @@ public class InspectReportExportApi extends PrivateBinaryStreamApiComponentBase 
                 } else {
                     sb.append("<td style=\"" + tdStyle + "\">").append(name).append("</td>");
                     sb.append("<td style=\"" + tdStyle + "\">").append(value.toString()).append("</td>");
-                    sb.append("</tr>");
-
                 }
                 i++;
 
