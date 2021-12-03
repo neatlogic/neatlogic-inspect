@@ -23,7 +23,8 @@ import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
 import java.util.*;
-import java.util.stream.Collectors;
+
+import static java.util.stream.Collectors.toList;
 
 @Service
 @AuthAction(action = INSPECT_MODIFY.class)
@@ -77,9 +78,18 @@ public class InspectCombopSearchApi extends PrivateApiComponentBase {
                     ciList.addAll(ciListTmp);
                 }
             }
-            String name = paramObj.getString("keyword");
-            if (StringUtils.isNotBlank(name)) {
-                ciList = ciList.stream().filter(o -> o.getLabel().contains(name)).collect(Collectors.toList());
+            String keyword = paramObj.getString("keyword");
+            if (StringUtils.isNotBlank(keyword)) {
+                List<CiVo> allCiList = new ArrayList<>();
+                List<CiVo> labelCiList = ciList.stream().filter(o -> o.getLabel().contains(keyword)).collect(toList());
+                List<CiVo> nameCiList = ciList.stream().filter(o -> o.getName().contains(keyword)).collect(toList());
+                if (CollectionUtils.isNotEmpty(labelCiList)) {
+                    allCiList.addAll(labelCiList);
+                }
+                if (CollectionUtils.isNotEmpty(nameCiList)) {
+                    allCiList.addAll(nameCiList);
+                }
+                ciList = allCiList.stream().distinct().collect(toList());
             }
             //将List<CIVo>换成List<InspectCiCombopVo>
             for (CiVo ciVo : ciList) {
