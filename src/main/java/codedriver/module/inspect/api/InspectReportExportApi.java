@@ -79,7 +79,7 @@ public class InspectReportExportApi extends PrivateBinaryStreamApiComponentBase 
                     String name = obj.getString("name");
                     String desc = obj.getString("desc");
                     translationMap.put(name, desc);
-                    recursion(translationMap, name, obj.getJSONArray("subset"));
+                    recursionForTranslation(translationMap, name, obj.getJSONArray("subset"));
                 }
             }
             try (OutputStream os = response.getOutputStream()) {
@@ -120,47 +120,12 @@ public class InspectReportExportApi extends PrivateBinaryStreamApiComponentBase 
             if (name != null) {
                 // todo 补充tr标签
                 if (value instanceof JSONArray) { // todo 会有非对象数组吗？
-                    if (i - 1 % 2 != 0) {
-                        sb.append("</tr>");
-                    }
                     sb.append("<tr style=\"" + trStyle + "\">");
                     sb.append("<td style=\"" + tdStyle + "\">").append(name).append("</td>");
                     JSONArray array = (JSONArray) value;
                     if (CollectionUtils.isNotEmpty(array)) {
                         sb.append("<td style=\"" + tdStyle + "\">");
-                        sb.append("<table style=\"" + tableStyle + "\">");
-                        Set<String> headSet = new LinkedHashSet<>();
-                        for (int j = 0; j < array.size(); j++) {
-                            headSet.addAll(array.getJSONObject(j).keySet());
-                        }
-                        sb.append("<thead><tr>");
-                        Iterator<String> iterator = headSet.iterator();
-                        while (iterator.hasNext()) {
-                            String _name = translationMap.get(key + "." + iterator.next());
-                            if (_name != null) {
-                                sb.append("<th>").append(_name).append("</th>");
-                            } else {
-                                iterator.remove(); // 抛弃没有译文的字段
-                            }
-                        }
-
-                        sb.append("</tr></thead>");
-                        sb.append("<tbody>");
-                        for (int j = 0; j < array.size(); j++) {
-                            JSONObject object = array.getJSONObject(j);
-                            sb.append("<tr style=\"" + trStyle + "\">");
-                            for (String head : headSet) {
-                                Object o = object.get(head);
-                                if (o != null) {
-                                    sb.append("<td>").append(o).append("</td>");
-                                } else {
-                                    sb.append("<td>").append(StringUtils.EMPTY).append("</td>");
-                                }
-                            }
-                            sb.append("</tr>");
-                        }
-                        sb.append("</tbody>");
-                        sb.append("</table>");
+                        recursionForTable(sb, translationMap, array, key.toString());
                         sb.append("</td>");
                     }
                     sb.append("</tr>");
@@ -168,7 +133,6 @@ public class InspectReportExportApi extends PrivateBinaryStreamApiComponentBase 
                     sb.append("<tr style=\"" + trStyle + "\">");
                     sb.append("<td style=\"" + tdStyle + "\">").append(name).append("</td>");
                     sb.append("<td style=\"" + tdStyle + "\">").append(value.toString()).append("</td>");
-
                 } else {
                     sb.append("<td style=\"" + tdStyle + "\">").append(name).append("</td>");
                     sb.append("<td style=\"" + tdStyle + "\">").append(value.toString()).append("</td>");
@@ -191,16 +155,59 @@ public class InspectReportExportApi extends PrivateBinaryStreamApiComponentBase 
         return out.toString();
     }
 
-    private void recursion(Map<String, String> translationMap, String name, JSONArray subset) {
+    private void recursionForTranslation(Map<String, String> translationMap, String name, JSONArray subset) {
         if (CollectionUtils.isNotEmpty(subset)) {
             for (int j = 0; j < subset.size(); j++) {
                 JSONObject _obj = subset.getJSONObject(j);
                 String _name = _obj.getString("name");
                 String _desc = _obj.getString("desc");
                 translationMap.put(name + "." + _name, _desc);
-                recursion(translationMap, name + "." + _name, _obj.getJSONArray("subset"));
+                recursionForTranslation(translationMap, name + "." + _name, _obj.getJSONArray("subset"));
             }
         }
+    }
+
+    private void recursionForTable(StringBuilder sb, Map<String, String> translationMap, JSONArray array, String key) {
+        sb.append("<table style=\"" + tableStyle + "\">");
+        Set<String> headSet = new LinkedHashSet<>();
+        for (int j = 0; j < array.size(); j++) {
+            headSet.addAll(array.getJSONObject(j).keySet());
+        }
+        sb.append("<thead><tr>");
+        Iterator<String> iterator = headSet.iterator();
+        while (iterator.hasNext()) {
+            String _name = translationMap.get(key + "." + iterator.next());
+            if (_name != null) {
+                sb.append("<th>").append(_name).append("</th>");
+            } else {
+                iterator.remove(); // 抛弃没有译文的字段
+            }
+        }
+
+        sb.append("</tr></thead>");
+        sb.append("<tbody>");
+        for (int j = 0; j < array.size(); j++) {
+            JSONObject object = array.getJSONObject(j);
+            sb.append("<tr style=\"" + trStyle + "\">");
+            for (String head : headSet) {
+                Object obj = object.get(head);
+                if (obj != null) {
+                    if (obj instanceof JSONArray) {
+                        JSONArray _array = (JSONArray) obj;
+                        if (CollectionUtils.isNotEmpty(_array)) {
+                            recursionForTable(sb, translationMap, _array, key + "." + head);
+                        }
+                    } else {
+                        sb.append("<td>").append(obj.toString()).append("</td>");
+                    }
+                } else {
+                    sb.append("<td>").append(StringUtils.EMPTY).append("</td>");
+                }
+            }
+            sb.append("</tr>");
+        }
+        sb.append("</tbody>");
+        sb.append("</table>");
     }
 
     static final String tableStyle = "table-layout:fixed;border-collapse:collapse;width:100%;text-align:left;";
