@@ -9,7 +9,6 @@ import codedriver.framework.asynchronization.threadlocal.TenantContext;
 import codedriver.framework.auth.core.AuthAction;
 import codedriver.framework.autoexec.dao.mapper.AutoexecCombopMapper;
 import codedriver.framework.autoexec.dto.combop.AutoexecCombopVo;
-import codedriver.framework.autoexec.exception.AutoexecCombopNotFoundException;
 import codedriver.framework.cmdb.crossover.ICiCrossoverMapper;
 import codedriver.framework.cmdb.dao.mapper.resourcecenter.ResourceCenterMapper;
 import codedriver.framework.cmdb.dto.ci.CiVo;
@@ -20,7 +19,6 @@ import codedriver.framework.common.constvalue.ApiParamType;
 import codedriver.framework.crossover.CrossoverServiceFactory;
 import codedriver.framework.inspect.auth.INSPECT_BASE;
 import codedriver.framework.inspect.dao.mapper.InspectMapper;
-import codedriver.framework.inspect.exception.InspectCiCombopNotBindException;
 import codedriver.framework.restful.annotation.Description;
 import codedriver.framework.restful.annotation.Input;
 import codedriver.framework.restful.annotation.OperationType;
@@ -64,6 +62,9 @@ public class InspectCiCombopGetApi extends PrivateApiComponentBase {
     @Description(desc = "根据CiId|资产id 获取巡检Ci绑定的组合工具")
     @Override
     public Object myDoService(JSONObject paramObj) throws Exception {
+        JSONObject result = new JSONObject();
+        AutoexecCombopVo combopVo = null;
+        result.put("isHasBindCombop",1);
         Long ciId = paramObj.getLong("ciId");
         Long resourceId = paramObj.getLong("resourceId");
         if(resourceId != null){
@@ -79,14 +80,14 @@ public class InspectCiCombopGetApi extends PrivateApiComponentBase {
             throw new CiNotFoundException(ciId);
         }
         Long combopId = inspectMapper.getCombopIdByCiId(ciId);
-        if(combopId == null){
-            throw  new InspectCiCombopNotBindException(ciVo.getLabel());
+        if(combopId != null){
+            combopVo = autoexecCombopMapper.getAutoexecCombopById(combopId);
         }
-        AutoexecCombopVo combopVo = autoexecCombopMapper.getAutoexecCombopById(combopId);
-        if(combopVo == null){
-            throw new AutoexecCombopNotFoundException(combopId);
+        if (combopVo == null) {
+            result.put("isHasBindCombop", 0);
         }
-        return combopVo;
+        result.put("combop",combopVo);
+        return result;
     }
 
     @Override
