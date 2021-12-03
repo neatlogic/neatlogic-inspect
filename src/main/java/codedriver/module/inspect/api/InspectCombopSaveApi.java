@@ -1,8 +1,10 @@
 package codedriver.module.inspect.api;
 
 import codedriver.framework.auth.core.AuthAction;
+import codedriver.framework.cmdb.dto.ci.CiVo;
 import codedriver.framework.common.constvalue.ApiParamType;
 import codedriver.framework.inspect.auth.INSPECT_MODIFY;
+import codedriver.framework.inspect.dao.mapper.InspectMapper;
 import codedriver.framework.restful.annotation.Description;
 import codedriver.framework.restful.annotation.Input;
 import codedriver.framework.restful.annotation.OperationType;
@@ -11,18 +13,19 @@ import codedriver.framework.restful.constvalue.OperationTypeEnum;
 import codedriver.framework.restful.core.privateapi.PrivateApiComponentBase;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
-import org.bson.Document;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.mongodb.core.MongoTemplate;
+import com.alibaba.nacos.common.utils.CollectionUtils;
 import org.springframework.stereotype.Service;
+
+import javax.annotation.Resource;
+import java.util.List;
 
 @Service
 @AuthAction(action = INSPECT_MODIFY.class)
 @OperationType(type = OperationTypeEnum.UPDATE)
 public class InspectCombopSaveApi extends PrivateApiComponentBase {
 
-    @Autowired
-    private MongoTemplate mongoTemplate;
+    @Resource
+    InspectMapper inspectMapper;
 
     @Override
     public String getName() {
@@ -40,26 +43,17 @@ public class InspectCombopSaveApi extends PrivateApiComponentBase {
     }
 
     @Input({
-            @Param(name = "inspectCombopList", type = ApiParamType.JSONARRAY, isRequired = true, desc = "集合和组合工具关系列表")})
-    @Description(desc = "保存巡检规则接口，用于巡检模块的巡检工具保存，需要依赖mongodb")
+            @Param(name = "cmdbCiList", type = ApiParamType.JSONARRAY, isRequired = true, desc = "集合和组合工具关系列表")})
+    @Description(desc = "保存巡检规则接口，用于巡检模块的巡检工具保存")
     @Override
     public Object myDoService(JSONObject paramObj) throws Exception {
-        JSONArray inspectCombopList = paramObj.getJSONArray("inspectCombopList");
-        if (inspectCombopList == null) {
-            return null;
+        JSONArray cmdbCiList = paramObj.getJSONArray("cmdbCiList");
+        List<CiVo> ciVoList = null;
+        if (CollectionUtils.isNotEmpty(cmdbCiList)) {
+            ciVoList = cmdbCiList.toJavaList(CiVo.class);
         }
-        for (int i = 0; i < inspectCombopList.size(); i++) {
-            JSONObject inspectCombop = inspectCombopList.getJSONObject(i);
-            String name = inspectCombop.getString("name");
-            Long combopId =inspectCombop.getLong("combop_id");
-            Document whereDoc = new Document();
-            Document updateDoc = new Document();
-            Document setDocument = new Document();
-            whereDoc.put("name", name);
-            updateDoc.put("combop_id", combopId);
-            setDocument.put("$set", updateDoc);
-            mongoTemplate.getCollection("_inspectdef").updateOne(whereDoc, setDocument);
-        }
+        inspectMapper.replaceInspectCiCombopList(ciVoList);
+
         return null;
     }
 }
