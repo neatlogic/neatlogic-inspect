@@ -48,7 +48,7 @@ public class InspectCombopSearchApi extends PrivateApiComponentBase {
         return null;
     }
 
-    @Input({@Param(name = "name", type = ApiParamType.STRING, desc = "名称")})
+    @Input({@Param(name = "keyword", type = ApiParamType.STRING, desc = "关键字（name、label）")})
     @Override
     public Object myDoService(JSONObject paramObj) throws Exception {
 
@@ -77,7 +77,7 @@ public class InspectCombopSearchApi extends PrivateApiComponentBase {
                     ciList.addAll(ciListTmp);
                 }
             }
-            String name = paramObj.getString("name");
+            String name = paramObj.getString("keyword");
             if (StringUtils.isNotBlank(name)) {
                 ciList = ciList.stream().filter(o -> o.getLabel().contains(name)).collect(Collectors.toList());
             }
@@ -93,7 +93,7 @@ public class InspectCombopSearchApi extends PrivateApiComponentBase {
         }
         //若cmdb的ciType列表为空，直接返回
         if (CollectionUtils.isEmpty(ciList)) {
-            return null;
+            return Collections.emptyList();
         }
         //把关系表的combopId、combopName set到对应的InspectCiCombopVo里面
         for (InspectCiCombopVo ciCombopVo : ciCombopVoList) {
