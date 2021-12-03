@@ -5,7 +5,10 @@
 
 package codedriver.module.inspect.api;
 
+import codedriver.framework.asynchronization.threadlocal.TenantContext;
 import codedriver.framework.auth.core.AuthAction;
+import codedriver.framework.cmdb.dao.mapper.resourcecenter.ResourceCenterMapper;
+import codedriver.framework.cmdb.dto.resourcecenter.ResourceVo;
 import codedriver.framework.common.constvalue.ApiParamType;
 import codedriver.framework.inspect.auth.INSPECT_BASE;
 import codedriver.framework.restful.annotation.Description;
@@ -33,6 +36,7 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.OutputStream;
 import java.io.StringWriter;
 import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 @AuthAction(action = INSPECT_BASE.class)
@@ -41,6 +45,9 @@ import java.util.*;
 public class InspectReportExportApi extends PrivateBinaryStreamApiComponentBase {
 
     static Logger logger = LoggerFactory.getLogger(InspectReportExportApi.class);
+
+    @Resource
+    private ResourceCenterMapper resourceCenterMapper;
 
     @Resource
     private InspectReportService inspectReportService;
@@ -72,6 +79,11 @@ public class InspectReportExportApi extends PrivateBinaryStreamApiComponentBase 
         Long resourceId = paramObj.getLong("resourceId");
         String id = paramObj.getString("id");
         String type = paramObj.getString("type");
+        ResourceVo resource = resourceCenterMapper.getResourceById(resourceId, TenantContext.get().getDataDbName());
+        String fileName = resourceId.toString();
+        if (resource != null && resource.getName() != null) {
+            fileName = resource.getName();
+        }
         Document reportDoc = inspectReportService.getInspectReport(resourceId, id);
         if (MapUtils.isNotEmpty(reportDoc)) {
             Map<String, String> translationMap = new HashMap<>();
@@ -90,12 +102,12 @@ public class InspectReportExportApi extends PrivateBinaryStreamApiComponentBase 
                 if (DocType.WORD.getValue().equals(type)) {
                     response.setContentType("application/x-download");
                     response.setHeader("Content-Disposition",
-                            " attachment; filename=\"" + URLEncoder.encode(resourceId.toString(), "utf-8") + ".docx\"");
+                            " attachment; filename=\"" + URLEncoder.encode(fileName, StandardCharsets.UTF_8.name()) + ".docx\"");
                     ExportUtil.getWordFileByHtml(getHtmlContent(reportJson, translationMap), os, true, false);
                 } else if (DocType.PDF.getValue().equals(type)) {
                     response.setContentType("application/pdf");
                     response.setHeader("Content-Disposition",
-                            " attachment; filename=\"" + URLEncoder.encode(resourceId.toString(), "utf-8") + ".pdf\"");
+                            " attachment; filename=\"" + URLEncoder.encode(fileName, StandardCharsets.UTF_8.name()) + ".pdf\"");
                     ExportUtil.getPdfFileByHtml(getHtmlContent(reportJson, translationMap), os, true, true);
                 }
             } catch (Exception e) {
