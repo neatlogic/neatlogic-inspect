@@ -14,6 +14,7 @@ import codedriver.framework.restful.annotation.OperationType;
 import codedriver.framework.restful.annotation.Param;
 import codedriver.framework.restful.constvalue.OperationTypeEnum;
 import codedriver.framework.restful.core.privateapi.PrivateBinaryStreamApiComponentBase;
+import codedriver.framework.util.DocType;
 import codedriver.framework.util.ExportUtil;
 import codedriver.module.inspect.service.InspectReportService;
 import com.alibaba.fastjson.JSONArray;
@@ -22,8 +23,6 @@ import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.bson.Document;
-import org.jsoup.Jsoup;
-import org.jsoup.nodes.Entities;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -64,13 +63,15 @@ public class InspectReportExportApi extends PrivateBinaryStreamApiComponentBase 
 
     @Input({
             @Param(name = "resourceId", type = ApiParamType.LONG, desc = "资产id", isRequired = true),
-            @Param(name = "id", type = ApiParamType.STRING, desc = "id")
+            @Param(name = "id", type = ApiParamType.STRING, desc = "id"),
+            @Param(name = "type", type = ApiParamType.ENUM, rule = "word,pdf", desc = "类型", isRequired = true)
     })
     @Description(desc = "导出巡检报告")
     @Override
     public Object myDoService(JSONObject paramObj, HttpServletRequest request, HttpServletResponse response) throws Exception {
         Long resourceId = paramObj.getLong("resourceId");
         String id = paramObj.getString("id");
+        String type = paramObj.getString("type");
         Document reportDoc = inspectReportService.getInspectReport(resourceId, id);
         if (MapUtils.isNotEmpty(reportDoc)) {
             Map<String, String> translationMap = new HashMap<>();
@@ -86,12 +87,17 @@ public class InspectReportExportApi extends PrivateBinaryStreamApiComponentBase 
                 }
             }
             try (OutputStream os = response.getOutputStream()) {
-                response.setContentType("application/x-download");
-                response.setHeader("Content-Disposition",
-                        " attachment; filename=\"" + URLEncoder.encode(resourceId.toString(), "utf-8") + ".docx\"");
-                org.jsoup.nodes.Document doc = Jsoup.parse(getHtmlContent(reportJson, translationMap));
-                doc.outputSettings().syntax(org.jsoup.nodes.Document.OutputSettings.Syntax.xml).escapeMode(Entities.EscapeMode.xhtml);
-                ExportUtil.saveDocx(ExportUtil.xhtml2word(doc, true), os);
+                if (DocType.WORD.getValue().equals(type)) {
+                    response.setContentType("application/x-download");
+                    response.setHeader("Content-Disposition",
+                            " attachment; filename=\"" + URLEncoder.encode(resourceId.toString(), "utf-8") + ".docx\"");
+                    ExportUtil.getWordFileByHtml(getHtmlContent(reportJson, translationMap), os, true, false);
+                } else if (DocType.PDF.getValue().equals(type)) {
+                    response.setContentType("application/pdf");
+                    response.setHeader("Content-Disposition",
+                            " attachment; filename=\"" + URLEncoder.encode(resourceId.toString(), "utf-8") + ".pdf\"");
+                    ExportUtil.getPdfFileByHtml(getHtmlContent(reportJson, translationMap), os, true, true);
+                }
             } catch (Exception e) {
                 logger.error(e.getMessage(), e);
             }
