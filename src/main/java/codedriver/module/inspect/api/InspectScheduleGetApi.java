@@ -45,7 +45,7 @@ public class InspectScheduleGetApi extends PrivateApiComponentBase {
     }
 
     @Input({@Param(name = "id", type = ApiParamType.LONG, desc = "任务id", isRequired = true)})
-    @Description(desc = "巡检定时任务列表")
+    @Description(desc = "获取巡检定时任务")
     @Override
     public Object myDoService(JSONObject paramObj) throws Exception {
         Long id = paramObj.getLong("id");

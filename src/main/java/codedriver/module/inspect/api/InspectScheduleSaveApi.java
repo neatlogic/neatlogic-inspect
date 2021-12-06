@@ -86,6 +86,8 @@ public class InspectScheduleSaveApi extends PrivateApiComponentBase {
         }
         if (scheduleVo.getIsActive() == 1) {
             // todo 启动任务
+        } else {
+            // todo 停止任务
         }
         return null;
     }
