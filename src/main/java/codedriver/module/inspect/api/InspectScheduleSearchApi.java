@@ -47,7 +47,6 @@ public class InspectScheduleSearchApi extends PrivateApiComponentBase {
         return null;
     }
 
-
     @Input({@Param(name = "keyword", type = ApiParamType.STRING, desc = "关键字（name、label）")})
     @Description(desc = "巡检定时任务列表")
     @Override
