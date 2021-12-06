@@ -8,7 +8,7 @@ import codedriver.framework.cmdb.dto.resourcecenter.ResourceTypeVo;
 import codedriver.framework.cmdb.exception.ci.CiNotFoundException;
 import codedriver.framework.common.constvalue.ApiParamType;
 import codedriver.framework.crossover.CrossoverServiceFactory;
-import codedriver.framework.inspect.auth.INSPECT_MODIFY;
+import codedriver.framework.inspect.auth.INSPECT_BASE;
 import codedriver.framework.inspect.dao.mapper.InspectScheduleMapper;
 import codedriver.framework.inspect.dto.InspectScheduleVo;
 import codedriver.framework.restful.annotation.Description;
@@ -25,7 +25,7 @@ import javax.annotation.Resource;
 import java.util.*;
 
 @Service
-@AuthAction(action = INSPECT_MODIFY.class)
+@AuthAction(action = INSPECT_BASE.class)
 @OperationType(type = OperationTypeEnum.SEARCH)
 public class InspectScheduleSearchApi extends PrivateApiComponentBase {
 
