@@ -47,7 +47,7 @@ public class InspectScheduleSearchApi extends PrivateApiComponentBase {
         return null;
     }
 
-    @Input({@Param(name = "keyword", type = ApiParamType.STRING, desc = "关键字（name、label）")})
+    @Input({@Param(name = "keyword", type = ApiParamType.STRING, desc = "关键字")})
     @Description(desc = "巡检定时任务列表")
     @Override
     public Object myDoService(JSONObject paramObj) throws Exception {
@@ -82,7 +82,7 @@ public class InspectScheduleSearchApi extends PrivateApiComponentBase {
                     scheduleVo.setCiName(vo.getName());
                     result.add(scheduleVo);
                 } else {
-                    result.add(new InspectScheduleVo(vo.getId(), vo.getLabel()));
+                    result.add(new InspectScheduleVo(vo.getId(), vo.getLabel(), vo.getName()));
                 }
             }
         }
