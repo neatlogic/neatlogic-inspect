@@ -7,6 +7,7 @@ package codedriver.module.inspect.api;
 
 import codedriver.framework.auth.core.AuthAction;
 import codedriver.framework.common.constvalue.ApiParamType;
+import codedriver.framework.dto.UserVo;
 import codedriver.framework.inspect.auth.INSPECT_BASE;
 import codedriver.framework.restful.annotation.Description;
 import codedriver.framework.restful.annotation.Input;
@@ -23,6 +24,7 @@ import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
 import java.util.ArrayList;
+import java.util.List;
 
 @AuthAction(action = INSPECT_BASE.class)
 @OperationType(type = OperationTypeEnum.SEARCH)
@@ -56,7 +58,12 @@ public class InspectReportHistoryListApi extends PrivateApiComponentBase {
         Document sortDoc = new Document();
         sortDoc.put("_report_time", -1);
         FindIterable<Document> findIterable = collection.find(doc).sort(sortDoc).skip(paramObj.getInteger("currentPage")-1).limit(paramObj.getInteger("pageSize"));
-        return findIterable.into(new ArrayList<>());
+        List<Document> documentList = findIterable.into(new ArrayList<>());
+        for (Document reportDoc : documentList){
+            String execUserUuid = reportDoc.getString("_execuser");
+            reportDoc.put("_execuser",new UserVo(execUserUuid));
+        }
+        return documentList;
     }
 
     @Override
