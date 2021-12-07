@@ -88,7 +88,6 @@ public class InspectScheduleSearchApi extends PrivateApiComponentBase {
             for (CiVo vo : ciList) {
                 Optional<InspectScheduleVo> first = inspectScheduleList.stream().filter(o -> Objects.equals(o.getCiId(), vo.getId())).findFirst();
                 if (first.isPresent()) {
-                    // todo 执行次数
                     InspectScheduleVo scheduleVo = first.get();
                     scheduleVo.setCiLabel(vo.getLabel());
                     scheduleVo.setCiName(vo.getName());
