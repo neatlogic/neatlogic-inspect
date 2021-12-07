@@ -1,5 +1,6 @@
 package codedriver.module.inspect.api;
 
+import codedriver.framework.asynchronization.threadlocal.TenantContext;
 import codedriver.framework.asynchronization.threadlocal.UserContext;
 import codedriver.framework.auth.core.AuthAction;
 import codedriver.framework.common.constvalue.ApiParamType;
@@ -13,7 +14,11 @@ import codedriver.framework.restful.annotation.OperationType;
 import codedriver.framework.restful.annotation.Param;
 import codedriver.framework.restful.constvalue.OperationTypeEnum;
 import codedriver.framework.restful.core.privateapi.PrivateApiComponentBase;
-import com.alibaba.fastjson.JSON;
+import codedriver.framework.scheduler.core.IJob;
+import codedriver.framework.scheduler.core.SchedulerManager;
+import codedriver.framework.scheduler.dto.JobObject;
+import codedriver.framework.scheduler.exception.ScheduleHandlerNotFoundException;
+import codedriver.module.inspect.schedule.plugin.InspectScheduleJob;
 import com.alibaba.fastjson.JSONObject;
 import org.springframework.stereotype.Service;
 
@@ -26,6 +31,9 @@ public class InspectScheduleStatusUpdateApi extends PrivateApiComponentBase {
 
     @Resource
     private InspectScheduleMapper inspectScheduleMapper;
+
+    @Resource
+    private SchedulerManager schedulerManager;
 
     @Override
     public String getName() {
@@ -49,16 +57,28 @@ public class InspectScheduleStatusUpdateApi extends PrivateApiComponentBase {
     @Description(desc = "启用/禁用巡检定时任务")
     @Override
     public Object myDoService(JSONObject paramObj) throws Exception {
-        InspectScheduleVo scheduleVo = JSON.toJavaObject(paramObj, InspectScheduleVo.class);
-        if (inspectScheduleMapper.getInspectScheduleById(scheduleVo.getId()) == null) {
-            throw new InspectScheduleNotFoundException(scheduleVo.getId());
+        Long id = paramObj.getLong("id");
+        InspectScheduleVo scheduleVo = inspectScheduleMapper.getInspectScheduleById(id);
+        if (scheduleVo == null) {
+            throw new InspectScheduleNotFoundException(id);
         }
+        scheduleVo.setIsActive(paramObj.getInteger("isActive"));
         scheduleVo.setLcu(UserContext.get().getUserUuid());
         inspectScheduleMapper.updateInspectScheduleStatus(scheduleVo);
+        IJob jobHandler = SchedulerManager.getHandler(InspectScheduleJob.class.getName());
+        if (jobHandler == null) {
+            throw new ScheduleHandlerNotFoundException(InspectScheduleJob.class.getName());
+        }
+        String tenantUuid = TenantContext.get().getTenantUuid();
+        JobObject jobObject = new JobObject.Builder(scheduleVo.getUuid(), jobHandler.getGroupName(), jobHandler.getClassName(), tenantUuid)
+                .withCron(scheduleVo.getCron()).withBeginTime(scheduleVo.getBeginTime())
+                .withEndTime(scheduleVo.getEndTime())
+                .setType("private")
+                .build();
         if (scheduleVo.getIsActive() == 1) {
-            // todo 启动任务
+            schedulerManager.loadJob(jobObject);
         } else {
-            // todo 停止任务
+            schedulerManager.unloadJob(jobObject);
         }
         return null;
     }
