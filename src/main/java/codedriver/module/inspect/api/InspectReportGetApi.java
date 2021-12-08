@@ -16,7 +16,6 @@ import codedriver.framework.restful.constvalue.OperationTypeEnum;
 import codedriver.framework.restful.core.privateapi.PrivateApiComponentBase;
 import codedriver.module.inspect.service.InspectReportService;
 import com.alibaba.fastjson.JSONObject;
-import org.bson.Document;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
@@ -49,8 +48,7 @@ public class InspectReportGetApi extends PrivateApiComponentBase {
     public Object myDoService(JSONObject paramObj) throws Exception {
         Long resourceId = paramObj.getLong("resourceId");
         String id = paramObj.getString("id");
-        Document reportDoc = inspectReportService.getInspectReport(resourceId, id);
-        return reportDoc;
+        return inspectReportService.getInspectReport(resourceId, id);
     }
 
     @Override

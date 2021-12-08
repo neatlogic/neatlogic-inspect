@@ -9,8 +9,7 @@ import codedriver.framework.auth.core.AuthAction;
 import codedriver.framework.common.constvalue.ApiParamType;
 import codedriver.framework.dto.UserVo;
 import codedriver.framework.inspect.auth.INSPECT_BASE;
-import codedriver.framework.inspect.constvalue.InspectStatus;
-import codedriver.framework.inspect.dto.InspectStatusVo;
+import codedriver.framework.common.constvalue.InspectStatus;
 import codedriver.framework.restful.annotation.Description;
 import codedriver.framework.restful.annotation.Input;
 import codedriver.framework.restful.annotation.OperationType;
@@ -68,11 +67,7 @@ public class InspectReportHistoryListApi extends PrivateApiComponentBase {
             if(inspectResult != null){
                 Document inspectResultDoc = (Document)inspectResult;
                 String status = inspectResultDoc.getString("status");
-                InspectStatus inspectStatus = InspectStatus.getInspectStatus(status);
-                if(inspectStatus != null) {
-                    InspectStatusVo inspectStatusVo = new InspectStatusVo(inspectStatus);
-                    reportDoc.put("status", inspectStatusVo);
-                }
+                reportDoc.put("status", InspectStatus.getInspectStatusJson(status));
             }
         }
         return documentList;
