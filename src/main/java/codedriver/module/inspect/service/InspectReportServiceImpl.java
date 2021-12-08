@@ -51,7 +51,7 @@ public class InspectReportServiceImpl implements InspectReportService {
                 }
             }
             //补充inspectStatus
-            reportDoc.put("inspectStatus", InspectStatus.getInspectStatusArray());
+            reportDoc.put("inspectStatus", InspectStatus.getAllInspectStatusMap());
         }
         return reportDoc;
     }
