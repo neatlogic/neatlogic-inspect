@@ -1,5 +1,6 @@
 package codedriver.module.inspect.api;
 
+import codedriver.framework.asynchronization.threadlocal.TenantContext;
 import codedriver.framework.asynchronization.threadlocal.UserContext;
 import codedriver.framework.auth.core.AuthAction;
 import codedriver.framework.cmdb.crossover.ICiCrossoverMapper;
@@ -16,8 +17,13 @@ import codedriver.framework.restful.annotation.OperationType;
 import codedriver.framework.restful.annotation.Param;
 import codedriver.framework.restful.constvalue.OperationTypeEnum;
 import codedriver.framework.restful.core.privateapi.PrivateApiComponentBase;
+import codedriver.framework.scheduler.core.IJob;
+import codedriver.framework.scheduler.core.SchedulerManager;
+import codedriver.framework.scheduler.dto.JobObject;
+import codedriver.framework.scheduler.exception.ScheduleHandlerNotFoundException;
 import codedriver.framework.scheduler.exception.ScheduleIllegalParameterException;
 import codedriver.framework.util.SnowflakeUtil;
+import codedriver.module.inspect.schedule.plugin.InspectScheduleJob;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import org.quartz.CronExpression;
@@ -32,6 +38,9 @@ public class InspectScheduleSaveApi extends PrivateApiComponentBase {
 
     @Resource
     private InspectScheduleMapper inspectScheduleMapper;
+
+    @Resource
+    private SchedulerManager schedulerManager;
 
     @Override
     public String getName() {
@@ -74,6 +83,7 @@ public class InspectScheduleSaveApi extends PrivateApiComponentBase {
             vo.setEndTime(scheduleVo.getEndTime());
             vo.setLcu(UserContext.get().getUserUuid());
             inspectScheduleMapper.updateInspectSchedule(vo);
+            scheduleVo = vo;
         } else {
             ICiCrossoverMapper ciCrossoverMapper = CrossoverServiceFactory.getApi(ICiCrossoverMapper.class);
             if (ciCrossoverMapper.getCiById(scheduleVo.getCiId()) == null) {
@@ -84,10 +94,20 @@ public class InspectScheduleSaveApi extends PrivateApiComponentBase {
             scheduleVo.setLcu(UserContext.get().getUserUuid());
             inspectScheduleMapper.insertInspectSchedule(scheduleVo);
         }
+        IJob jobHandler = SchedulerManager.getHandler(InspectScheduleJob.class.getName());
+        if (jobHandler == null) {
+            throw new ScheduleHandlerNotFoundException(InspectScheduleJob.class.getName());
+        }
+        String tenantUuid = TenantContext.get().getTenantUuid();
+        JobObject jobObject = new JobObject.Builder(scheduleVo.getUuid(), jobHandler.getGroupName(), jobHandler.getClassName(), tenantUuid)
+                .withCron(scheduleVo.getCron()).withBeginTime(scheduleVo.getBeginTime())
+                .withEndTime(scheduleVo.getEndTime())
+                .setType("private")
+                .build();
         if (scheduleVo.getIsActive() == 1) {
-            // todo 启动任务
+            schedulerManager.loadJob(jobObject);
         } else {
-            // todo 停止任务
+            schedulerManager.unloadJob(jobObject);
         }
         return null;
     }
