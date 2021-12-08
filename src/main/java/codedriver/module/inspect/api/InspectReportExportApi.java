@@ -179,6 +179,8 @@ public class InspectReportExportApi extends PrivateBinaryStreamApiComponentBase 
                     sb.append("<td>");
                     recursionForTable(sb, translationMap, entry.getKey(), entry.getValue());
                     sb.append("</td>");
+                } else {
+                    sb.append("<td>").append("暂无数据").append("</td>");
                 }
                 sb.append("</tr>");
             }
@@ -255,15 +257,17 @@ public class InspectReportExportApi extends PrivateBinaryStreamApiComponentBase 
                         List _array = (List) obj;
                         if (CollectionUtils.isNotEmpty(_array)) {
                             recursionForTable(sb, translationMap, key + "." + head, _array);
+                        } else {
+                            sb.append("<td style=\"" + tdStyle + "\">").append("暂无数据").append("</td>");
                         }
                     } else {
                         if (obj instanceof Date) {
                             obj = TimeUtil.convertDateToString((Date) obj, TimeUtil.YYYY_MM_DD_HH_MM_SS);
                         }
-                        sb.append("<td style=\"" + tdStyle + "\">").append(obj.toString()).append("</td>");
+                        sb.append("<td style=\"" + tdStyle + "\">").append(StringUtils.isNotBlank(obj.toString()) ? obj.toString() : "暂无数据").append("</td>");
                     }
                 } else {
-                    sb.append("<td style=\"" + tdStyle + "\">").append(StringUtils.EMPTY).append("</td>");
+                    sb.append("<td style=\"" + tdStyle + "\">").append("暂无数据").append("</td>");
                 }
             }
             sb.append("</tr>");
