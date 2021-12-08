@@ -1,6 +1,7 @@
 package codedriver.module.inspect.service;
 
 import codedriver.framework.cmdb.dto.sync.CollectionVo;
+import codedriver.framework.common.constvalue.InspectStatus;
 import com.alibaba.fastjson.JSONObject;
 import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoCollection;
@@ -49,6 +50,8 @@ public class InspectReportServiceImpl implements InspectReportService {
                     reportDoc.put("fields", collectionVo.getFields());
                 }
             }
+            //补充inspectStatus
+            reportDoc.put("inspectStatus", InspectStatus.getInspectStatusArray());
         }
         return reportDoc;
     }
