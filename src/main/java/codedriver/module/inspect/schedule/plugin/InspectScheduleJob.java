@@ -17,6 +17,8 @@ import codedriver.framework.cmdb.dto.ci.CiVo;
 import codedriver.framework.common.constvalue.SystemUser;
 import codedriver.framework.crossover.CrossoverServiceFactory;
 import codedriver.framework.dao.mapper.UserMapper;
+import codedriver.framework.dto.UserVo;
+import codedriver.framework.filter.core.LoginAuthHandlerBase;
 import codedriver.framework.inspect.constvalue.JobSource;
 import codedriver.framework.inspect.dao.mapper.InspectMapper;
 import codedriver.framework.inspect.dao.mapper.InspectScheduleMapper;
@@ -117,7 +119,9 @@ public class InspectScheduleJob extends JobBase {
                 }
             });
             paramObj.put("executeConfig", executeConfig);
-            UserContext.init(userMapper.getUserByUuid(inspectScheduleVo.getFcu()), SystemUser.SYSTEM.getTimezone());
+            UserVo fcuVo  = userMapper.getUserByUuid(inspectScheduleVo.getFcu());
+            UserContext.init(fcuVo, SystemUser.SYSTEM.getTimezone());
+            UserContext.get().setToken("GZIP_" + LoginAuthHandlerBase.buildJwt(fcuVo).getCc());
             IAutoexecJobActionCrossoverService autoexecJobActionCrossoverService = CrossoverServiceFactory.getApi(IAutoexecJobActionCrossoverService.class);
             AutoexecJobVo jobVo = autoexecJobActionCrossoverService.validateCreateJobFromCombop(paramObj, false);
             IAutoexecJobActionHandler fireAction = AutoexecJobActionHandlerFactory.getAction(JobAction.FIRE.getValue());
