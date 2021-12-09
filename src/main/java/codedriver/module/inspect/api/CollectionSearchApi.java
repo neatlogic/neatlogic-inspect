@@ -20,6 +20,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.regex.Pattern;
 
 @Service
 @AuthAction(action = INSPECT_MODIFY.class)
@@ -50,13 +51,14 @@ public class CollectionSearchApi extends PrivateApiComponentBase {
     public Object myDoService(JSONObject paramObj) throws Exception {
         String keyword = paramObj.getString("keyword");
         JSONObject result = new JSONObject();
-        MongoCollection<Document> collection = mongoTemplate.getDb().getCollection("_inspectdef");
+        MongoCollection<Document> collection = mongoTemplate.getCollection("_inspectdef");
         Document orDoc  = new Document();
         if (StringUtils.isNotBlank(keyword)) {
+            Pattern pattern=Pattern.compile("^.*"+keyword+".*$", Pattern.CASE_INSENSITIVE);
             Document nameDoc = new Document();
-            nameDoc.put("name" , keyword);
+            nameDoc.put("name" , pattern);
             Document labelDoc = new Document();
-            labelDoc.put("label" , keyword);
+            labelDoc.put("label" , pattern);
             orDoc.put("$or", Arrays.asList(nameDoc,labelDoc));
         }
         FindIterable<Document> collectionList = collection.find(orDoc);
