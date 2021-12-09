@@ -19,6 +19,7 @@ import codedriver.framework.restful.constvalue.OperationTypeEnum;
 import codedriver.framework.restful.core.privateapi.PrivateBinaryStreamApiComponentBase;
 import codedriver.framework.util.DocType;
 import codedriver.framework.util.ExportUtil;
+import codedriver.framework.util.FreemarkerUtil;
 import codedriver.framework.util.TimeUtil;
 import codedriver.module.inspect.service.InspectReportService;
 import com.alibaba.fastjson.JSON;
@@ -26,6 +27,7 @@ import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.MapUtils;
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.bson.Document;
 import org.slf4j.Logger;
@@ -35,8 +37,7 @@ import org.springframework.stereotype.Service;
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.io.OutputStream;
-import java.io.StringWriter;
+import java.io.*;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
@@ -47,6 +48,17 @@ import java.util.*;
 public class InspectReportExportApi extends PrivateBinaryStreamApiComponentBase {
 
     static Logger logger = LoggerFactory.getLogger(InspectReportExportApi.class);
+
+    static String template;
+
+    static {
+        try {
+            InputStreamReader reader = new InputStreamReader(Objects.requireNonNull(InspectReportExportApi.class.getClassLoader().getResourceAsStream("template/inspect-report-template.ftl")), StandardCharsets.UTF_8.name());
+            template = IOUtils.toString(reader);
+        } catch (Exception e) {
+            logger.error(e.getMessage(), e);
+        }
+    }
 
     @Resource
     private ResourceCenterMapper resourceCenterMapper;
@@ -99,17 +111,23 @@ public class InspectReportExportApi extends PrivateBinaryStreamApiComponentBase 
                     recursionForTranslation(translationMap, name, obj.getJSONArray("subset"));
                 }
             }
+            List<Map<String, String>> lineList = new ArrayList<>();
+            getDataMap(reportDoc, translationMap, lineList);
+            JSONObject dataObj = new JSONObject();
+            dataObj.put("lineList", lineList);
+            String content = FreemarkerUtil.transform(dataObj, template);
+            System.out.println(content);
             try (OutputStream os = response.getOutputStream()) {
                 if (DocType.WORD.getValue().equals(type)) {
                     response.setContentType("application/x-download");
                     response.setHeader("Content-Disposition",
                             " attachment; filename=\"" + URLEncoder.encode(fileName + "_巡检报告", StandardCharsets.UTF_8.name()) + ".docx\"");
-                    ExportUtil.getWordFileByHtml(getHtmlContent(reportDoc, translationMap), os, true, false);
+                    ExportUtil.getWordFileByHtml(content, os, true, false);
                 } else if (DocType.PDF.getValue().equals(type)) {
                     response.setContentType("application/pdf");
                     response.setHeader("Content-Disposition",
                             " attachment; filename=\"" + URLEncoder.encode(fileName + "_巡检报告", StandardCharsets.UTF_8.name()) + ".pdf\"");
-                    ExportUtil.getPdfFileByHtml(getHtmlContent(reportDoc, translationMap), os, true, true);
+                    ExportUtil.getPdfFileByHtml(content, os, true, true);
                 }
             } catch (Exception e) {
                 logger.error(e.getMessage(), e);
@@ -117,6 +135,31 @@ public class InspectReportExportApi extends PrivateBinaryStreamApiComponentBase 
         }
 
         return null;
+    }
+
+    private void getDataMap(Map<String, Object> reportJson, Map<String, String> translationMap, List<Map<String, String>> lineList) {
+        for (Map.Entry<String, Object> entry : reportJson.entrySet()) {
+            String key = entry.getKey();
+            Object value = entry.getValue();
+            String name = translationMap.get(key);
+            if (name != null) {
+                if (value instanceof List) {
+
+                } else {
+                    if (value == null) {
+                        value = "暂无数据";
+                    }
+                    if (value instanceof Date) {
+                        value = TimeUtil.convertDateToString((Date) value, TimeUtil.YYYY_MM_DD_HH_MM_SS);
+                    }
+                    Map<String, String> map = new HashMap<>();
+                    map.put("name", name);
+                    map.put("value", value.toString());
+                    lineList.add(map);
+                }
+            }
+        }
+
     }
 
     private String getHtmlContent(Map<String, Object> reportJson, Map<String, String> translationMap) throws Exception {
