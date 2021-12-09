@@ -4,6 +4,9 @@ import codedriver.framework.asynchronization.threadlocal.UserContext;
 import codedriver.framework.auth.core.AuthAction;
 import codedriver.framework.common.constvalue.ApiParamType;
 import codedriver.framework.inspect.auth.INSPECT_MODIFY;
+import codedriver.framework.inspect.exception.InspectDefLessLevelException;
+import codedriver.framework.inspect.exception.InspectDefLessNameException;
+import codedriver.framework.inspect.exception.InspectDefLessRuleException;
 import codedriver.framework.inspect.exception.InspectDefRoleNameRepeatException;
 import codedriver.framework.restful.annotation.Description;
 import codedriver.framework.restful.annotation.Input;
@@ -19,7 +22,9 @@ import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
 
 @Service
 @AuthAction(action = INSPECT_MODIFY.class)
@@ -55,11 +60,23 @@ public class InspectDefSaveApi extends PrivateApiComponentBase {
         if (!CollectionUtils.isEmpty(thresholds)) {
             List<String> nameList = new ArrayList<>();
             for (int i = 0; i < thresholds.size(); i++) {
-                String nameTmp = thresholds.getJSONObject(i).getString("name");
+                JSONObject thresholdTmp = thresholds.getJSONObject(i);
+                if (!thresholdTmp.containsKey("name")) {
+                    throw new InspectDefLessNameException();
+                }
+                if (!thresholdTmp.containsKey("level")) {
+                    throw new InspectDefLessLevelException();
+                }
+                if (!thresholdTmp.containsKey("rule")) {
+                    throw new InspectDefLessRuleException();
+                }
+
+                //判断name是否重复
+                String nameTmp = thresholdTmp.getString("name");
                 if (nameList.contains(nameTmp)) {
                     throw new InspectDefRoleNameRepeatException(nameTmp);
                 }
-                nameList.add(thresholds.getJSONObject(i).getString("name"));
+                nameList.add(thresholdTmp.getString("name"));
             }
         }
         Document whereDoc = new Document();
