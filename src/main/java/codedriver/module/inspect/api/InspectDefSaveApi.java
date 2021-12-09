@@ -62,13 +62,13 @@ public class InspectDefSaveApi extends PrivateApiComponentBase {
             for (int i = 0; i < thresholds.size(); i++) {
                 JSONObject thresholdTmp = thresholds.getJSONObject(i);
                 if (!thresholdTmp.containsKey("name")) {
-                    throw new InspectDefLessNameException();
+                    throw new InspectDefLessNameException(i);
                 }
                 if (!thresholdTmp.containsKey("level")) {
-                    throw new InspectDefLessLevelException();
+                    throw new InspectDefLessLevelException(i);
                 }
                 if (!thresholdTmp.containsKey("rule")) {
-                    throw new InspectDefLessRuleException();
+                    throw new InspectDefLessRuleException(i);
                 }
 
                 //判断name是否重复
