@@ -111,8 +111,10 @@ public class InspectReportExportApi extends PrivateBinaryStreamApiComponentBase 
                     recursionForTranslation(translationMap, name, obj.getJSONArray("subset"));
                 }
             }
-            List<Map<String, String>> lineList = new ArrayList<>();
-            getDataMap(reportDoc, translationMap, lineList);
+            JSONArray lineList = new JSONArray();
+            JSONArray tableList = new JSONArray();
+
+            getDataMap(reportDoc, translationMap, lineList, tableList);
             JSONObject dataObj = new JSONObject();
             dataObj.put("lineList", lineList);
             String content = FreemarkerUtil.transform(dataObj, template);
@@ -137,14 +139,16 @@ public class InspectReportExportApi extends PrivateBinaryStreamApiComponentBase 
         return null;
     }
 
-    private void getDataMap(Map<String, Object> reportJson, Map<String, String> translationMap, List<Map<String, String>> lineList) {
+    private void getDataMap(Map<String, Object> reportJson, Map<String, String> translationMap, JSONArray lineList, JSONArray tableList) {
+        Map<String, List> tableMap = new LinkedHashMap<>();
         for (Map.Entry<String, Object> entry : reportJson.entrySet()) {
             String key = entry.getKey();
             Object value = entry.getValue();
             String name = translationMap.get(key);
             if (name != null) {
+                JSONObject line = new JSONObject();
                 if (value instanceof List) {
-
+                    tableMap.put(key, (List) value);
                 } else {
                     if (value == null) {
                         value = "暂无数据";
@@ -152,14 +156,92 @@ public class InspectReportExportApi extends PrivateBinaryStreamApiComponentBase 
                     if (value instanceof Date) {
                         value = TimeUtil.convertDateToString((Date) value, TimeUtil.YYYY_MM_DD_HH_MM_SS);
                     }
-                    Map<String, String> map = new HashMap<>();
-                    map.put("name", name);
-                    map.put("value", value.toString());
-                    lineList.add(map);
+                    line.put("key", name);
+                    line.put("value", value.toString());
+                    lineList.add(line);
                 }
             }
         }
+        if (!tableMap.isEmpty()) {
+            for (Map.Entry<String, List> entry : tableMap.entrySet()) {
+                String name = translationMap.get(entry.getKey());
+                if (name != null) {
+                    JSONObject table = new JSONObject();
+                    List value = entry.getValue();
+                    if (CollectionUtils.isNotEmpty(value)) {
+                        tableList.add(table);
+                        if (!(value.get(0) instanceof Document)) {
+                            lineList.add(new JSONObject() {
+                                {
+                                    this.put("key", name);
+                                    this.put("value", value.toString());
+                                }
+                            });
+                        } else {
+                            recursionForTable(table, translationMap, entry.getKey(), value);
+                        }
+                    } else {
+                        lineList.add(new JSONObject() {
+                            {
+                                this.put("key", name);
+                                this.put("value", "暂无数据");
+                            }
+                        });
+                    }
+                }
 
+            }
+        }
+
+    }
+
+    private void recursionForTable(JSONObject table, Map<String, String> translationMap, String key, List array) {
+        Set<String> headSet = new LinkedHashSet<>();
+        for (int i = 0; i < array.size(); i++) {
+            Map map = (Map) array.get(i);
+            headSet.addAll(map.keySet());
+        }
+        List<String> headList = new ArrayList<>();
+        Iterator<String> iterator = headSet.iterator();
+        while (iterator.hasNext()) {
+            String name = translationMap.get(key + "." + iterator.next());
+            if (name != null) {
+                headList.add(name);
+            } else {
+                iterator.remove(); // 抛弃没有译文的字段
+            }
+        }
+        table.put("key", translationMap.get(key));
+        table.put("headList", headList);
+        JSONArray valueList = new JSONArray();
+        table.put("valueList", valueList);
+        for (int i = 0; i < array.size(); i++) {
+            Map object = (Map) array.get(i);
+            JSONObject row = new JSONObject();
+            valueList.add(row);
+            int j = 0;
+            for (String head : headSet) {
+                Object obj = object.get(head);
+                if (obj != null) {
+                    if (obj instanceof List) {
+                        List _array = (List) obj;
+                        if (CollectionUtils.isNotEmpty(_array)) {
+                            recursionForTable(row, translationMap, key + "." + head, _array);
+                        } else {
+                            row.put(headList.get(j), "暂无数据");
+                        }
+                    } else {
+                        if (obj instanceof Date) {
+                            obj = TimeUtil.convertDateToString((Date) obj, TimeUtil.YYYY_MM_DD_HH_MM_SS);
+                        }
+                        row.put(headList.get(j), StringUtils.isNotBlank(obj.toString()) ? obj.toString() : "暂无数据");
+                    }
+                } else {
+                    row.put(headList.get(j), StringUtils.isNotBlank(obj.toString()) ? obj.toString() : "暂无数据");
+                }
+                j++;
+            }
+        }
     }
 
     private String getHtmlContent(Map<String, Object> reportJson, Map<String, String> translationMap) throws Exception {

@@ -10,7 +10,7 @@
 			<#if i % 2 != 0>
 				<tr>
 			</#if>
-				<td>${line.name}</td>
+				<td>${line.key}</td>
 				<td>${line.value}</td>
 			<#if i % 2 == 0 || i == lineList?size>
 				</tr>
