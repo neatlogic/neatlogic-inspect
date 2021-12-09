@@ -103,12 +103,12 @@ public class InspectReportExportApi extends PrivateBinaryStreamApiComponentBase 
                 if (DocType.WORD.getValue().equals(type)) {
                     response.setContentType("application/x-download");
                     response.setHeader("Content-Disposition",
-                            " attachment; filename=\"" + URLEncoder.encode(fileName, StandardCharsets.UTF_8.name()) + ".docx\"");
+                            " attachment; filename=\"" + URLEncoder.encode(fileName + "_巡检报告", StandardCharsets.UTF_8.name()) + ".docx\"");
                     ExportUtil.getWordFileByHtml(getHtmlContent(reportDoc, translationMap), os, true, false);
                 } else if (DocType.PDF.getValue().equals(type)) {
                     response.setContentType("application/pdf");
                     response.setHeader("Content-Disposition",
-                            " attachment; filename=\"" + URLEncoder.encode(fileName, StandardCharsets.UTF_8.name()) + ".pdf\"");
+                            " attachment; filename=\"" + URLEncoder.encode(fileName + "_巡检报告", StandardCharsets.UTF_8.name()) + ".pdf\"");
                     ExportUtil.getPdfFileByHtml(getHtmlContent(reportDoc, translationMap), os, true, true);
                 }
             } catch (Exception e) {
@@ -175,9 +175,14 @@ public class InspectReportExportApi extends PrivateBinaryStreamApiComponentBase 
             for (Map.Entry<String, List> entry : map.entrySet()) {
                 sb.append("<tr>");
                 sb.append("<td>").append(translationMap.get(entry.getKey())).append("</td>");
-                if (CollectionUtils.isNotEmpty(entry.getValue())) {
+                List value = entry.getValue();
+                if (CollectionUtils.isNotEmpty(value)) {
                     sb.append("<td>");
-                    recursionForTable(sb, translationMap, entry.getKey(), entry.getValue());
+                    if (!(value.get(0) instanceof Document)) {
+                        sb.append(value.toString());
+                    } else {
+                        recursionForTable(sb, translationMap, entry.getKey(), value);
+                    }
                     sb.append("</td>");
                 } else {
                     sb.append("<td>").append("暂无数据").append("</td>");
