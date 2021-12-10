@@ -198,10 +198,8 @@ public class InspectReportExportApi extends PrivateBinaryStreamApiComponentBase 
                         });
                     }
                 }
-
             }
         }
-
     }
 
     /**
@@ -230,6 +228,8 @@ public class InspectReportExportApi extends PrivateBinaryStreamApiComponentBase 
     /**
      * 解析JsonArray类型的document字段，组装成如下结构：
      * {"headList":["单位","磁盘名","类型","容量"],"valueList":[{"单位":"GB","磁盘名":"/dev/sda","容量":"137","类型":"local"}],"key":"磁盘"}
+     * 如果存在嵌套，则结构如下：
+     * {"headList":["网卡名","状态","速率","网卡地址","连接交换机端口"],"valueList":[{"网卡地址":"00:0c:29:e0:ec:e4","网卡名":"eth0","状态":"up","速率":"10000","连接交换机端口":{"headList":["端口名","归属类别","交换机类型","管理Ip","序列号"],"valueList":[{"归属类别":"q","序列号":"r","管理Ip":"e","交换机类型":"w","端口名":"t"}]}}],"key":"网卡"}
      *
      * @param table          转换后的JSONObject
      * @param translationMap 译文
