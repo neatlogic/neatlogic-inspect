@@ -259,7 +259,6 @@ public class InspectReportExportApi extends PrivateBinaryStreamApiComponentBase 
         for (int i = 0; i < array.size(); i++) {
             Map object = (Map) array.get(i);
             JSONObject row = new JSONObject();
-            valueList.add(row);
             int j = 0;
             for (String head : headSet) {
                 Object obj = object.get(head);
@@ -267,7 +266,10 @@ public class InspectReportExportApi extends PrivateBinaryStreamApiComponentBase 
                     if (obj instanceof List) {
                         List _array = (List) obj;
                         if (CollectionUtils.isNotEmpty(_array)) {
-                            recursionForTable(row, translationMap, key + "." + head, _array);
+                            JSONObject _table = new JSONObject();
+                            recursionForTable(_table, translationMap, key + "." + head, _array);
+                            _table.remove("key");
+                            row.put(headList.get(j), _table);
                         } else {
                             row.put(headList.get(j), "暂无数据");
                         }
@@ -282,6 +284,7 @@ public class InspectReportExportApi extends PrivateBinaryStreamApiComponentBase 
                 }
                 j++;
             }
+            valueList.add(row);
         }
     }
 

@@ -6,6 +6,7 @@
         text-align: center;
         border-collapse: collapse;
     }
+
     .innerTable th, .innerTable td {
         border: 1px solid;
     }
@@ -29,43 +30,44 @@
     <#assign tableList = DATA.tableList/>
     <#if tableList?? && tableList?size gt 0>
         <#list tableList as value>
-            <@getTable table = value/>
+            <tr>
+                <td>${value.key}</td>
+                <td>
+                    <@getTable table = value/>
+                </td>
+            </tr>
         </#list>
     </#if>
 </table>
 </html>
 
 <#macro getTable table>
+    <table class="innerTable">
+    <thead>
     <tr>
-        <td>${table.key}</td>
-        <td>
-            <table class="innerTable">
-                <thead>
-                    <tr>
-                        <#list table.headList as head>
-                            <th>${head}</th>
-                        </#list>
-                    </tr>
-                </thead>
-                <tbody>
-                <#assign valueList = table.valueList/>
-                <#if valueList?? && valueList?size gt 0>
-                    <#list valueList as value>
-                        <tr>
-                            <#list table.headList as head>
-                                <td>
-                                    <#assign cell = value[head]/>
-                                    <#if cell?is_hash>
-                                        <@getTable table = cell/>
-                                    </#if>
-                                    ${cell}
-                                </td>
-                            </#list>
-                        </tr>
-                    </#list>
-                </#if>
-                </tbody>
-            </table>
-        </td>
+        <#list table.headList as head>
+            <th>${head}</th>
+        </#list>
     </tr>
+    </thead>
+    <tbody>
+    <#assign valueList = table.valueList/>
+    <#if valueList?? && valueList?size gt 0>
+        <#list valueList as value>
+            <tr>
+            <#list table.headList as head>
+                <td>
+                <#assign cell = value[head]/>
+                <#if cell?is_hash>
+                    <@getTable table = cell/>
+                <#else>
+                    ${cell}
+                </#if>
+                </td>
+            </#list>
+            </tr>
+        </#list>
+    </#if>
+    </tbody>
+    </table>
 </#macro>
