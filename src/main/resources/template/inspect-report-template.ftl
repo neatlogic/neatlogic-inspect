@@ -6,12 +6,7 @@
         text-align: center;
         border-collapse: collapse;
     }
-
-    .innerTable th {
-        border: 1px solid;
-    }
-
-    .innerTable td {
+    .innerTable th, .innerTable td {
         border: 1px solid;
     }
 </style>

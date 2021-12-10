@@ -53,7 +53,8 @@ public class InspectReportExportApi extends PrivateBinaryStreamApiComponentBase 
 
     static {
         try {
-            InputStreamReader reader = new InputStreamReader(Objects.requireNonNull(InspectReportExportApi.class.getClassLoader().getResourceAsStream("template/inspect-report-template.ftl")), StandardCharsets.UTF_8.name());
+            InputStreamReader reader = new InputStreamReader(Objects.requireNonNull(InspectReportExportApi.class.getClassLoader()
+                    .getResourceAsStream("template/inspect-report-template.ftl")), StandardCharsets.UTF_8.name());
             template = IOUtils.toString(reader);
         } catch (Exception e) {
             logger.error(e.getMessage(), e);
@@ -119,7 +120,6 @@ public class InspectReportExportApi extends PrivateBinaryStreamApiComponentBase 
             dataObj.put("lineList", lineList);
             dataObj.put("tableList", tableList);
             String content = FreemarkerUtil.transform(dataObj, template);
-            System.out.println(content);
             try (OutputStream os = response.getOutputStream()) {
                 if (DocType.WORD.getValue().equals(type)) {
                     response.setContentType("application/x-download");
@@ -140,6 +140,14 @@ public class InspectReportExportApi extends PrivateBinaryStreamApiComponentBase 
         return null;
     }
 
+    /**
+     * 解析MongoDB Document
+     *
+     * @param reportJson     待解析的document
+     * @param translationMap 译文
+     * @param lineList       存储String、int或Array字段的list
+     * @param tableList      存储JsonArray字段的list
+     */
     private void getDataMap(Map<String, Object> reportJson, Map<String, String> translationMap, JSONArray lineList, JSONArray tableList) {
         Map<String, List> tableMap = new LinkedHashMap<>();
         for (Map.Entry<String, Object> entry : reportJson.entrySet()) {
@@ -147,7 +155,6 @@ public class InspectReportExportApi extends PrivateBinaryStreamApiComponentBase 
             Object value = entry.getValue();
             String name = translationMap.get(key);
             if (name != null) {
-                JSONObject line = new JSONObject();
                 if (value instanceof List) {
                     tableMap.put(key, (List) value);
                 } else {
@@ -157,6 +164,7 @@ public class InspectReportExportApi extends PrivateBinaryStreamApiComponentBase 
                     if (value instanceof Date) {
                         value = TimeUtil.convertDateToString((Date) value, TimeUtil.YYYY_MM_DD_HH_MM_SS);
                     }
+                    JSONObject line = new JSONObject();
                     line.put("key", name);
                     line.put("value", value.toString());
                     lineList.add(line);
@@ -170,8 +178,7 @@ public class InspectReportExportApi extends PrivateBinaryStreamApiComponentBase 
                     JSONObject table = new JSONObject();
                     List value = entry.getValue();
                     if (CollectionUtils.isNotEmpty(value)) {
-                        tableList.add(table);
-                        if (!(value.get(0) instanceof Document)) {
+                        if (!(value.get(0) instanceof Document)) { // 元素类型不是Document，说明value是非JSONObject数组
                             lineList.add(new JSONObject() {
                                 {
                                     this.put("key", name);
@@ -180,6 +187,7 @@ public class InspectReportExportApi extends PrivateBinaryStreamApiComponentBase 
                             });
                         } else {
                             recursionForTable(table, translationMap, entry.getKey(), value);
+                            tableList.add(table);
                         }
                     } else {
                         lineList.add(new JSONObject() {
@@ -196,6 +204,38 @@ public class InspectReportExportApi extends PrivateBinaryStreamApiComponentBase 
 
     }
 
+    /**
+     * 递归抽取字段译文，如果存在嵌套数组，则转为链式结构
+     * 例如：{"name":"DNS_SERVERS","type":"JsonArray","subset":[{"name":"VALUE","type":"String","desc":"IP"}],"desc":"DNS服务器"}
+     * 将转为：
+     * "DNS_SERVERS" -> "DNS服务器"
+     * "DNS_SERVERS.VALUE" -> "IP"
+     *
+     * @param translationMap
+     * @param name
+     * @param subset
+     */
+    private void recursionForTranslation(Map<String, String> translationMap, String name, JSONArray subset) {
+        if (CollectionUtils.isNotEmpty(subset)) {
+            for (int i = 0; i < subset.size(); i++) {
+                JSONObject _obj = subset.getJSONObject(i);
+                String _name = _obj.getString("name");
+                String _desc = _obj.getString("desc");
+                translationMap.put(name + "." + _name, _desc);
+                recursionForTranslation(translationMap, name + "." + _name, _obj.getJSONArray("subset"));
+            }
+        }
+    }
+
+    /**
+     * 解析JsonArray类型的document字段，组装成如下结构：
+     * {"headList":["单位","磁盘名","类型","容量"],"valueList":[{"单位":"GB","磁盘名":"/dev/sda","容量":"137","类型":"local"}],"key":"磁盘"}
+     *
+     * @param table          转换后的JSONObject
+     * @param translationMap 译文
+     * @param key            key
+     * @param array          待转换的JsonArray字段
+     */
     private void recursionForTable(JSONObject table, Map<String, String> translationMap, String key, List array) {
         Set<String> headSet = new LinkedHashSet<>();
         for (int i = 0; i < array.size(); i++) {
@@ -244,171 +284,5 @@ public class InspectReportExportApi extends PrivateBinaryStreamApiComponentBase 
             }
         }
     }
-
-    private String getHtmlContent(Map<String, Object> reportJson, Map<String, String> translationMap) throws Exception {
-        StringWriter out = new StringWriter();
-        out.write("<html xmlns:v=\"urn:schemas-microsoft-com:vml\" xmlns:o=\"urn:schemas-microsoft-com:office:office\" xmlns:x=\"urn:schemas-microsoft-com:office:excel\" xmlns=\"http://www.w3.org/TR/REC-html40\">\n");
-        out.write("<head>\n");
-        out.write("<meta http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\"></meta>\n");
-        out.write("<style></style>\n");
-        out.write("</head>\n");
-        out.write("<body>\n");
-        StringBuilder sb = new StringBuilder();
-        sb.append("<table>");
-        sb.append("<tbody>");
-        Map<String, List> map = new LinkedHashMap<>();
-        int i = 1;
-        // 渲染非JSONArray数据
-        for (Map.Entry<String, Object> entry : reportJson.entrySet()) {
-            String key = entry.getKey();
-            Object value = entry.getValue();
-            String name = translationMap.get(key);
-            if (name != null) {
-                if (value instanceof List) {
-                    map.put(key, (List) value);
-                } else if (i % 2 != 0) {
-                    if (i != 1) {
-                        sb.append("</tr>");
-                    }
-                    if (value == null) {
-                        value = "暂无数据";
-                    }
-                    if (value instanceof Date) {
-                        value = TimeUtil.convertDateToString((Date) value, TimeUtil.YYYY_MM_DD_HH_MM_SS);
-                    }
-                    sb.append("<tr>");
-                    sb.append("<td>").append(name).append("</td>");
-                    sb.append("<td>").append(value.toString()).append("</td>");
-                    i++;
-                } else {
-                    if (value == null) {
-                        value = "暂无数据";
-                    }
-                    if (value instanceof Date) {
-                        value = TimeUtil.convertDateToString((Date) value, TimeUtil.YYYY_MM_DD_HH_MM_SS);
-                    }
-                    sb.append("<td>").append(name).append("</td>");
-                    sb.append("<td>").append(value.toString()).append("</td>");
-                    i++;
-                }
-            }
-        }
-        if (sb.lastIndexOf("</tr>") != sb.length() - 1) {
-            sb.append("</tr>");
-        }
-        // 渲染JSONArray数据为table
-        if (!map.isEmpty()) {
-            for (Map.Entry<String, List> entry : map.entrySet()) {
-                sb.append("<tr>");
-                sb.append("<td>").append(translationMap.get(entry.getKey())).append("</td>");
-                List value = entry.getValue();
-                if (CollectionUtils.isNotEmpty(value)) {
-                    sb.append("<td>");
-                    if (!(value.get(0) instanceof Document)) {
-                        sb.append(value.toString());
-                    } else {
-                        recursionForTable(sb, translationMap, entry.getKey(), value);
-                    }
-                    sb.append("</td>");
-                } else {
-                    sb.append("<td>").append("暂无数据").append("</td>");
-                }
-                sb.append("</tr>");
-            }
-        }
-
-        sb.append("</tbody>");
-        sb.append("</table>");
-        out.write(sb.toString());
-
-        out.write("\n</body>\n</html>");
-        out.flush();
-        out.close();
-        return out.toString();
-    }
-
-    /**
-     * 递归抽取字段译文，如果存在嵌套数组，则转为链式结构
-     * 例如：{"name":"DNS_SERVERS","type":"JsonArray","subset":[{"name":"VALUE","type":"String","desc":"IP"}],"desc":"DNS服务器"}
-     * 将转为：
-     * "DNS_SERVERS" -> "DNS服务器"
-     * "DNS_SERVERS.VALUE" -> "IP"
-     *
-     * @param translationMap
-     * @param name
-     * @param subset
-     */
-    private void recursionForTranslation(Map<String, String> translationMap, String name, JSONArray subset) {
-        if (CollectionUtils.isNotEmpty(subset)) {
-            for (int i = 0; i < subset.size(); i++) {
-                JSONObject _obj = subset.getJSONObject(i);
-                String _name = _obj.getString("name");
-                String _desc = _obj.getString("desc");
-                translationMap.put(name + "." + _name, _desc);
-                recursionForTranslation(translationMap, name + "." + _name, _obj.getJSONArray("subset"));
-            }
-        }
-    }
-
-    /**
-     * 将JSONArray结构的字段渲染成Table
-     *
-     * @param sb
-     * @param translationMap
-     * @param key
-     * @param array
-     */
-    private void recursionForTable(StringBuilder sb, Map<String, String> translationMap, String key, List array) {
-        sb.append("<table style=\"" + tableStyle + "\">");
-        Set<String> headSet = new LinkedHashSet<>();
-        for (int i = 0; i < array.size(); i++) {
-            Map map = (Map) array.get(i);
-            headSet.addAll(map.keySet());
-        }
-        sb.append("<thead><tr>");
-        Iterator<String> iterator = headSet.iterator();
-        while (iterator.hasNext()) {
-            String name = translationMap.get(key + "." + iterator.next());
-            if (name != null) {
-                sb.append("<th style=\"" + tdStyle + "\">").append(name).append("</th>");
-            } else {
-                iterator.remove(); // 抛弃没有译文的字段
-            }
-        }
-        sb.append("</tr></thead>");
-        sb.append("<tbody>");
-
-        for (int i = 0; i < array.size(); i++) {
-            Map object = (Map) array.get(i);
-            sb.append("<tr>");
-            for (String head : headSet) {
-                Object obj = object.get(head);
-                if (obj != null) {
-                    if (obj instanceof List) {
-                        List _array = (List) obj;
-                        if (CollectionUtils.isNotEmpty(_array)) {
-                            recursionForTable(sb, translationMap, key + "." + head, _array);
-                        } else {
-                            sb.append("<td style=\"" + tdStyle + "\">").append("暂无数据").append("</td>");
-                        }
-                    } else {
-                        if (obj instanceof Date) {
-                            obj = TimeUtil.convertDateToString((Date) obj, TimeUtil.YYYY_MM_DD_HH_MM_SS);
-                        }
-                        sb.append("<td style=\"" + tdStyle + "\">").append(StringUtils.isNotBlank(obj.toString()) ? obj.toString() : "暂无数据").append("</td>");
-                    }
-                } else {
-                    sb.append("<td style=\"" + tdStyle + "\">").append("暂无数据").append("</td>");
-                }
-            }
-            sb.append("</tr>");
-        }
-        sb.append("</tbody>");
-        sb.append("</table>");
-    }
-
-    static final String tableStyle = "width:100%; text-align:center; border-collapse:collapse;";
-    static final String tdStyle = "border:1px solid;";
-
 
 }
