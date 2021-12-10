@@ -117,6 +117,7 @@ public class InspectReportExportApi extends PrivateBinaryStreamApiComponentBase 
             getDataMap(reportDoc, translationMap, lineList, tableList);
             JSONObject dataObj = new JSONObject();
             dataObj.put("lineList", lineList);
+            dataObj.put("tableList", tableList);
             String content = FreemarkerUtil.transform(dataObj, template);
             System.out.println(content);
             try (OutputStream os = response.getOutputStream()) {
