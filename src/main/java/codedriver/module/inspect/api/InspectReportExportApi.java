@@ -115,7 +115,7 @@ public class InspectReportExportApi extends PrivateBinaryStreamApiComponentBase 
             JSONObject alert = null;
             Map<String, String> alertMap = new HashMap<>(); // 记录jsonpath与告警级别之间的映射
             Map<String, String> alertLevelClassMap = new HashMap<>();
-            Map<String, Object> inspectStatus = reportDoc.get("inspectStatus") != null ? (Map<String, Object>) reportDoc.get("inspectStatus") : null;
+            Map<String, Object> inspectStatus = (Map<String, Object>) reportDoc.get("inspectStatus");
             // 组装告警级别与cssClass之间的映射(alertLevelClassMap)和告警提示(alert)
             if (MapUtils.isNotEmpty(inspectStatus)) {
                 for (Map.Entry<String, Object> entry : inspectStatus.entrySet()) {
@@ -159,7 +159,7 @@ public class InspectReportExportApi extends PrivateBinaryStreamApiComponentBase 
     }
 
     /**
-     * 组装告警列表，结构如下：
+     * 组装告警列表，将jsonpath转为中文路径，结构如下：
      * {"headList":["告警级别","告警字段","告警提示"],"rowList":[{"level":"normal","告警级别":"正常","告警字段":"挂载点->使用率%","告警提示":"磁盘空间使用率超过11%、磁盘空间使用率超过15%"},{"level":"normal","告警级别":"正常","告警字段":"挂载点->使用率%","告警提示":"磁盘空间使用率超过11%"}]}
      * 并且记录jsonpath与告警级别之间的映射
      *
@@ -170,9 +170,8 @@ public class InspectReportExportApi extends PrivateBinaryStreamApiComponentBase 
      * @return
      */
     private JSONObject getAlert(Document reportDoc, Map<String, String> translationMap, Map<String, String> alertMap, Map<String, Object> inspectStatus) {
-        Object inspect_result = reportDoc.get("_inspect_result");
-        if (inspect_result != null) {
-            Document inspectResult = (Document) inspect_result;
+        Document inspectResult = (Document) reportDoc.get("_inspect_result");
+        if (inspectResult != null) {
             List alertFields = (List) inspectResult.get("alertFields");
             if (CollectionUtils.isNotEmpty(alertFields)) {
                 JSONObject alert = new JSONObject();
@@ -194,9 +193,11 @@ public class InspectReportExportApi extends PrivateBinaryStreamApiComponentBase 
                         String[] split = alertField.split("\\.");
                         StringBuilder sb = new StringBuilder();
                         for (int j = 0; j < split.length; j++) {
-                            String key = split[j];
+                            String key;
                             if (j != 0) {
                                 key = split[j - 1] + "." + split[j];
+                            } else {
+                                key = split[j];
                             }
                             sb.append(translationMap.get(key));
                             if (j != split.length - 1) {
