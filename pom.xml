@@ -16,6 +16,12 @@
 					<include>META-INF/**</include>
 				</includes>
 			</resource>
+			<resource>
+				<directory>src/main/resources</directory>
+				<includes>
+					<include>template/**</include>
+				</includes>
+			</resource>
 		</resources>
 		<plugins>
 			<plugin>
