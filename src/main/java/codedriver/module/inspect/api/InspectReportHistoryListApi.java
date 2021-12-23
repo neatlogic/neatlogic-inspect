@@ -53,12 +53,15 @@ public class InspectReportHistoryListApi extends PrivateApiComponentBase {
     @Description(desc = "根据resourceId 获取对应的巡检报告")
     @Override
     public Object myDoService(JSONObject paramObj) throws Exception {
+        Integer currentPage = paramObj.getInteger("currentPage");
+        Integer pageSize = paramObj.getInteger("pageSize");
+        int skipNum = (currentPage - 1) * pageSize;
         MongoCollection<Document> collection = mongoTemplate.getDb().getCollection("INSPECT_REPORTS_HIS");
         Document doc = new Document();
         doc.put("RESOURCE_ID", paramObj.getLong("resourceId"));
         Document sortDoc = new Document();
         sortDoc.put("_report_time", -1);
-        FindIterable<Document> findIterable = collection.find(doc).sort(sortDoc).skip(paramObj.getInteger("currentPage")-1).limit(paramObj.getInteger("pageSize"));
+        FindIterable<Document> findIterable = collection.find(doc).sort(sortDoc).skip(skipNum).limit(pageSize);
         List<Document> documentList = findIterable.into(new ArrayList<>());
         for (Document reportDoc : documentList){
             String execUserUuid = reportDoc.getString("_execuser");
