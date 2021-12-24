@@ -10,6 +10,8 @@ import codedriver.framework.auth.core.AuthAction;
 import codedriver.framework.cmdb.dao.mapper.resourcecenter.ResourceCenterMapper;
 import codedriver.framework.cmdb.dto.resourcecenter.ResourceVo;
 import codedriver.framework.common.constvalue.ApiParamType;
+import codedriver.framework.dao.mapper.UserMapper;
+import codedriver.framework.dto.UserVo;
 import codedriver.framework.inspect.auth.INSPECT_BASE;
 import codedriver.framework.restful.annotation.Description;
 import codedriver.framework.restful.annotation.Input;
@@ -60,6 +62,9 @@ public class InspectReportExportApi extends PrivateBinaryStreamApiComponentBase 
             logger.error(e.getMessage(), e);
         }
     }
+
+    @Resource
+    private UserMapper userMapper;
 
     @Resource
     private ResourceCenterMapper resourceCenterMapper;
@@ -137,17 +142,30 @@ public class InspectReportExportApi extends PrivateBinaryStreamApiComponentBase 
             }
             dataObj.put("lineList", lineList);
             dataObj.put("tableList", tableList);
+            String execUser = reportDoc.getString("_execuser");
+            Date reportTime = reportDoc.getDate("_report_time");
+            if (StringUtils.isNotBlank(execUser)) {
+                UserVo userVo = userMapper.getUserBaseInfoByUuid(execUser);
+                if (userVo != null) {
+                    dataObj.put("execUser", userVo.getUserName());
+                }
+            }
+            if (reportTime != null) {
+                dataObj.put("reportTime", TimeUtil.convertDateToString(reportTime, TimeUtil.YYYY_MM_DD_HH_MM_SS));
+            }
+            fileName += "_巡检报告";
+            dataObj.put("reportName", fileName);
             String content = FreemarkerUtil.transform(dataObj, template);
             try (OutputStream os = response.getOutputStream()) {
                 if (DocType.WORD.getValue().equals(type)) {
                     response.setContentType("application/x-download");
                     response.setHeader("Content-Disposition",
-                            " attachment; filename=\"" + URLEncoder.encode(fileName + "_巡检报告", StandardCharsets.UTF_8.name()) + ".docx\"");
+                            " attachment; filename=\"" + URLEncoder.encode(fileName, StandardCharsets.UTF_8.name()) + ".docx\"");
                     ExportUtil.getWordFileByHtml(content, os, true, false);
                 } else if (DocType.PDF.getValue().equals(type)) {
                     response.setContentType("application/pdf");
                     response.setHeader("Content-Disposition",
-                            " attachment; filename=\"" + URLEncoder.encode(fileName + "_巡检报告", StandardCharsets.UTF_8.name()) + ".pdf\"");
+                            " attachment; filename=\"" + URLEncoder.encode(fileName, StandardCharsets.UTF_8.name()) + ".pdf\"");
                     ExportUtil.getPdfFileByHtml(content, os, true, true);
                 }
             } catch (Exception e) {
