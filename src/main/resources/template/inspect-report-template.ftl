@@ -26,7 +26,23 @@
     .bg-error {
         color: #f71010;
     }
+
+    .title {
+        font-size: 20px;
+        text-align: center;
+        font-weight: bold;
+    }
+
+    .userAndTime {
+        text-align: center;
+    }
 </style>
+<#if DATA.reportName??>
+    <p class="title">${DATA.reportName}</p>
+</#if>
+<#if DATA.execUser?? || DATA.reportTime>
+    <p class="userAndTime"><span>${DATA.execUser}</span>&nbsp;&nbsp;&nbsp;&nbsp;<span>${DATA.reportTime}</span></p>
+</#if>
 <#assign alertLevelClassMap = DATA.alertLevelClassMap/>
 <#--告警列表-->
 <#if DATA.alert?? && alertLevelClassMap??>
