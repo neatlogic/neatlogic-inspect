@@ -78,11 +78,14 @@ public class InspectReportHistoryListApi extends PrivateApiComponentBase {
                 }
             }
             returnObj.put("tbodyList", documentList);
-            returnObj.put("pageSize", pageSize);
-            returnObj.put("currentPage", currentPage);
-            returnObj.put("rowNum", rowNum);
-            returnObj.put("pageCount", PageUtil.getPageCount(Math.toIntExact(rowNum), pageSize));
+        }else {
+            returnObj.put("tbodyList", new ArrayList<>());
         }
+
+        returnObj.put("pageSize", pageSize);
+        returnObj.put("currentPage", currentPage);
+        returnObj.put("rowNum", rowNum);
+        returnObj.put("pageCount", PageUtil.getPageCount(Math.toIntExact(rowNum), pageSize));
         return returnObj;
     }
 
