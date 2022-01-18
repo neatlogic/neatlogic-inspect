@@ -17,6 +17,7 @@ import codedriver.framework.restful.core.privateapi.PrivateApiComponentBase;
 import com.alibaba.fastjson.JSONObject;
 import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoCollection;
+import org.apache.commons.collections4.CollectionUtils;
 import org.bson.Document;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.stereotype.Service;
@@ -79,7 +80,7 @@ public class InspectReportHistoryListApi extends PrivateApiComponentBase {
             }
             returnObj.put("tbodyList", documentList);
         }else {
-            returnObj.put("tbodyList", new ArrayList<>());
+            returnObj.put("tbodyList", CollectionUtils.EMPTY_COLLECTION);
         }
 
         returnObj.put("pageSize", pageSize);
