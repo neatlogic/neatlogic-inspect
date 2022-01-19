@@ -7,18 +7,17 @@ package codedriver.module.inspect.api;
 
 import codedriver.framework.auth.core.AuthAction;
 import codedriver.framework.common.constvalue.ApiParamType;
+import codedriver.framework.common.constvalue.InspectStatus;
+import codedriver.framework.common.util.PageUtil;
 import codedriver.framework.dto.UserVo;
 import codedriver.framework.inspect.auth.INSPECT_BASE;
-import codedriver.framework.common.constvalue.InspectStatus;
-import codedriver.framework.restful.annotation.Description;
-import codedriver.framework.restful.annotation.Input;
-import codedriver.framework.restful.annotation.OperationType;
-import codedriver.framework.restful.annotation.Param;
+import codedriver.framework.restful.annotation.*;
 import codedriver.framework.restful.constvalue.OperationTypeEnum;
 import codedriver.framework.restful.core.privateapi.PrivateApiComponentBase;
 import com.alibaba.fastjson.JSONObject;
 import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoCollection;
+import org.apache.commons.collections4.CollectionUtils;
 import org.bson.Document;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.stereotype.Service;
@@ -49,31 +48,46 @@ public class InspectReportHistoryListApi extends PrivateApiComponentBase {
             @Param(name = "pageSize", type = ApiParamType.INTEGER, desc = "每页大小", isRequired = true),
             @Param(name = "currentPage", type = ApiParamType.INTEGER, desc = "当前页", isRequired = true)
     })
+    @Output({
+            @Param(name = "tbodyList",explode = Document[].class, desc = "巡检报告集合"),
+    })
 
     @Description(desc = "根据resourceId 获取对应的巡检报告")
     @Override
     public Object myDoService(JSONObject paramObj) throws Exception {
+        JSONObject returnObj = new JSONObject();
         Integer currentPage = paramObj.getInteger("currentPage");
         Integer pageSize = paramObj.getInteger("pageSize");
-        int skipNum = (currentPage - 1) * pageSize;
         MongoCollection<Document> collection = mongoTemplate.getDb().getCollection("INSPECT_REPORTS_HIS");
         Document doc = new Document();
         doc.put("RESOURCE_ID", paramObj.getLong("resourceId"));
-        Document sortDoc = new Document();
-        sortDoc.put("_report_time", -1);
-        FindIterable<Document> findIterable = collection.find(doc).sort(sortDoc).skip(skipNum).limit(pageSize);
-        List<Document> documentList = findIterable.into(new ArrayList<>());
-        for (Document reportDoc : documentList){
-            String execUserUuid = reportDoc.getString("_execuser");
-            reportDoc.put("_execuser",new UserVo(execUserUuid));
-            Object inspectResult = reportDoc.get("_inspect_result");
-            if(inspectResult != null){
-                Document inspectResultDoc = (Document)inspectResult;
-                String status = inspectResultDoc.getString("status");
-                reportDoc.put("status", InspectStatus.getInspectStatusJson(status));
+        long rowNum = collection.countDocuments(doc);
+        if (rowNum > 0) {
+            int skipNum = (currentPage - 1) * pageSize;
+            Document sortDoc = new Document();
+            sortDoc.put("_report_time", -1);
+            FindIterable<Document> findIterable = collection.find(doc).sort(sortDoc).skip(skipNum).limit(pageSize);
+            List<Document> documentList = findIterable.into(new ArrayList<>());
+            for (Document reportDoc : documentList) {
+                String execUserUuid = reportDoc.getString("_execuser");
+                reportDoc.put("_execuser", new UserVo(execUserUuid));
+                Object inspectResult = reportDoc.get("_inspect_result");
+                if (inspectResult != null) {
+                    Document inspectResultDoc = (Document) inspectResult;
+                    String status = inspectResultDoc.getString("status");
+                    reportDoc.put("status", InspectStatus.getInspectStatusJson(status));
+                }
             }
+            returnObj.put("tbodyList", documentList);
+        }else {
+            returnObj.put("tbodyList", CollectionUtils.EMPTY_COLLECTION);
         }
-        return documentList;
+
+        returnObj.put("pageSize", pageSize);
+        returnObj.put("currentPage", currentPage);
+        returnObj.put("rowNum", rowNum);
+        returnObj.put("pageCount", PageUtil.getPageCount(Math.toIntExact(rowNum), pageSize));
+        return returnObj;
     }
 
     @Override
