@@ -1,5 +1,5 @@
-<html xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office"
-      xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
+<#--<html xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office"-->
+<#--      xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">-->
 <style>
     .innerTable {
         width: 100%;
@@ -36,6 +36,29 @@
     .userAndTime {
         text-align: center;
     }
+
+    .tdone{
+        flex:1;
+    }
+    .title-text{
+        display: inline-block;
+        width: 25%;
+        /*padding-right: 10px;*/
+        text-align: right;
+    }
+    .block-text{
+        width:10%!important;
+    }
+    .tdone .text{
+        display: inline-block;
+    }
+    .tdBox{
+        display: flex;
+    }
+    .boxtab{
+        display: inline-block;
+        width: 89%;
+    }
 </style>
 <#if DATA.reportName??>
     <p class="title">${DATA.reportName}</p>
@@ -71,40 +94,40 @@
         </table>
     </#if>
 </#if>
-<#--报告正文-->
-<table width="100%">
-    <#assign lineList = DATA.lineList/>
-    <#if lineList?? && lineList?size gt 0>
-        <#assign i = 1/>
-        <#list lineList as line>
-            <#if i % 2 != 0>
-                <tr>
-            </#if>
-            <td>${line.key}</td>
-            <#if alertLevelClassMap?? && line.alertLevel??>
-                <td class="${alertLevelClassMap[line.alertLevel]}">
+<#assign lineList = DATA.lineList/>
+<#if lineList?? && lineList?size gt 0>
+<#assign i = 1/>
+<#list lineList as line>
+<#if i % 2 != 0>
+<div class="tdBox">
+    </#if>
+    <div class="tdone">
+        <div class="title-text">${line.key}</div>
+        <#if alertLevelClassMap?? && line.alertLevel??>
+        <div class="${alertLevelClassMap[line.alertLevel]} text">
             <#else>
-                <td>
-            </#if>
-            ${line.value}</td>
-            <#if i % 2 == 0 || i == lineList?size>
-                </tr>
-            </#if>
-            <#assign i++/>
-        </#list>
+            <div class="text">
+                </#if>
+                ${line.value}</div>
+        </div>
+        <#if i % 2 == 0 || i == lineList?size>
+    </div>
+    </#if>
+    <#assign i++/>
+    </#list>
     </#if>
     <#assign tableList = DATA.tableList/>
     <#if tableList?? && tableList?size gt 0>
-        <#list tableList as value>
-            <tr>
-                <td>${value.key}</td>
-                <td>
+        <div>
+            <#list tableList as value>
+                <div class="title-text block-text">${value.key}</div>
+                <div class="boxtab">
                     <@getTable table = value alertLevelClassMap = alertLevelClassMap/>
-                </td>
-            </tr>
-        </#list>
+                </div>
+            </#list>
+        </div>
     </#if>
-</table>
+
 </html>
 
 <#macro getTable table alertLevelClassMap>

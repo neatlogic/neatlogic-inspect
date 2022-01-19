@@ -53,6 +53,12 @@ public class InspectReportExportApi extends PrivateBinaryStreamApiComponentBase 
 
     static String template;
 
+    String wordHtmlHead = "<html xmlns:v=\"urn:schemas-microsoft-com:vml\" xmlns:o=\"urn:schemas-microsoft-com:office:office\"\n" +
+            "xmlns:w=\"urn:schemas-microsoft-com:office:word\" xmlns:m=\"http://schemas.microsoft.com/office/2004/12/omml\"\n" +
+            "xmlns=\"http://www.w3.org/TR/REC-html40\"><head>\n" +
+            "    <!--[if gte mso 9]><xml><w:WordDocument><w:View>Print</w:View><w:TrackMoves>false</w:TrackMoves><w:TrackFormatting/><w:ValidateAgainstSchemas/><w:SaveIfXMLInvalid>false</w:SaveIfXMLInvalid><w:IgnoreMixedContent>false</w:IgnoreMixedContent><w:AlwaysShowPlaceholderText>false</w:AlwaysShowPlaceholderText><w:DoNotPromoteQF/><w:LidThemeOther>EN-US</w:LidThemeOther><w:LidThemeAsian>ZH-CN</w:LidThemeAsian><w:LidThemeComplexScript>X-NONE</w:LidThemeComplexScript><w:Compatibility><w:BreakWrappedTables/><w:SnapToGridInCell/><w:WrapTextWithPunct/><w:UseAsianBreakRules/><w:DontGrowAutofit/><w:SplitPgBreakAndParaMark/><w:DontVertAlignCellWithSp/><w:DontBreakConstrainedForcedTables/><w:DontVertAlignInTxbx/><w:Word11KerningPairs/><w:CachedColBalance/><w:UseFELayout/></w:Compatibility><w:BrowserLevel>MicrosoftInternetExplorer4</w:BrowserLevel><m:mathPr><m:mathFont m:val=\"Cambria Math\"/><m:brkBin m:val=\"before\"/><m:brkBinSub m:val=\"--\"/><m:smallFrac m:val=\"off\"/><m:dispDef/><m:lMargin m:val=\"0\"/> <m:rMargin m:val=\"0\"/><m:defJc m:val=\"centerGroup\"/><m:wrapIndent m:val=\"1440\"/><m:intLim m:val=\"subSup\"/><m:naryLim m:val=\"undOvr\"/></m:mathPr></w:WordDocument></xml><![endif]-->\n" +
+            "</head>";
+
     static {
         try {
             InputStreamReader reader = new InputStreamReader(Objects.requireNonNull(InspectReportExportApi.class.getClassLoader()
@@ -156,17 +162,21 @@ public class InspectReportExportApi extends PrivateBinaryStreamApiComponentBase 
             fileName += "_巡检报告";
             dataObj.put("reportName", fileName);
             String content = FreemarkerUtil.transform(dataObj, template);
+            content = wordHtmlHead + content;
             try (OutputStream os = response.getOutputStream()) {
                 if (DocType.WORD.getValue().equals(type)) {
-                    response.setContentType("application/x-download");
+                    response.setCharacterEncoding("utf-8");
+                    response.setContentType("application/msword");
                     response.setHeader("Content-Disposition",
-                            " attachment; filename=\"" + URLEncoder.encode(fileName, StandardCharsets.UTF_8.name()) + ".docx\"");
-                    ExportUtil.getWordFileByHtml(content, os, true, false);
+                            " attachment; filename=\"" + URLEncoder.encode(fileName, StandardCharsets.UTF_8.name()) + ".doc\"");
+                    os.write(content.getBytes(StandardCharsets.UTF_8));
+                    os.flush();
+                    //ExportUtil.getWordFileByHtml(content, os, true, false);
                 } else if (DocType.PDF.getValue().equals(type)) {
-                    response.setContentType("application/pdf");
-                    response.setHeader("Content-Disposition",
-                            " attachment; filename=\"" + URLEncoder.encode(fileName, StandardCharsets.UTF_8.name()) + ".pdf\"");
-                    ExportUtil.getPdfFileByHtml(content, os, true, true);
+                    //response.setContentType("application/pdf");
+                    //response.setHeader("Content-Disposition",
+                    //        " attachment; filename=\"" + URLEncoder.encode(fileName, StandardCharsets.UTF_8.name()) + ".pdf\"");
+                    //ExportUtil.getPdfFileByHtml(content, os, true, true);
                 }
             } catch (Exception e) {
                 logger.error(e.getMessage(), e);
