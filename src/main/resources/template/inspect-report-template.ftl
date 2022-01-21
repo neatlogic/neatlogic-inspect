@@ -1,6 +1,8 @@
 <!DOCTYPE html>
-<html>
+<html xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office"
+      xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40">
 <head lang="en">
+    <!--[if gte mso 9]><xml><w:WordDocument><w:View>Print</w:View><w:TrackMoves>false</w:TrackMoves><w:TrackFormatting/><w:ValidateAgainstSchemas/><w:SaveIfXMLInvalid>false</w:SaveIfXMLInvalid><w:IgnoreMixedContent>false</w:IgnoreMixedContent><w:AlwaysShowPlaceholderText>false</w:AlwaysShowPlaceholderText><w:DoNotPromoteQF/><w:LidThemeOther>EN-US</w:LidThemeOther><w:LidThemeAsian>ZH-CN</w:LidThemeAsian><w:LidThemeComplexScript>X-NONE</w:LidThemeComplexScript><w:Compatibility><w:BreakWrappedTables/><w:SnapToGridInCell/><w:WrapTextWithPunct/><w:UseAsianBreakRules/><w:DontGrowAutofit/><w:SplitPgBreakAndParaMark/><w:DontVertAlignCellWithSp/><w:DontBreakConstrainedForcedTables/><w:DontVertAlignInTxbx/><w:Word11KerningPairs/><w:CachedColBalance/><w:UseFELayout/></w:Compatibility><w:BrowserLevel>MicrosoftInternetExplorer4</w:BrowserLevel><m:mathPr><m:mathFont m:val="Cambria Math"/><m:brkBin m:val="before"/><m:brkBinSub m:val="--"/><m:smallFrac m:val="off"/><m:dispDef/><m:lMargin m:val="0"/> <m:rMargin m:val="0"/><m:defJc m:val="centerGroup"/><m:wrapIndent m:val="1440"/><m:intLim m:val="subSup"/><m:naryLim m:val="undOvr"/></m:mathPr></w:WordDocument></xml><![endif]-->
     <meta charset="UTF-8"/>
     <style>
         body {
@@ -47,32 +49,16 @@
             text-align: center;
         }
 
-        .tdone {
-            flex: 1;
+        .lineBox{
+            width: 100%;
         }
-
-        .title-text {
-            display: inline-block;
-            width: 25%;
-            /*padding-right: 10px;*/
-            text-align: right;
+        .lineTitle{
+            width: 100%;
+            text-align: left;
         }
-
-        .block-text {
-            width: 10% !important;
-        }
-
-        .tdone .text {
-            display: inline-block;
-        }
-
-        .tdBox {
-            display: flex;
-        }
-
-        .boxtab {
-            display: inline-block;
-            width: 89%;
+        .lineText{
+            width: 100%;
+            text-align: left;
         }
     </style>
 </head>
@@ -82,7 +68,7 @@
     <p class="title">${DATA.reportName}</p>
 </#if>
 <#if DATA.execUser?? || DATA.reportTime>
-    <p class="userAndTime"><span>${DATA.execUser}</span>&nbsp;&nbsp;&nbsp;&nbsp;<span>${DATA.reportTime}</span></p>
+    <p class="userAndTime"><span>${DATA.execUser}</span>&nbsp;<span>${DATA.reportTime}</span></p>
 </#if>
 <#assign alertLevelClassMap = DATA.alertLevelClassMap/>
 <#--告警列表-->
@@ -114,37 +100,26 @@
 </#if>
 <#assign lineList = DATA.lineList/>
 <#if lineList?? && lineList?size gt 0>
-<#assign i = 1/>
-<#list lineList as line>
-<#if i % 2 != 0>
-<div class="tdBox">
-    </#if>
-    <div class="tdone">
-        <div class="title-text">${line.key}</div>
-        <#if alertLevelClassMap?? && line.alertLevel??>
-        <div class="${alertLevelClassMap[line.alertLevel]} text">
-            <#else>
-            <div class="text">
-                </#if>
-                ${line.value}</div>
+    <#assign i = 1/>
+    <#list lineList as line>
+        <div class="lineBox">
+            <span class="lineTitle">${line.key}：</span>
+            <span class="<#if alertLevelClassMap?? && line.alertLevel??> ${alertLevelClassMap[line.alertLevel]} lineText <#else> lineText </#if>">${line.value}</span>
         </div>
-        <#if i % 2 == 0 || i == lineList?size>
-    </div>
-    </#if>
-    <#assign i++/>
+        <#assign i++/>
     </#list>
-    </#if>
-    <#assign tableList = DATA.tableList/>
-    <#if tableList?? && tableList?size gt 0>
-        <div>
-            <#list tableList as value>
-                <div class="title-text block-text">${value.key}</div>
-                <div class="boxtab">
-                    <@getTable table = value alertLevelClassMap = alertLevelClassMap/>
-                </div>
-            </#list>
-        </div>
-    </#if>
+</#if>
+<#assign tableList = DATA.tableList/>
+<#if tableList?? && tableList?size gt 0>
+    <div>
+        <#list tableList as value>
+            <div>${value.key}：</div>
+            <div>
+                <@getTable table = value alertLevelClassMap = alertLevelClassMap/>
+            </div>
+        </#list>
+    </div>
+</#if>
 </body>
 </html>
 
