@@ -20,18 +20,26 @@ import codedriver.framework.restful.annotation.Param;
 import codedriver.framework.restful.constvalue.OperationTypeEnum;
 import codedriver.framework.restful.core.privateapi.PrivateBinaryStreamApiComponentBase;
 import codedriver.framework.util.DocType;
-import codedriver.framework.util.ExportUtil;
 import codedriver.framework.util.FreemarkerUtil;
 import codedriver.framework.util.TimeUtil;
 import codedriver.module.inspect.service.InspectReportService;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
+import com.itextpdf.text.BaseColor;
+import com.itextpdf.text.FontFactory;
+import com.itextpdf.text.pdf.PdfWriter;
+import com.itextpdf.tool.xml.XMLWorkerFontProvider;
+import com.itextpdf.tool.xml.XMLWorkerHelper;
+import com.lowagie.text.Font;
+import com.lowagie.text.pdf.BaseFont;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.bson.Document;
+import org.docx4j.org.xhtmlrenderer.pdf.ITextFontResolver;
+import org.docx4j.org.xhtmlrenderer.pdf.ITextRenderer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -39,8 +47,11 @@ import org.springframework.stereotype.Service;
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.io.*;
+import java.io.ByteArrayInputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.net.URLEncoder;
+import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 
@@ -53,6 +64,8 @@ public class InspectReportExportApi extends PrivateBinaryStreamApiComponentBase 
 
     static String template;
 
+    static String fontPath;
+
     String wordHtmlHead = "<html xmlns:v=\"urn:schemas-microsoft-com:vml\" xmlns:o=\"urn:schemas-microsoft-com:office:office\"\n" +
             "xmlns:w=\"urn:schemas-microsoft-com:office:word\" xmlns:m=\"http://schemas.microsoft.com/office/2004/12/omml\"\n" +
             "xmlns=\"http://www.w3.org/TR/REC-html40\"><head>\n" +
@@ -64,6 +77,8 @@ public class InspectReportExportApi extends PrivateBinaryStreamApiComponentBase 
             InputStreamReader reader = new InputStreamReader(Objects.requireNonNull(InspectReportExportApi.class.getClassLoader()
                     .getResourceAsStream("template/inspect-report-template.ftl")), StandardCharsets.UTF_8.name());
             template = IOUtils.toString(reader);
+            fontPath = Objects.requireNonNull(InspectReportExportApi.class.getClassLoader()
+                    .getResource("codedriver/resources/fonts/simhei.ttf")).getPath();
         } catch (Exception e) {
             logger.error(e.getMessage(), e);
         }
@@ -162,7 +177,7 @@ public class InspectReportExportApi extends PrivateBinaryStreamApiComponentBase 
             fileName += "_巡检报告";
             dataObj.put("reportName", fileName);
             String content = FreemarkerUtil.transform(dataObj, template);
-            content = wordHtmlHead + content;
+            //content = wordHtmlHead + content;
             try (OutputStream os = response.getOutputStream()) {
                 if (DocType.WORD.getValue().equals(type)) {
                     response.setCharacterEncoding("utf-8");
@@ -173,10 +188,37 @@ public class InspectReportExportApi extends PrivateBinaryStreamApiComponentBase 
                     os.flush();
                     //ExportUtil.getWordFileByHtml(content, os, true, false);
                 } else if (DocType.PDF.getValue().equals(type)) {
-                    //response.setContentType("application/pdf");
-                    //response.setHeader("Content-Disposition",
-                    //        " attachment; filename=\"" + URLEncoder.encode(fileName, StandardCharsets.UTF_8.name()) + ".pdf\"");
+                    response.setContentType("application/pdf");
+                    response.setHeader("Content-Disposition",
+                            " attachment; filename=\"" + URLEncoder.encode(fileName, StandardCharsets.UTF_8.name()) + ".pdf\"");
+                    //ITextRenderer renderer = new ITextRenderer();
+                    //renderer.setDocumentFromString(content);
+                    //ITextFontResolver fontResolver = renderer.getFontResolver();
+                    //fontResolver.addFont("codedriver/resources/fonts/simhei.ttf", BaseFont.IDENTITY_H, BaseFont.NOT_EMBEDDED);
+                    //
+                    //renderer.layout();
+                    //renderer.createPDF(os);
                     //ExportUtil.getPdfFileByHtml(content, os, true, true);
+
+//                    //2 生成PDF并输出到浏览器下载
+                    com.itextpdf.text.Document doc = new com.itextpdf.text.Document();
+
+                    response.setContentType("application/pdf");
+                    response.setHeader("Content-Disposition",
+                            " attachment; filename=\"" + URLEncoder.encode(fileName, StandardCharsets.UTF_8.name()) + ".pdf\"");
+
+                    PdfWriter writer = PdfWriter.getInstance(doc, response.getOutputStream());
+
+                    //String fontPath = Objects.requireNonNull(this.getClass().getClassLoader().getResource("codedriver/resources/fonts/simhei.ttf")).getPath(); //字体文件路径
+                    //XMLWorkerFontProvider provider = new XMLWorkerFontProvider(XMLWorkerFontProvider.DONTLOOKFORFONTS);
+                    //provider.register(fontPath);//注册字体
+
+                    doc.open();
+                    ByteArrayInputStream bis = new ByteArrayInputStream(content.getBytes(Charset.forName("UTF-8")));
+                    XMLWorkerHelper.getInstance().parseXHtml(writer, doc, bis, Charset.forName("UTF-8"));
+
+                    doc.close();
+                    writer.close();
                 }
             } catch (Exception e) {
                 logger.error(e.getMessage(), e);

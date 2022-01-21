@@ -1,65 +1,83 @@
-<#--<html xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office"-->
-<#--      xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">-->
-<style>
-    .innerTable {
-        width: 100%;
-        text-align: center;
-        border-collapse: collapse;
-    }
+<!DOCTYPE html>
+<html>
+<head lang="en">
+    <meta charset="UTF-8"/>
+    <style>
+        body {
+            font-family: "SimSun";
+        }
 
-    .innerTable th, .innerTable td {
-        border: 1px solid #000;
-    }
+        th {
+            font-weight: normal;
+        }
 
-    .text-success {
-        color: #25b865;
-    }
+        .innerTable {
+            width: 100%;
+            text-align: center;
+            border-collapse: collapse;
+        }
 
-    .text-warning {
-        color: #f9a825;
-    }
+        .innerTable th, .innerTable td {
+            border: 1px solid #000;
+        }
 
-    .text-error {
-        color: #f71010;
-    }
+        .text-success {
+            color: #25b865;
+        }
 
-    .bg-error {
-        color: #f71010;
-    }
+        .text-warning {
+            color: #f9a825;
+        }
 
-    .title {
-        font-size: 20px;
-        text-align: center;
-        font-weight: bold;
-    }
+        .text-error {
+            color: #f71010;
+        }
 
-    .userAndTime {
-        text-align: center;
-    }
+        .bg-error {
+            color: #f71010;
+        }
 
-    .tdone{
-        flex:1;
-    }
-    .title-text{
-        display: inline-block;
-        width: 25%;
-        /*padding-right: 10px;*/
-        text-align: right;
-    }
-    .block-text{
-        width:10%!important;
-    }
-    .tdone .text{
-        display: inline-block;
-    }
-    .tdBox{
-        display: flex;
-    }
-    .boxtab{
-        display: inline-block;
-        width: 89%;
-    }
-</style>
+        .title {
+            font-size: 20px;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        .userAndTime {
+            text-align: center;
+        }
+
+        .tdone {
+            flex: 1;
+        }
+
+        .title-text {
+            display: inline-block;
+            width: 25%;
+            /*padding-right: 10px;*/
+            text-align: right;
+        }
+
+        .block-text {
+            width: 10% !important;
+        }
+
+        .tdone .text {
+            display: inline-block;
+        }
+
+        .tdBox {
+            display: flex;
+        }
+
+        .boxtab {
+            display: inline-block;
+            width: 89%;
+        }
+    </style>
+</head>
+
+<body>
 <#if DATA.reportName??>
     <p class="title">${DATA.reportName}</p>
 </#if>
@@ -127,7 +145,7 @@
             </#list>
         </div>
     </#if>
-
+</body>
 </html>
 
 <#macro getTable table alertLevelClassMap>
