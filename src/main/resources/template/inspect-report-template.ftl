@@ -91,6 +91,7 @@
         </table>
     </#if>
 </#if>
+<#--正文-->
 <#assign lineList = DATA.lineList/>
 <#if lineList?? && lineList?size gt 0>
     <#assign i = 1/>
@@ -102,6 +103,7 @@
         <#assign i++/>
     </#list>
 </#if>
+<#--表格类字段-->
 <#assign tableList = DATA.tableList/>
 <#if tableList?? && tableList?size gt 0>
     <div>

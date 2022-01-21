@@ -176,6 +176,7 @@ public class InspectReportExportApi extends PrivateBinaryStreamApiComponentBase 
                     doc.open();
                     ByteArrayInputStream bis = new ByteArrayInputStream(content.getBytes(StandardCharsets.UTF_8));
                     XMLWorkerHelper.getInstance().parseXHtml(writer, doc, bis, StandardCharsets.UTF_8);
+                    bis.close();
                     doc.close();
                     writer.close();
                 }
