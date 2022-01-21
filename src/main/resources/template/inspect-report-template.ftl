@@ -9,7 +9,8 @@
             font-family: "SimSun";
         }
 
-        th {
+        .innerTable th, .innerTable td {
+            border: 1px solid #000;
             font-weight: normal;
         }
 
@@ -51,14 +52,6 @@
 
         .lineBox{
             width: 100%;
-        }
-        .lineTitle{
-            width: 100%;
-            text-align: left;
-        }
-        .lineText{
-            width: 100%;
-            text-align: left;
         }
     </style>
 </head>
@@ -103,8 +96,8 @@
     <#assign i = 1/>
     <#list lineList as line>
         <div class="lineBox">
-            <span class="lineTitle">${line.key}：</span>
-            <span class="<#if alertLevelClassMap?? && line.alertLevel??> ${alertLevelClassMap[line.alertLevel]} lineText <#else> lineText </#if>">${line.value}</span>
+            <span>${line.key}：</span>
+            <span <#if alertLevelClassMap?? && line.alertLevel??> class="${alertLevelClassMap[line.alertLevel]}" </#if>>${line.value}</span>
         </div>
         <#assign i++/>
     </#list>
