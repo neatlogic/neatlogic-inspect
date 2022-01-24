@@ -39,7 +39,8 @@ import org.springframework.stereotype.Service;
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.io.*;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
@@ -158,15 +159,17 @@ public class InspectReportExportApi extends PrivateBinaryStreamApiComponentBase 
             String content = FreemarkerUtil.transform(dataObj, template);
             try (OutputStream os = response.getOutputStream()) {
                 if (DocType.WORD.getValue().equals(type)) {
-                    response.setContentType("application/x-download");
+                    response.setCharacterEncoding("utf-8");
+                    response.setContentType("application/msword");
                     response.setHeader("Content-Disposition",
-                            " attachment; filename=\"" + URLEncoder.encode(fileName, StandardCharsets.UTF_8.name()) + ".docx\"");
-                    ExportUtil.getWordFileByHtml(content, os, true, false);
+                            " attachment; filename=\"" + URLEncoder.encode(fileName, StandardCharsets.UTF_8.name()) + ".doc\"");
+                    os.write(content.getBytes(StandardCharsets.UTF_8));
+                    os.flush();
                 } else if (DocType.PDF.getValue().equals(type)) {
                     response.setContentType("application/pdf");
                     response.setHeader("Content-Disposition",
                             " attachment; filename=\"" + URLEncoder.encode(fileName, StandardCharsets.UTF_8.name()) + ".pdf\"");
-                    ExportUtil.getPdfFileByHtml(content, os, true, true);
+                    ExportUtil.savePdf(content, os);
                 }
             } catch (Exception e) {
                 logger.error(e.getMessage(), e);
