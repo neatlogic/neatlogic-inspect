@@ -20,14 +20,13 @@ import codedriver.framework.restful.annotation.Param;
 import codedriver.framework.restful.constvalue.OperationTypeEnum;
 import codedriver.framework.restful.core.privateapi.PrivateBinaryStreamApiComponentBase;
 import codedriver.framework.util.DocType;
+import codedriver.framework.util.ExportUtil;
 import codedriver.framework.util.FreemarkerUtil;
 import codedriver.framework.util.TimeUtil;
 import codedriver.module.inspect.service.InspectReportService;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
-import com.itextpdf.text.pdf.PdfWriter;
-import com.itextpdf.tool.xml.XMLWorkerHelper;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.io.IOUtils;
@@ -40,7 +39,6 @@ import org.springframework.stereotype.Service;
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.io.ByteArrayInputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.URLEncoder;
@@ -171,14 +169,7 @@ public class InspectReportExportApi extends PrivateBinaryStreamApiComponentBase 
                     response.setContentType("application/pdf");
                     response.setHeader("Content-Disposition",
                             " attachment; filename=\"" + URLEncoder.encode(fileName, StandardCharsets.UTF_8.name()) + ".pdf\"");
-                    com.itextpdf.text.Document doc = new com.itextpdf.text.Document();
-                    PdfWriter writer = PdfWriter.getInstance(doc, response.getOutputStream());
-                    doc.open();
-                    ByteArrayInputStream bis = new ByteArrayInputStream(content.getBytes(StandardCharsets.UTF_8));
-                    XMLWorkerHelper.getInstance().parseXHtml(writer, doc, bis, StandardCharsets.UTF_8);
-                    bis.close();
-                    doc.close();
-                    writer.close();
+                    ExportUtil.savePdf(content, os);
                 }
             } catch (Exception e) {
                 logger.error(e.getMessage(), e);
