@@ -58,6 +58,7 @@ public class InspectResourceReportSearchApi extends PrivateApiComponentBase {
             @Param(name = "envIdList", type = ApiParamType.JSONARRAY, desc = "环境id列表"),
             @Param(name = "appSystemIdList", type = ApiParamType.JSONARRAY, desc = "应用系统id列表"),
             @Param(name = "appModuleIdList", type = ApiParamType.JSONARRAY, desc = "应用模块id列表"),
+            @Param(name = "inspectStatusList", type = ApiParamType.JSONARRAY, desc = "巡检状态列表"),
             @Param(name = "typeIdList", type = ApiParamType.JSONARRAY, desc = "资源类型id列表"),
             @Param(name = "tagIdList", type = ApiParamType.JSONARRAY, desc = "标签id列表"),
             @Param(name = "defaultValue", type = ApiParamType.JSONARRAY, desc = "用于回显的资源ID列表"),
