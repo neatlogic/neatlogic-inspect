@@ -156,20 +156,22 @@ public class InspectReportExportApi extends PrivateBinaryStreamApiComponentBase 
             }
             fileName += "_巡检报告";
             dataObj.put("reportName", fileName);
+            dataObj.put("docType", type);
             String content = FreemarkerUtil.transform(dataObj, template);
             try (OutputStream os = response.getOutputStream()) {
                 if (DocType.WORD.getValue().equals(type)) {
                     response.setCharacterEncoding("utf-8");
                     response.setContentType("application/msword");
                     response.setHeader("Content-Disposition",
-                            " attachment; filename=\"" + URLEncoder.encode(fileName, StandardCharsets.UTF_8.name()) + ".doc\"");
-                    os.write(content.getBytes(StandardCharsets.UTF_8));
+                            " attachment; filename=\"" + URLEncoder.encode(fileName, StandardCharsets.UTF_8.name()) + ".docx\"");
+                    ExportUtil.getWordFileByHtml(content, os, true, false);
                     os.flush();
                 } else if (DocType.PDF.getValue().equals(type)) {
                     response.setContentType("application/pdf");
                     response.setHeader("Content-Disposition",
                             " attachment; filename=\"" + URLEncoder.encode(fileName, StandardCharsets.UTF_8.name()) + ".pdf\"");
-                    ExportUtil.savePdf(content, os);
+                    ExportUtil.savePdf(content, os, false);
+                    os.flush();
                 }
             } catch (Exception e) {
                 logger.error(e.getMessage(), e);
