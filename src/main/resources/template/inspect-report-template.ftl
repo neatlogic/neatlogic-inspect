@@ -1,47 +1,67 @@
+<!DOCTYPE html>
 <html xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office"
-      xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
-<style>
-    .innerTable {
-        width: 100%;
-        text-align: center;
-        border-collapse: collapse;
-    }
+      xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40">
+<head lang="en">
+    <!--[if gte mso 9]><xml><w:WordDocument><w:View>Print</w:View><w:TrackMoves>false</w:TrackMoves><w:TrackFormatting/><w:ValidateAgainstSchemas/><w:SaveIfXMLInvalid>false</w:SaveIfXMLInvalid><w:IgnoreMixedContent>false</w:IgnoreMixedContent><w:AlwaysShowPlaceholderText>false</w:AlwaysShowPlaceholderText><w:DoNotPromoteQF/><w:LidThemeOther>EN-US</w:LidThemeOther><w:LidThemeAsian>ZH-CN</w:LidThemeAsian><w:LidThemeComplexScript>X-NONE</w:LidThemeComplexScript><w:Compatibility><w:BreakWrappedTables/><w:SnapToGridInCell/><w:WrapTextWithPunct/><w:UseAsianBreakRules/><w:DontGrowAutofit/><w:SplitPgBreakAndParaMark/><w:DontVertAlignCellWithSp/><w:DontBreakConstrainedForcedTables/><w:DontVertAlignInTxbx/><w:Word11KerningPairs/><w:CachedColBalance/><w:UseFELayout/></w:Compatibility><w:BrowserLevel>MicrosoftInternetExplorer4</w:BrowserLevel><m:mathPr><m:mathFont m:val="Cambria Math"/><m:brkBin m:val="before"/><m:brkBinSub m:val="--"/><m:smallFrac m:val="off"/><m:dispDef/><m:lMargin m:val="0"/> <m:rMargin m:val="0"/><m:defJc m:val="centerGroup"/><m:wrapIndent m:val="1440"/><m:intLim m:val="subSup"/><m:naryLim m:val="undOvr"/></m:mathPr></w:WordDocument></xml><![endif]-->
+    <meta charset="UTF-8"/>
+    <style>
+        body {
+            font-family: "SimSun";
+        }
 
-    .innerTable th, .innerTable td {
-        border: 1px solid #000;
-    }
+        .innerTable th, .innerTable td {
+            border: 1px solid #000;
+            font-weight: normal;
+        }
 
-    .text-success {
-        color: #25b865;
-    }
+        .innerTable {
+            width: 100%;
+            text-align: center;
+            border-collapse: collapse;
+        }
 
-    .text-warning {
-        color: #f9a825;
-    }
+        .innerTable th, .innerTable td {
+            border: 1px solid #000;
+        }
 
-    .text-error {
-        color: #f71010;
-    }
+        .text-success {
+            color: #25b865;
+        }
 
-    .bg-error {
-        color: #f71010;
-    }
+        .text-warning {
+            color: #f9a825;
+        }
 
-    .title {
-        font-size: 20px;
-        text-align: center;
-        font-weight: bold;
-    }
+        .text-error {
+            color: #f71010;
+        }
 
-    .userAndTime {
-        text-align: center;
-    }
-</style>
+        .bg-error {
+            color: #f71010;
+        }
+
+        .title {
+            font-size: 20px;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        .userAndTime {
+            text-align: center;
+        }
+
+        .lineBox{
+            width: 100%;
+        }
+    </style>
+</head>
+
+<body>
 <#if DATA.reportName??>
     <p class="title">${DATA.reportName}</p>
 </#if>
 <#if DATA.execUser?? || DATA.reportTime>
-    <p class="userAndTime"><span>${DATA.execUser}</span>&nbsp;&nbsp;&nbsp;&nbsp;<span>${DATA.reportTime}</span></p>
+    <p class="userAndTime"><span>${DATA.execUser}</span>&nbsp;<span>${DATA.reportTime}</span></p>
 </#if>
 <#assign alertLevelClassMap = DATA.alertLevelClassMap/>
 <#--告警列表-->
@@ -71,40 +91,31 @@
         </table>
     </#if>
 </#if>
-<#--报告正文-->
-<table width="100%">
-    <#assign lineList = DATA.lineList/>
-    <#if lineList?? && lineList?size gt 0>
-        <#assign i = 1/>
-        <#list lineList as line>
-            <#if i % 2 != 0>
-                <tr>
-            </#if>
-            <td>${line.key}</td>
-            <#if alertLevelClassMap?? && line.alertLevel??>
-                <td class="${alertLevelClassMap[line.alertLevel]}">
-            <#else>
-                <td>
-            </#if>
-            ${line.value}</td>
-            <#if i % 2 == 0 || i == lineList?size>
-                </tr>
-            </#if>
-            <#assign i++/>
-        </#list>
-    </#if>
-    <#assign tableList = DATA.tableList/>
-    <#if tableList?? && tableList?size gt 0>
+<#--正文-->
+<#assign lineList = DATA.lineList/>
+<#if lineList?? && lineList?size gt 0>
+    <#assign i = 1/>
+    <#list lineList as line>
+        <div class="lineBox">
+            <span>${line.key}：</span>
+            <span <#if alertLevelClassMap?? && line.alertLevel??> class="${alertLevelClassMap[line.alertLevel]}" </#if>>${line.value}</span>
+        </div>
+        <#assign i++/>
+    </#list>
+</#if>
+<#--表格类字段-->
+<#assign tableList = DATA.tableList/>
+<#if tableList?? && tableList?size gt 0>
+    <div>
         <#list tableList as value>
-            <tr>
-                <td>${value.key}</td>
-                <td>
-                    <@getTable table = value alertLevelClassMap = alertLevelClassMap/>
-                </td>
-            </tr>
+            <div>${value.key}：</div>
+            <div>
+                <@getTable table = value alertLevelClassMap = alertLevelClassMap/>
+            </div>
         </#list>
-    </#if>
-</table>
+    </div>
+</#if>
+</body>
 </html>
 
 <#macro getTable table alertLevelClassMap>
