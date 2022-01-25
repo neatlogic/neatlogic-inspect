@@ -6,7 +6,8 @@ import codedriver.framework.autoexec.dto.job.AutoexecJobVo;
 import codedriver.framework.common.constvalue.ApiParamType;
 import codedriver.framework.common.dto.BasePageVo;
 import codedriver.framework.crossover.CrossoverServiceFactory;
-import codedriver.framework.inspect.auth.INSPECT_AUTOEXEC_JOB;
+import codedriver.framework.inspect.auth.INSPECT_EXECUTE;
+import codedriver.framework.inspect.auth.INSPECT_SCHEDULE_EXECUTE;
 import codedriver.framework.restful.annotation.*;
 import codedriver.framework.restful.constvalue.OperationTypeEnum;
 import codedriver.framework.restful.core.privateapi.PrivateApiComponentBase;
@@ -22,7 +23,8 @@ import java.util.List;
  * @date 2022/1/24 5:54 下午
  */
 @Service
-@AuthAction(action = INSPECT_AUTOEXEC_JOB.class)
+@AuthAction(action = INSPECT_SCHEDULE_EXECUTE.class)
+@AuthAction(action = INSPECT_EXECUTE.class)
 @OperationType(type = OperationTypeEnum.SEARCH)
 public class InspectAutoexecJobSearchApi extends PrivateApiComponentBase {
     @Override
