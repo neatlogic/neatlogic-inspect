@@ -152,7 +152,18 @@
                             <#if cell?contains("&=&") && alertLevelClassMap??>
                                 <td class="${alertLevelClassMap[cell?split("&=&")[1]]}">${cell?split("&=&")[0]}</td>
                             <#else>
-                                <td>${cell}</td>
+                                <td style="word-break: break-all;word-wrap: break-word;">
+                                    <!--有些命令行或环境变量太长，导致超出纸张大小，故强制换行-->
+                                    <#if cell?length gt 20>
+                                        <#if cell?contains(" ")>
+                                            ${cell?replace(" ", " <br/>")}
+                                        <#elseif cell?contains(":")>
+                                            ${cell?replace(":", ":<br/>")}
+                                        </#if>
+                                    <#else>
+                                        ${cell}
+                                    </#if>
+                                </td>
                             </#if>
                         </#if>
                     </#list>
