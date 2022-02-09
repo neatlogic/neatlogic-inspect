@@ -9,12 +9,13 @@ import codedriver.framework.autoexec.dao.mapper.AutoexecTypeMapper;
 import codedriver.framework.autoexec.dto.AutoexecTypeVo;
 import codedriver.framework.common.constvalue.SystemUser;
 import codedriver.framework.startup.IStartup;
+import codedriver.framework.startup.StartupBase;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
 
 @Service
-class InspectAutoexecTypeSaveApi implements IStartup {
+class InspectAutoexecTypeSaveApi extends StartupBase {
 
     @Resource
 
