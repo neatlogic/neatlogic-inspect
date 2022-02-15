@@ -5,16 +5,17 @@
 
 package codedriver.module.inspect.api;
 
+import codedriver.framework.asynchronization.threadlocal.TenantContext;
 import codedriver.framework.auth.core.AuthAction;
-import codedriver.framework.autoexec.dao.mapper.AutoexecJobMapper;
-import codedriver.framework.autoexec.dto.job.AutoexecJobPhaseNodeVo;
-import codedriver.framework.autoexec.dto.job.AutoexecJobResourceInspectVo;
-import codedriver.framework.cmdb.crossover.IResourceListApiCrossoverService;
+import codedriver.framework.cmdb.crossover.IResourceCenterResourceCrossoverService;
+import codedriver.framework.cmdb.dto.resourcecenter.ResourceSearchVo;
 import codedriver.framework.cmdb.dto.resourcecenter.ResourceVo;
 import codedriver.framework.common.constvalue.ApiParamType;
 import codedriver.framework.common.dto.BasePageVo;
+import codedriver.framework.common.util.PageUtil;
 import codedriver.framework.crossover.CrossoverServiceFactory;
 import codedriver.framework.inspect.auth.INSPECT_BASE;
+import codedriver.framework.inspect.dao.mapper.InspectMapper;
 import codedriver.framework.inspect.dto.InspectResourceVo;
 import codedriver.framework.restful.annotation.Input;
 import codedriver.framework.restful.annotation.OperationType;
@@ -23,14 +24,12 @@ import codedriver.framework.restful.annotation.Param;
 import codedriver.framework.restful.constvalue.OperationTypeEnum;
 import codedriver.framework.restful.core.privateapi.PrivateApiComponentBase;
 import com.alibaba.fastjson.JSONObject;
-import org.apache.commons.collections4.CollectionUtils;
+import com.alibaba.nacos.common.utils.CollectionUtils;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.stream.Collectors;
 
 @Service
 @AuthAction(action = INSPECT_BASE.class)
@@ -38,7 +37,7 @@ import java.util.stream.Collectors;
 public class InspectResourceReportSearchApi extends PrivateApiComponentBase {
 
     @Resource
-    AutoexecJobMapper autoexecJobMapper;
+    InspectMapper inspectMapper;
 
     @Override
     public String getName() {
@@ -72,25 +71,30 @@ public class InspectResourceReportSearchApi extends PrivateApiComponentBase {
     })
     @Override
     public Object myDoService(JSONObject paramObj) throws Exception {
-        IResourceListApiCrossoverService resourceListApi = CrossoverServiceFactory.getApi(IResourceListApiCrossoverService.class);
-        JSONObject resourceJson = JSONObject.parseObject(JSONObject.toJSONString(resourceListApi.myDoService(paramObj)));
-        List<InspectResourceVo> resourceVoList = JSONObject.parseArray(resourceJson.getString("tbodyList"), InspectResourceVo.class);
-        //补充巡检相关信息
-        if (CollectionUtils.isNotEmpty(resourceVoList)) {
-            List<AutoexecJobResourceInspectVo> jobResourceInspectVos = autoexecJobMapper.getJobResourceInspectByResourceId(resourceVoList.stream().map(InspectResourceVo::getId).collect(Collectors.toList()));
-            if (CollectionUtils.isNotEmpty(jobResourceInspectVos)) {
-                for (InspectResourceVo resourceVo : resourceVoList) {
-                    Optional<AutoexecJobResourceInspectVo> jobResourceInspectVoOptional = jobResourceInspectVos.stream().filter(o -> Objects.equals(o.getResourceId(), resourceVo.getId())).findFirst();
-                    if (jobResourceInspectVoOptional.isPresent()) {
-                        AutoexecJobResourceInspectVo jobResourceInspectVo = jobResourceInspectVoOptional.get();
-                        AutoexecJobPhaseNodeVo jobPhaseNodeVo = autoexecJobMapper.getJobPhaseNodeInfoByJobPhaseIdAndResourceId(jobResourceInspectVo.getPhaseId(), jobResourceInspectVo.getResourceId());
-                        resourceVo.setJobPhaseNodeVo(jobPhaseNodeVo);
-                    }
-                }
-                resourceJson.put("tbodyList", resourceVoList);
+        JSONObject resultObj = new JSONObject();
+        List<InspectResourceVo> inspectResourceVoList = null;
+        IResourceCenterResourceCrossoverService resourceCrossoverService = CrossoverServiceFactory.getApi(IResourceCenterResourceCrossoverService.class);
+        ResourceSearchVo searchVo = resourceCrossoverService.assembleResourceSearchVo(paramObj);
+        int rowNum = inspectMapper.getInspectResourceCount(searchVo);
+        if (rowNum > 0) {
+            List<ResourceVo> resourceVoList = new ArrayList<>();
+            List<Long> resourceIdList = inspectMapper.getInspectResourceIdList(searchVo);
+            inspectResourceVoList = inspectMapper.getInspectResourceVoListByIdList(resourceIdList, TenantContext.get().getDataDbName());
+            if (CollectionUtils.isNotEmpty(inspectResourceVoList)) {
+                resourceVoList.addAll(inspectResourceVoList);
             }
+            resourceCrossoverService.getResourceAccountAndTag(resourceIdList, resourceVoList);
         }
-        return resourceJson;
+        if (inspectResourceVoList == null) {
+            inspectResourceVoList = new ArrayList<>();
+        }
+        resultObj.put("tbodyList", inspectResourceVoList);
+        resultObj.put("rowNum", rowNum);
+        resultObj.put("pageCount", PageUtil.getPageCount(Math.toIntExact(rowNum), searchVo.getPageSize()));
+        resultObj.put("currentPage", searchVo.getCurrentPage());
+        resultObj.put("pageSize", searchVo.getPageSize());
+        return resultObj;
+
     }
 
     @Override
