@@ -155,11 +155,10 @@
                                 <td style="word-break: break-all;word-wrap: break-word;">
                                     <!--有些命令行或环境变量太长，导致超出纸张大小，故强制换行-->
                                     <#if cell?length gt 20>
-                                        <#if cell?contains(" ")>
-                                            ${cell?replace(" ", " <br/>")}
-                                        <#elseif cell?contains(":")>
-                                            ${cell?replace(":", ":<br/>")}
-                                        </#if>
+                                        <#assign n = cell?length / 20>
+                                        <#list 0..n as i>
+                                            ${cell[i * 20..*(i + 1) * 20]}<br/>
+                                        </#list>
                                     <#else>
                                         ${cell}
                                     </#if>
