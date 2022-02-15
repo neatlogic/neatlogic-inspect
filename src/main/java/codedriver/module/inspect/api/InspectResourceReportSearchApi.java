@@ -82,8 +82,8 @@ public class InspectResourceReportSearchApi extends PrivateApiComponentBase {
             inspectResourceVoList = inspectMapper.getInspectResourceVoListByIdList(resourceIdList, TenantContext.get().getDataDbName());
             if (CollectionUtils.isNotEmpty(inspectResourceVoList)) {
                 resourceVoList.addAll(inspectResourceVoList);
+                resourceCrossoverService.getResourceAccountAndTag(resourceIdList, resourceVoList);
             }
-            resourceCrossoverService.getResourceAccountAndTag(resourceIdList, resourceVoList);
         }
         if (inspectResourceVoList == null) {
             inspectResourceVoList = new ArrayList<>();
