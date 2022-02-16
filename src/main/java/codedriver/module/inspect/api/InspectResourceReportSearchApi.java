@@ -12,7 +12,6 @@ import codedriver.framework.cmdb.dto.resourcecenter.ResourceSearchVo;
 import codedriver.framework.cmdb.dto.resourcecenter.ResourceVo;
 import codedriver.framework.common.constvalue.ApiParamType;
 import codedriver.framework.common.dto.BasePageVo;
-import codedriver.framework.common.util.PageUtil;
 import codedriver.framework.crossover.CrossoverServiceFactory;
 import codedriver.framework.inspect.auth.INSPECT_BASE;
 import codedriver.framework.inspect.dao.mapper.InspectMapper;
@@ -23,6 +22,7 @@ import codedriver.framework.restful.annotation.Output;
 import codedriver.framework.restful.annotation.Param;
 import codedriver.framework.restful.constvalue.OperationTypeEnum;
 import codedriver.framework.restful.core.privateapi.PrivateApiComponentBase;
+import codedriver.framework.util.TableResultUtil;
 import com.alibaba.fastjson.JSONObject;
 import com.alibaba.nacos.common.utils.CollectionUtils;
 import org.springframework.stereotype.Service;
@@ -89,13 +89,8 @@ public class InspectResourceReportSearchApi extends PrivateApiComponentBase {
         if (inspectResourceVoList == null) {
             inspectResourceVoList = new ArrayList<>();
         }
-        resultObj.put("tbodyList", inspectResourceVoList);
-        resultObj.put("rowNum", rowNum);
-        resultObj.put("pageCount", PageUtil.getPageCount(Math.toIntExact(rowNum), searchVo.getPageSize()));
-        resultObj.put("currentPage", searchVo.getCurrentPage());
-        resultObj.put("pageSize", searchVo.getPageSize());
-        return resultObj;
-
+        searchVo.setRowNum(rowNum);
+        return TableResultUtil.getResult(inspectResourceVoList, searchVo);
     }
 
     @Override
