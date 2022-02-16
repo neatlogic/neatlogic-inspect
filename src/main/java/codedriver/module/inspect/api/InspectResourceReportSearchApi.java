@@ -72,7 +72,6 @@ public class InspectResourceReportSearchApi extends PrivateApiComponentBase {
     })
     @Override
     public Object myDoService(JSONObject paramObj) throws Exception {
-        JSONObject resultObj = new JSONObject();
         List<InspectResourceVo> inspectResourceVoList = null;
         IResourceCenterResourceCrossoverService resourceCrossoverService = CrossoverServiceFactory.getApi(IResourceCenterResourceCrossoverService.class);
         ResourceSearchVo searchVo = resourceCrossoverService.assembleResourceSearchVo(paramObj);
