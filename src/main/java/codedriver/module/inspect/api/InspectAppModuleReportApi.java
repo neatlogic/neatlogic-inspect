@@ -5,6 +5,7 @@ import codedriver.framework.autoexec.dao.mapper.AutoexecJobMapper;
 import codedriver.framework.autoexec.dto.job.AutoexecJobPhaseNodeVo;
 import codedriver.framework.autoexec.dto.job.AutoexecJobResourceInspectVo;
 import codedriver.framework.cmdb.crossover.IResourceCenterResourceCrossoverService;
+import codedriver.framework.cmdb.dto.resourcecenter.ResourceSearchVo;
 import codedriver.framework.common.constvalue.ApiParamType;
 import codedriver.framework.crossover.CrossoverServiceFactory;
 import codedriver.framework.inspect.auth.INSPECT_BASE;
@@ -66,16 +67,17 @@ public class InspectAppModuleReportApi extends PrivateApiComponentBase {
     @Description(desc = "获取巡检应用报告列表")
     @Override
     public Object myDoService(JSONObject paramObj) throws Exception {
+        ResourceSearchVo searchVo = paramObj.toJavaObject(ResourceSearchVo.class);
         JSONObject resourceJson = new JSONObject();
         List<InspectResourceVo> resourceVoList = new ArrayList<>();
         IResourceCenterResourceCrossoverService resourceCrossoverService = CrossoverServiceFactory.getApi(IResourceCenterResourceCrossoverService.class);
-        JSONArray appModuleResourceList = resourceCrossoverService.getAppModuleResourceList(paramObj);
-        for (Object object : appModuleResourceList) {
-            JSONObject jsonObject=(JSONObject) JSONObject.toJSON(object);
-            List<InspectResourceVo> voList = JSONObject.parseArray(jsonObject.getJSONArray("tbodyList").toJSONString(), InspectResourceVo.class);
+        JSONArray appModuleResourceList = resourceCrossoverService.getAppModuleResourceList(searchVo);
+        for (int i = 0; i < appModuleResourceList.size(); i++) {
+            JSONObject jsonObject = appModuleResourceList.getJSONObject(i);
+            List<InspectResourceVo> voList = jsonObject.getJSONArray("tbodyList").toJavaList(InspectResourceVo.class);
             resourceVoList.addAll(voList);
-            jsonObject.remove("tbodyList");
-            jsonObject.put("tbodyList",voList);
+            //voList 是List<InspectResourceVo>，覆盖原来的List<ResourceVo>， 以便resourceVoList的vo的循环赋值
+            jsonObject.put("tbodyList", voList);
         }
         //补充巡检相关信息
         if (CollectionUtils.isNotEmpty(resourceVoList)) {
