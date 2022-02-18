@@ -74,7 +74,7 @@ public class InspectAppModuleReportApi extends PrivateApiComponentBase {
         JSONArray appModuleResourceList = resourceCrossoverService.getAppModuleResourceList(searchVo);
         for (int i = 0; i < appModuleResourceList.size(); i++) {
             JSONObject jsonObject = appModuleResourceList.getJSONObject(i);
-            List<InspectResourceVo> voList = jsonObject.getJSONArray("tbodyList").toJavaList(InspectResourceVo.class);
+            List<InspectResourceVo> voList = JSONObject.parseArray(jsonObject.getJSONArray("tbodyList").toString(),InspectResourceVo.class);
             resourceVoList.addAll(voList);
             //voList是List<InspectResourceVo>，覆盖原来的List<ResourceVo>， 以便resourceVoList的vo的循环赋值
             jsonObject.put("tbodyList", voList);
