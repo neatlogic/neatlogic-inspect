@@ -76,7 +76,7 @@ public class InspectAppModuleReportApi extends PrivateApiComponentBase {
             JSONObject jsonObject = appModuleResourceList.getJSONObject(i);
             List<InspectResourceVo> voList = jsonObject.getJSONArray("tbodyList").toJavaList(InspectResourceVo.class);
             resourceVoList.addAll(voList);
-            //voList 是List<InspectResourceVo>，覆盖原来的List<ResourceVo>， 以便resourceVoList的vo的循环赋值
+            //voList是List<InspectResourceVo>，覆盖原来的List<ResourceVo>， 以便resourceVoList的vo的循环赋值
             jsonObject.put("tbodyList", voList);
         }
         //补充巡检相关信息
