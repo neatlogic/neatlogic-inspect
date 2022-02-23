@@ -40,7 +40,7 @@ public class InspectAutoexecJobNodeSearchApi extends PrivateApiComponentBase {
 
     @Override
     public String getName() {
-        return "巡检作业节点查询接口";
+        return "巡检作业节点资产查询接口";
     }
 
     @Override
@@ -72,7 +72,7 @@ public class InspectAutoexecJobNodeSearchApi extends PrivateApiComponentBase {
     })
     @Output({
             @Param(explode = BasePageVo.class),
-            @Param(name = "tbodyList", explode = ResourceVo[].class, desc = "数据列表")
+            @Param(name = "tbodyList", explode = ResourceVo[].class, desc = "巡检作业节点资产列表")
     })
     @Override
     public Object myDoService(JSONObject paramObj) throws Exception {
