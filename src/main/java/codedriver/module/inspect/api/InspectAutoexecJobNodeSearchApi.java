@@ -1,8 +1,3 @@
-/*
- * Copyright (c)  2021 TechSure Co.,Ltd.  All Rights Reserved.
- * 本内容仅限于深圳市赞悦科技有限公司内部传阅，禁止外泄以及用于其他的商业项目。
- */
-
 package codedriver.module.inspect.api;
 
 import codedriver.framework.asynchronization.threadlocal.TenantContext;
@@ -31,17 +26,26 @@ import javax.annotation.Resource;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * @author longrf
+ * @date 2022/2/22 5:57 下午
+ */
 @Service
 @AuthAction(action = INSPECT_BASE.class)
 @OperationType(type = OperationTypeEnum.SEARCH)
-public class InspectResourceReportSearchApi extends PrivateApiComponentBase {
+public class InspectAutoexecJobNodeSearchApi extends PrivateApiComponentBase {
 
     @Resource
     InspectMapper inspectMapper;
 
     @Override
     public String getName() {
-        return "获取巡检资产报告列表";
+        return "巡检作业节点查询接口";
+    }
+
+    @Override
+    public String getToken() {
+        return "inspect/autoexec/job/node/search";
     }
 
     @Override
@@ -73,16 +77,16 @@ public class InspectResourceReportSearchApi extends PrivateApiComponentBase {
     @Override
     public Object myDoService(JSONObject paramObj) throws Exception {
         List<InspectResourceVo> inspectResourceVoList = null;
+        Long jobId = paramObj.getLong("jobId");
         IResourceCenterResourceCrossoverService resourceCrossoverService = CrossoverServiceFactory.getApi(IResourceCenterResourceCrossoverService.class);
         ResourceSearchVo searchVo = resourceCrossoverService.assembleResourceSearchVo(paramObj);
-        int rowNum = inspectMapper.getInspectResourceCount(searchVo);
+        int rowNum = inspectMapper.getInspectAutoexecJobNodeResourceCount(searchVo,jobId,TenantContext.get().getDataDbName());
         if (rowNum > 0) {
             List<ResourceVo> resourceVoList = new ArrayList<>();
-            List<Long> resourceIdList = inspectMapper.getInspectResourceIdList(searchVo);
-            inspectResourceVoList = inspectMapper.getInspectResourceVoListByIdList(resourceIdList, TenantContext.get().getDataDbName());
+            List<Long> resourceIdList = inspectMapper.getInspectAutoexecJobNodeResourceIdList(searchVo,jobId,TenantContext.get().getDataDbName());
+            inspectResourceVoList = inspectMapper.getInspectHistoryResourceInfoListByIdList(resourceIdList, TenantContext.get().getDataDbName());
             if (CollectionUtils.isNotEmpty(inspectResourceVoList)) {
                 resourceVoList.addAll(inspectResourceVoList);
-                resourceCrossoverService.addResourceAccount(resourceIdList, resourceVoList);
                 resourceCrossoverService.addResourceTag(resourceIdList, resourceVoList);
             }
         }
@@ -93,8 +97,4 @@ public class InspectResourceReportSearchApi extends PrivateApiComponentBase {
         return TableResultUtil.getResult(inspectResourceVoList, searchVo);
     }
 
-    @Override
-    public String getToken() {
-        return "inspect/resource/report/search";
-    }
 }
