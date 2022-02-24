@@ -40,7 +40,8 @@ public class InspectReportGetApi extends PrivateApiComponentBase {
 
     @Input({
             @Param(name = "resourceId", type = ApiParamType.LONG, desc = "资产id", isRequired = true),
-            @Param(name = "id", type = ApiParamType.STRING, desc = "id")
+            @Param(name = "id", type = ApiParamType.STRING, desc = "id"),
+            @Param(name = "jobId", type = ApiParamType.LONG, desc = "作业id")
     })
 
     @Description(desc = "根据resourceId 获取对应的巡检报告")
@@ -48,7 +49,8 @@ public class InspectReportGetApi extends PrivateApiComponentBase {
     public Object myDoService(JSONObject paramObj) throws Exception {
         Long resourceId = paramObj.getLong("resourceId");
         String id = paramObj.getString("id");
-        return inspectReportService.getInspectReport(resourceId, id);
+        Long jobId = paramObj.getLong("jobId");
+        return inspectReportService.getInspectReport(resourceId, id,jobId);
     }
 
     @Override

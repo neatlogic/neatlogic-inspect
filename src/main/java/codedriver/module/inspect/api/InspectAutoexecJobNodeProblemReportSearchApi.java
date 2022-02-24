@@ -5,42 +5,55 @@ import codedriver.framework.cmdb.crossover.IResourceCenterResourceCrossoverServi
 import codedriver.framework.cmdb.dto.resourcecenter.ResourceSearchVo;
 import codedriver.framework.cmdb.dto.resourcecenter.ResourceVo;
 import codedriver.framework.common.constvalue.ApiParamType;
+import codedriver.framework.common.constvalue.InspectStatus;
 import codedriver.framework.common.dto.BasePageVo;
 import codedriver.framework.crossover.CrossoverServiceFactory;
 import codedriver.framework.inspect.auth.INSPECT_BASE;
+import codedriver.framework.inspect.dto.InspectResourceVo;
 import codedriver.framework.restful.annotation.Input;
 import codedriver.framework.restful.annotation.OperationType;
 import codedriver.framework.restful.annotation.Output;
 import codedriver.framework.restful.annotation.Param;
 import codedriver.framework.restful.constvalue.OperationTypeEnum;
 import codedriver.framework.restful.core.privateapi.PrivateApiComponentBase;
-import codedriver.framework.util.TableResultUtil;
 import codedriver.module.inspect.service.InspectReportService;
+import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
+import com.mongodb.client.FindIterable;
+import com.mongodb.client.MongoCollection;
+import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.collections4.MapUtils;
+import org.bson.Document;
+import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * @author longrf
- * @date 2022/2/22 5:57 下午
+ * @date 2022/2/23 3:45 下午
  */
 @Service
 @AuthAction(action = INSPECT_BASE.class)
 @OperationType(type = OperationTypeEnum.SEARCH)
-public class InspectAutoexecJobNodeSearchApi extends PrivateApiComponentBase {
+public class InspectAutoexecJobNodeProblemReportSearchApi extends PrivateApiComponentBase {
 
     @Resource
     InspectReportService inspectReportService;
 
+    @Resource
+    MongoTemplate mongoTemplate;
+
     @Override
     public String getName() {
-        return "巡检作业节点资产查询接口";
+        return "巡检作业节点资产问题报告查询接口";
     }
 
     @Override
     public String getToken() {
-        return "inspect/autoexec/job/node/search";
+        return "inspect/autoexec/job/node/problem/report/search";
     }
 
     @Override
@@ -67,14 +80,38 @@ public class InspectAutoexecJobNodeSearchApi extends PrivateApiComponentBase {
     })
     @Output({
             @Param(explode = BasePageVo.class),
-            @Param(name = "tbodyList", explode = ResourceVo[].class, desc = "巡检作业节点资产列表")
+            @Param(name = "tbodyList", explode = ResourceVo[].class, desc = "巡检作业节点资产问题报告列表")
     })
     @Override
     public Object myDoService(JSONObject paramObj) throws Exception {
         Long jobId = paramObj.getLong("jobId");
+        JSONArray inspectStatusArray = paramObj.getJSONArray("inspectStatusList");
+        List<String> inspectStatusList = new ArrayList<>();
+        if (CollectionUtils.isEmpty(inspectStatusArray)) {
+            inspectStatusList.add(InspectStatus.WARN.getValue());
+            inspectStatusList.add(InspectStatus.CRITICAL.getValue());
+            inspectStatusList.add(InspectStatus.FATAL.getValue());
+            paramObj.put("inspectStatusList", inspectStatusList);
+        }
         IResourceCenterResourceCrossoverService resourceCrossoverService = CrossoverServiceFactory.getApi(IResourceCenterResourceCrossoverService.class);
         ResourceSearchVo searchVo = resourceCrossoverService.assembleResourceSearchVo(paramObj);
-        return TableResultUtil.getResult( inspectReportService.getInspectAutoexecJobNodeList(jobId, searchVo), searchVo);
+        List<InspectResourceVo> inspectResourceVoList = inspectReportService.getInspectAutoexecJobNodeList(jobId, searchVo);
+
+        if (CollectionUtils.isNotEmpty(inspectResourceVoList)) {
+            for (InspectResourceVo inspectResourceVo : inspectResourceVoList) {
+                MongoCollection<Document> collection = mongoTemplate.getCollection("INSPECT_REPORTS_HIS");
+                Document doc = new Document();
+                doc.put("RESOURCE_ID", inspectResourceVo.getId());
+                doc.put("_jobid", jobId.toString());
+                FindIterable<Document> findIterable = collection.find(doc);
+                Document reportDoc = findIterable.first();
+                if (MapUtils.isNotEmpty(reportDoc)) {
+                    JSONObject reportJson = JSONObject.parseObject(reportDoc.toJson());
+                    inspectResourceVo.setInspectResult(reportJson.getJSONObject("_inspect_result"));
+                }
+            }
+        }
+        return inspectResourceVoList;
     }
 
 }
