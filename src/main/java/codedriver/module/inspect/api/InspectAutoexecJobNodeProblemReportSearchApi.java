@@ -16,6 +16,7 @@ import codedriver.framework.restful.annotation.Output;
 import codedriver.framework.restful.annotation.Param;
 import codedriver.framework.restful.constvalue.OperationTypeEnum;
 import codedriver.framework.restful.core.privateapi.PrivateApiComponentBase;
+import codedriver.framework.util.TableResultUtil;
 import codedriver.module.inspect.service.InspectReportService;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
@@ -98,11 +99,11 @@ public class InspectAutoexecJobNodeProblemReportSearchApi extends PrivateApiComp
         List<InspectResourceVo> inspectResourceVoList = inspectReportService.getInspectAutoexecJobNodeList(jobId, searchVo);
 
         if (CollectionUtils.isNotEmpty(inspectResourceVoList)) {
+            Document doc = new Document();
+            doc.put("_jobid", jobId.toString());
+            MongoCollection<Document> collection = mongoTemplate.getCollection("INSPECT_REPORTS_HIS");
             for (InspectResourceVo inspectResourceVo : inspectResourceVoList) {
-                MongoCollection<Document> collection = mongoTemplate.getCollection("INSPECT_REPORTS_HIS");
-                Document doc = new Document();
                 doc.put("RESOURCE_ID", inspectResourceVo.getId());
-                doc.put("_jobid", jobId.toString());
                 FindIterable<Document> findIterable = collection.find(doc);
                 Document reportDoc = findIterable.first();
                 if (MapUtils.isNotEmpty(reportDoc)) {
@@ -111,7 +112,7 @@ public class InspectAutoexecJobNodeProblemReportSearchApi extends PrivateApiComp
                 }
             }
         }
-        return inspectResourceVoList;
+        return TableResultUtil.getResult(inspectResourceVoList, searchVo);
     }
 
 }
