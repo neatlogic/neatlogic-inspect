@@ -40,7 +40,7 @@ public class InspectReportServiceImpl implements InspectReportService {
     public Document getInspectReport(Long resourceId, String id, Long jobId) {
         MongoCollection<Document> collection;
         Document doc = new Document();
-        //如果没有Id则查该资产对应的最新当前报告
+        //如果没有id和jobId则查该资产对应的最新当前报告
         if (StringUtils.isBlank(id) && Objects.isNull(jobId)) {
             collection = mongoTemplate.getDb().getCollection("INSPECT_REPORTS");
             doc.put("RESOURCE_ID", resourceId);
