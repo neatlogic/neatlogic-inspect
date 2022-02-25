@@ -28,7 +28,7 @@ import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
-import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -85,12 +85,8 @@ public class InspectAutoexecJobNodeProblemReportSearchApi extends PrivateApiComp
     public Object myDoService(JSONObject paramObj) throws Exception {
         Long jobId = paramObj.getLong("jobId");
         JSONArray inspectStatusArray = paramObj.getJSONArray("inspectStatusList");
-        List<String> inspectStatusList = new ArrayList<>();
         if (CollectionUtils.isEmpty(inspectStatusArray)) {
-            inspectStatusList.add(InspectStatus.WARN.getValue());
-            inspectStatusList.add(InspectStatus.CRITICAL.getValue());
-            inspectStatusList.add(InspectStatus.FATAL.getValue());
-            paramObj.put("inspectStatusList", inspectStatusList);
+            paramObj.put("inspectStatusList", Arrays.asList(InspectStatus.WARN.getValue(), InspectStatus.CRITICAL.getValue(), InspectStatus.FATAL.getValue()));
         }
         IResourceCenterResourceCrossoverService resourceCrossoverService = CrossoverServiceFactory.getApi(IResourceCenterResourceCrossoverService.class);
         ResourceSearchVo searchVo = resourceCrossoverService.assembleResourceSearchVo(paramObj);

@@ -82,7 +82,7 @@ public class InspectReportServiceImpl implements InspectReportService {
         if (rowNum > 0) {
             List<ResourceVo> resourceVoList = new ArrayList<>();
             List<Long> resourceIdList = inspectMapper.getInspectAutoexecJobNodeResourceIdList(searchVo, jobId, TenantContext.get().getDataDbName());
-            inspectResourceVoList = inspectMapper.getInspectResourceHistoryInfoByIdList(resourceIdList, jobId, TenantContext.get().getDataDbName());
+            inspectResourceVoList = inspectMapper.getInspectResourceVoListByIdListAndJobId(resourceIdList, jobId, TenantContext.get().getDataDbName());
             if (CollectionUtils.isNotEmpty(inspectResourceVoList)) {
                 resourceVoList.addAll(inspectResourceVoList);
                 IResourceCenterResourceCrossoverService resourceCrossoverService = CrossoverServiceFactory.getApi(IResourceCenterResourceCrossoverService.class);
