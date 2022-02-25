@@ -3,7 +3,6 @@ package codedriver.module.inspect.api;
 import codedriver.framework.auth.core.AuthAction;
 import codedriver.framework.cmdb.crossover.IResourceCenterResourceCrossoverService;
 import codedriver.framework.cmdb.dto.resourcecenter.ResourceSearchVo;
-import codedriver.framework.cmdb.dto.resourcecenter.ResourceVo;
 import codedriver.framework.common.constvalue.ApiParamType;
 import codedriver.framework.common.constvalue.InspectStatus;
 import codedriver.framework.common.dto.BasePageVo;
@@ -80,7 +79,7 @@ public class InspectAutoexecJobNodeProblemReportSearchApi extends PrivateApiComp
     })
     @Output({
             @Param(explode = BasePageVo.class),
-            @Param(name = "tbodyList", explode = ResourceVo[].class, desc = "巡检作业节点资产问题报告列表")
+            @Param(name = "tbodyList", explode = InspectResourceVo[].class, desc = "巡检作业节点资产问题报告列表")
     })
     @Override
     public Object myDoService(JSONObject paramObj) throws Exception {
@@ -97,10 +96,11 @@ public class InspectAutoexecJobNodeProblemReportSearchApi extends PrivateApiComp
         ResourceSearchVo searchVo = resourceCrossoverService.assembleResourceSearchVo(paramObj);
         List<InspectResourceVo> inspectResourceVoList = inspectReportService.getInspectAutoexecJobNodeList(jobId, searchVo);
 
+        //补充巡检问题信息
         if (CollectionUtils.isNotEmpty(inspectResourceVoList)) {
+            MongoCollection<Document> collection = mongoTemplate.getCollection("INSPECT_REPORTS_HIS");
             Document doc = new Document();
             doc.put("_jobid", jobId.toString());
-            MongoCollection<Document> collection = mongoTemplate.getCollection("INSPECT_REPORTS_HIS");
             for (InspectResourceVo inspectResourceVo : inspectResourceVoList) {
                 doc.put("RESOURCE_ID", inspectResourceVo.getId());
                 FindIterable<Document> findIterable = collection.find(doc);

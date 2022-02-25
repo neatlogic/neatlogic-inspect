@@ -3,11 +3,11 @@ package codedriver.module.inspect.api;
 import codedriver.framework.auth.core.AuthAction;
 import codedriver.framework.cmdb.crossover.IResourceCenterResourceCrossoverService;
 import codedriver.framework.cmdb.dto.resourcecenter.ResourceSearchVo;
-import codedriver.framework.cmdb.dto.resourcecenter.ResourceVo;
 import codedriver.framework.common.constvalue.ApiParamType;
 import codedriver.framework.common.dto.BasePageVo;
 import codedriver.framework.crossover.CrossoverServiceFactory;
 import codedriver.framework.inspect.auth.INSPECT_BASE;
+import codedriver.framework.inspect.dto.InspectResourceVo;
 import codedriver.framework.restful.annotation.Input;
 import codedriver.framework.restful.annotation.OperationType;
 import codedriver.framework.restful.annotation.Output;
@@ -66,7 +66,7 @@ public class InspectAutoexecJobNodeSearchApi extends PrivateApiComponentBase {
     })
     @Output({
             @Param(explode = BasePageVo.class),
-            @Param(name = "tbodyList", explode = ResourceVo[].class, desc = "巡检作业节点资产列表")
+            @Param(name = "tbodyList", explode = InspectResourceVo[].class, desc = "巡检作业节点资产列表")
     })
     @Override
     public Object myDoService(JSONObject paramObj) throws Exception {
