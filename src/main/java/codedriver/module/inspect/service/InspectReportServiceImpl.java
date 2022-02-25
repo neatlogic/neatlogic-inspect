@@ -1,8 +1,16 @@
 package codedriver.module.inspect.service;
 
+import codedriver.framework.asynchronization.threadlocal.TenantContext;
+import codedriver.framework.cmdb.crossover.IResourceCenterResourceCrossoverService;
+import codedriver.framework.cmdb.dto.resourcecenter.ResourceSearchVo;
+import codedriver.framework.cmdb.dto.resourcecenter.ResourceVo;
 import codedriver.framework.cmdb.dto.sync.CollectionVo;
 import codedriver.framework.common.constvalue.InspectStatus;
+import codedriver.framework.crossover.CrossoverServiceFactory;
+import codedriver.framework.inspect.dao.mapper.InspectMapper;
+import codedriver.framework.inspect.dto.InspectResourceVo;
 import com.alibaba.fastjson.JSONObject;
+import com.alibaba.nacos.common.utils.CollectionUtils;
 import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoCollection;
 import org.apache.commons.collections4.MapUtils;
@@ -15,6 +23,8 @@ import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
+import java.util.ArrayList;
+import java.util.List;
 
 @Service
 public class InspectReportServiceImpl implements InspectReportService {
@@ -22,17 +32,29 @@ public class InspectReportServiceImpl implements InspectReportService {
     @Resource
     MongoTemplate mongoTemplate;
 
+    @Resource
+    InspectMapper inspectMapper;
+
     @Override
-    public Document getInspectReport(Long resourceId, String id) {
+    public Document getInspectReport(Long resourceId, String id, Long jobId) {
         MongoCollection<Document> collection;
         Document doc = new Document();
-        //如果没有Id则查该资产对应的最新当前报告
-        if (StringUtils.isBlank(id)) {
-            collection = mongoTemplate.getDb().getCollection("INSPECT_REPORTS");
-            doc.put("RESOURCE_ID", resourceId);
-        } else {
+        if (StringUtils.isNotBlank(id) || (jobId != null && resourceId != null)) {
+            //场景1：用id查历史报告
+            //场景2：用jobId和resourceId查历史报告
             collection = mongoTemplate.getDb().getCollection("INSPECT_REPORTS_HIS");
+        }else {
+            //场景3：用resourceId查最新报告
+            collection = mongoTemplate.getDb().getCollection("INSPECT_REPORTS");
+        }
+        if (resourceId != null) {
+            doc.put("RESOURCE_ID", resourceId);
+        }
+        if (StringUtils.isNotBlank(id)) {
             doc.put("_id", new ObjectId(id));
+        }
+        if (jobId != null) {
+            doc.put("_jobid", jobId.toString());
         }
 
         FindIterable<Document> findIterable = collection.find(doc);
@@ -54,5 +76,26 @@ public class InspectReportServiceImpl implements InspectReportService {
             reportDoc.put("inspectStatus", InspectStatus.getAllInspectStatusMap());
         }
         return reportDoc;
+    }
+
+    @Override
+    public List<InspectResourceVo> getInspectAutoexecJobNodeList(Long jobId, ResourceSearchVo searchVo) {
+        List<InspectResourceVo> inspectResourceVoList = null;
+        int rowNum = inspectMapper.getInspectAutoexecJobNodeResourceCount(searchVo, jobId, TenantContext.get().getDataDbName());
+        if (rowNum > 0) {
+            List<ResourceVo> resourceVoList = new ArrayList<>();
+            List<Long> resourceIdList = inspectMapper.getInspectAutoexecJobNodeResourceIdList(searchVo, jobId, TenantContext.get().getDataDbName());
+            inspectResourceVoList = inspectMapper.getInspectResourceVoListByIdListAndJobId(resourceIdList, jobId, TenantContext.get().getDataDbName());
+            if (CollectionUtils.isNotEmpty(inspectResourceVoList)) {
+                resourceVoList.addAll(inspectResourceVoList);
+                IResourceCenterResourceCrossoverService resourceCrossoverService = CrossoverServiceFactory.getApi(IResourceCenterResourceCrossoverService.class);
+                resourceCrossoverService.addResourceTag(resourceIdList, resourceVoList);
+            }
+        }
+        if (inspectResourceVoList == null) {
+            inspectResourceVoList = new ArrayList<>();
+        }
+        searchVo.setRowNum(rowNum);
+        return inspectResourceVoList;
     }
 }

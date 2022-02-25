@@ -92,6 +92,7 @@ public class InspectReportExportApi extends PrivateBinaryStreamApiComponentBase 
     @Input({
             @Param(name = "resourceId", type = ApiParamType.LONG, desc = "资产id", isRequired = true),
             @Param(name = "id", type = ApiParamType.STRING, desc = "id"),
+            @Param(name = "jobId", type = ApiParamType.STRING, desc = "作业id"),
             @Param(name = "type", type = ApiParamType.ENUM, rule = "word,pdf", desc = "类型", isRequired = true)
     })
     @Description(desc = "导出巡检报告")
@@ -99,13 +100,14 @@ public class InspectReportExportApi extends PrivateBinaryStreamApiComponentBase 
     public Object myDoService(JSONObject paramObj, HttpServletRequest request, HttpServletResponse response) throws Exception {
         Long resourceId = paramObj.getLong("resourceId");
         String id = paramObj.getString("id");
+        Long jobId = paramObj.getLong("jobId");
         String type = paramObj.getString("type");
         ResourceVo resource = resourceCenterMapper.getResourceById(resourceId, TenantContext.get().getDataDbName());
         String fileName = resourceId.toString();
         if (resource != null && resource.getName() != null) {
             fileName = resource.getName();
         }
-        Document reportDoc = inspectReportService.getInspectReport(resourceId, id);
+        Document reportDoc = inspectReportService.getInspectReport(resourceId, id, jobId);
         if (MapUtils.isNotEmpty(reportDoc)) {
             Map<String, String> translationMap = new HashMap<>();
             JSONArray fields = JSON.parseArray(reportDoc.get("fields").toString());
