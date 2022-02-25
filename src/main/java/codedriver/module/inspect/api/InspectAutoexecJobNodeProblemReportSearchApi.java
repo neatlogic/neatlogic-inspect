@@ -72,7 +72,6 @@ public class InspectAutoexecJobNodeProblemReportSearchApi extends PrivateApiComp
             @Param(name = "appModuleIdList", type = ApiParamType.JSONARRAY, desc = "应用模块id列表"),
             @Param(name = "typeIdList", type = ApiParamType.JSONARRAY, desc = "资源类型id列表"),
             @Param(name = "tagIdList", type = ApiParamType.JSONARRAY, desc = "标签id列表"),
-            @Param(name = "defaultValue", type = ApiParamType.JSONARRAY, desc = "用于回显的资源ID列表"),
             @Param(name = "inspectStatusList", type = ApiParamType.JSONARRAY, desc = "巡检状态列表"),
             @Param(name = "inspectJobPhaseNodeStatusList", type = ApiParamType.JSONARRAY, desc = "巡检作业状态列表"),
             @Param(name = "currentPage", type = ApiParamType.INTEGER, desc = "当前页"),
