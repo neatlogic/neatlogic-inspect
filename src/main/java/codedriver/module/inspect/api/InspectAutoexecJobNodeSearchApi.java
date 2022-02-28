@@ -51,6 +51,7 @@ public class InspectAutoexecJobNodeSearchApi extends PrivateApiComponentBase {
     @Input({
             @Param(name = "keyword", type = ApiParamType.STRING, xss = true, desc = "模糊搜索"),
             @Param(name = "typeId", type = ApiParamType.LONG, desc = "类型id"),
+            @Param(name = "jobId", type = ApiParamType.LONG,isRequired = true, desc = "类型id"),
             @Param(name = "protocolIdList", type = ApiParamType.JSONARRAY, desc = "协议id列表"),
             @Param(name = "stateIdList", type = ApiParamType.JSONARRAY, desc = "状态id列表"),
             @Param(name = "envIdList", type = ApiParamType.JSONARRAY, desc = "环境id列表"),

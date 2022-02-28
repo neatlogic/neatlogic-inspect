@@ -98,4 +98,25 @@ public class InspectReportServiceImpl implements InspectReportService {
         searchVo.setRowNum(rowNum);
         return inspectResourceVoList;
     }
+
+    @Override
+    public List<InspectResourceVo> getInspectResourceReportList(ResourceSearchVo searchVo) {
+        List<InspectResourceVo> inspectResourceVoList = null;
+        int rowNum = inspectMapper.getInspectResourceCount(searchVo);
+        if (rowNum > 0) {
+            List<ResourceVo> resourceVoList = new ArrayList<>();
+            List<Long> resourceIdList = inspectMapper.getInspectResourceIdList(searchVo);
+            inspectResourceVoList = inspectMapper.getInspectResourceVoListByIdList(resourceIdList, TenantContext.get().getDataDbName());
+            if (CollectionUtils.isNotEmpty(inspectResourceVoList)) {
+                IResourceCenterResourceCrossoverService resourceCrossoverService = CrossoverServiceFactory.getApi(IResourceCenterResourceCrossoverService.class);
+                resourceVoList.addAll(inspectResourceVoList);
+                resourceCrossoverService.addResourceTag(resourceIdList, resourceVoList);
+            }
+        }
+        if (inspectResourceVoList == null) {
+            inspectResourceVoList = new ArrayList<>();
+        }
+        searchVo.setRowNum(rowNum);
+        return inspectResourceVoList;
+    }
 }
