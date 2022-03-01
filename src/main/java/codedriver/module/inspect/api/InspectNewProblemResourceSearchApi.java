@@ -9,21 +9,14 @@ import codedriver.framework.common.dto.BasePageVo;
 import codedriver.framework.crossover.CrossoverServiceFactory;
 import codedriver.framework.inspect.auth.INSPECT_BASE;
 import codedriver.framework.inspect.dto.InspectResourceVo;
-import codedriver.framework.restful.annotation.Input;
-import codedriver.framework.restful.annotation.OperationType;
-import codedriver.framework.restful.annotation.Output;
-import codedriver.framework.restful.annotation.Param;
+import codedriver.framework.restful.annotation.*;
 import codedriver.framework.restful.constvalue.OperationTypeEnum;
 import codedriver.framework.restful.core.privateapi.PrivateApiComponentBase;
 import codedriver.framework.util.TableResultUtil;
 import codedriver.module.inspect.service.InspectReportService;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
-import com.mongodb.client.FindIterable;
-import com.mongodb.client.MongoCollection;
 import org.apache.commons.collections4.CollectionUtils;
-import org.apache.commons.collections4.MapUtils;
-import org.bson.Document;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.stereotype.Service;
 
@@ -38,7 +31,7 @@ import java.util.List;
 @Service
 @AuthAction(action = INSPECT_BASE.class)
 @OperationType(type = OperationTypeEnum.SEARCH)
-public class InspectNewProblemReportSearchApi extends PrivateApiComponentBase {
+public class InspectNewProblemResourceSearchApi extends PrivateApiComponentBase {
 
     @Resource
     InspectReportService inspectReportService;
@@ -48,12 +41,12 @@ public class InspectNewProblemReportSearchApi extends PrivateApiComponentBase {
 
     @Override
     public String getName() {
-        return "巡检最新问题报告查询接口";
+        return "获取巡检最新问题资产列表";
     }
 
     @Override
     public String getToken() {
-            return "inspect/new/problem/report/search";
+        return "inspect/new/problem/resource/search";
     }
 
     @Override
@@ -79,8 +72,9 @@ public class InspectNewProblemReportSearchApi extends PrivateApiComponentBase {
     })
     @Output({
             @Param(explode = BasePageVo.class),
-            @Param(name = "tbodyList", explode = InspectResourceVo[].class, desc = "巡检最新问题报告列表")
+            @Param(name = "tbodyList", explode = InspectResourceVo[].class, desc = "巡检最新问题资产列表")
     })
+    @Description(desc = "获取最新问题资产接口")
     @Override
     public Object myDoService(JSONObject paramObj) throws Exception {
         JSONArray inspectStatusArray = paramObj.getJSONArray("inspectStatusList");
@@ -89,22 +83,7 @@ public class InspectNewProblemReportSearchApi extends PrivateApiComponentBase {
         }
         IResourceCenterResourceCrossoverService resourceCrossoverService = CrossoverServiceFactory.getApi(IResourceCenterResourceCrossoverService.class);
         ResourceSearchVo searchVo = resourceCrossoverService.assembleResourceSearchVo(paramObj);
-        List<InspectResourceVo> inspectResourceVoList= inspectReportService.getInspectResourceReportList(searchVo);
-
-        //补充巡检问题信息
-        if (CollectionUtils.isNotEmpty(inspectResourceVoList)) {
-            MongoCollection<Document> collection = mongoTemplate.getCollection("INSPECT_REPORTS");
-            Document doc = new Document();
-            for (InspectResourceVo inspectResourceVo : inspectResourceVoList) {
-                doc.put("RESOURCE_ID", inspectResourceVo.getId());
-                FindIterable<Document> findIterable = collection.find(doc);
-                Document reportDoc = findIterable.first();
-                if (MapUtils.isNotEmpty(reportDoc)) {
-                    JSONObject reportJson = JSONObject.parseObject(reportDoc.toJson());
-                    inspectResourceVo.setInspectResult(reportJson.getJSONObject("_inspect_result"));
-                }
-            }
-        }
+        List<InspectResourceVo> inspectResourceVoList = inspectReportService.getInspectResourceReportList(searchVo);
         return TableResultUtil.getResult(inspectResourceVoList, searchVo);
     }
 
