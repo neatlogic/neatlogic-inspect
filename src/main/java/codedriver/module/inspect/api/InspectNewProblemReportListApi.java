@@ -52,7 +52,7 @@ public class InspectNewProblemReportListApi extends PrivateApiComponentBase {
     @Output({
             @Param(desc = "巡检最新问题报告列表")
     })
-    @Description(desc = "获取巡检资产报告接口")
+    @Description(desc = "获取巡检最新问题报告列表接口")
     @Override
     public Object myDoService(JSONObject paramObj) throws Exception {
         JSONArray returnArray = new JSONArray();
