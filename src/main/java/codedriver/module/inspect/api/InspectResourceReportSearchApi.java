@@ -13,10 +13,7 @@ import codedriver.framework.common.constvalue.ApiParamType;
 import codedriver.framework.common.dto.BasePageVo;
 import codedriver.framework.crossover.CrossoverServiceFactory;
 import codedriver.framework.inspect.auth.INSPECT_BASE;
-import codedriver.framework.restful.annotation.Input;
-import codedriver.framework.restful.annotation.OperationType;
-import codedriver.framework.restful.annotation.Output;
-import codedriver.framework.restful.annotation.Param;
+import codedriver.framework.restful.annotation.*;
 import codedriver.framework.restful.constvalue.OperationTypeEnum;
 import codedriver.framework.restful.core.privateapi.PrivateApiComponentBase;
 import codedriver.framework.util.TableResultUtil;
@@ -65,6 +62,7 @@ public class InspectResourceReportSearchApi extends PrivateApiComponentBase {
             @Param(explode = BasePageVo.class),
             @Param(name = "tbodyList", explode = ResourceVo[].class, desc = "数据列表")
     })
+    @Description(desc = "获取巡检资产报告接口")
     @Override
     public Object myDoService(JSONObject paramObj) throws Exception {
         IResourceCenterResourceCrossoverService resourceCrossoverService = CrossoverServiceFactory.getApi(IResourceCenterResourceCrossoverService.class);
