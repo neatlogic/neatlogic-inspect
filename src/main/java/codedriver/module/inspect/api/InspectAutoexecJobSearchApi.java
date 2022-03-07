@@ -29,7 +29,7 @@ import java.util.List;
 public class InspectAutoexecJobSearchApi extends PrivateApiComponentBase {
     @Override
     public String getName() {
-        return "查询巡检作业";
+        return "查询巡检作业列表";
     }
 
     @Override
@@ -58,7 +58,7 @@ public class InspectAutoexecJobSearchApi extends PrivateApiComponentBase {
             @Param(name = "tbodyList", type = ApiParamType.JSONARRAY, explode = AutoexecJobVo[].class, desc = "列表"),
             @Param(explode = BasePageVo.class)
     })
-    @Description(desc = "作业搜索（作业执行视图）")
+    @Description(desc = "巡检作业搜索（作业执行视图）")
     @Override
     public Object myDoService(JSONObject paramObj) throws Exception {
         AutoexecJobVo jobVo = new AutoexecJobVo(paramObj);
