@@ -38,7 +38,7 @@ public class InspectScheduleSearchApi extends PrivateApiComponentBase {
 
     @Override
     public String getName() {
-        return "巡检定时任务列表";
+        return "查询巡检定时任务列表";
     }
 
     @Override
@@ -53,7 +53,7 @@ public class InspectScheduleSearchApi extends PrivateApiComponentBase {
 
     @Input({@Param(name = "keyword", type = ApiParamType.STRING, desc = "关键字")})
     @Output({@Param(name = "Return", explode = InspectScheduleVo[].class)})
-    @Description(desc = "巡检定时任务列表")
+    @Description(desc = "查询巡检定时任务列表")
     @Override
     public Object myDoService(JSONObject paramObj) throws Exception {
         String keyword = paramObj.getString("keyword");

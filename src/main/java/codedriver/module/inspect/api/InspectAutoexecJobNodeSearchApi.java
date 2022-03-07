@@ -1,6 +1,9 @@
 package codedriver.module.inspect.api;
 
 import codedriver.framework.auth.core.AuthAction;
+import codedriver.framework.autoexec.dao.mapper.AutoexecJobMapper;
+import codedriver.framework.autoexec.dto.job.AutoexecJobVo;
+import codedriver.framework.autoexec.exception.AutoexecJobNotFoundException;
 import codedriver.framework.cmdb.crossover.IResourceCenterResourceCrossoverService;
 import codedriver.framework.cmdb.dto.resourcecenter.ResourceSearchVo;
 import codedriver.framework.common.constvalue.ApiParamType;
@@ -8,10 +11,7 @@ import codedriver.framework.common.dto.BasePageVo;
 import codedriver.framework.crossover.CrossoverServiceFactory;
 import codedriver.framework.inspect.auth.INSPECT_BASE;
 import codedriver.framework.inspect.dto.InspectResourceVo;
-import codedriver.framework.restful.annotation.Input;
-import codedriver.framework.restful.annotation.OperationType;
-import codedriver.framework.restful.annotation.Output;
-import codedriver.framework.restful.annotation.Param;
+import codedriver.framework.restful.annotation.*;
 import codedriver.framework.restful.constvalue.OperationTypeEnum;
 import codedriver.framework.restful.core.privateapi.PrivateApiComponentBase;
 import codedriver.framework.util.TableResultUtil;
@@ -33,9 +33,12 @@ public class InspectAutoexecJobNodeSearchApi extends PrivateApiComponentBase {
     @Resource
     InspectReportService inspectReportService;
 
+    @Resource
+    AutoexecJobMapper autoexecJobMapper;
+
     @Override
     public String getName() {
-        return "巡检作业节点资产查询接口";
+        return "查询巡检作业节点资产";
     }
 
     @Override
@@ -69,9 +72,14 @@ public class InspectAutoexecJobNodeSearchApi extends PrivateApiComponentBase {
             @Param(explode = BasePageVo.class),
             @Param(name = "tbodyList", explode = InspectResourceVo[].class, desc = "巡检作业节点资产列表")
     })
+    @Description(desc = "巡检作业节点资产查询接口")
     @Override
     public Object myDoService(JSONObject paramObj) throws Exception {
         Long jobId = paramObj.getLong("jobId");
+        AutoexecJobVo jobVo = autoexecJobMapper.getJobInfo(jobId);
+        if (jobVo == null) {
+            throw new AutoexecJobNotFoundException(jobId.toString());
+        }
         IResourceCenterResourceCrossoverService resourceCrossoverService = CrossoverServiceFactory.getApi(IResourceCenterResourceCrossoverService.class);
         ResourceSearchVo searchVo = resourceCrossoverService.assembleResourceSearchVo(paramObj);
         return TableResultUtil.getResult( inspectReportService.getInspectAutoexecJobNodeList(jobId, searchVo), searchVo);

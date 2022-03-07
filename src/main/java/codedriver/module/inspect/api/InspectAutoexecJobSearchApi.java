@@ -29,7 +29,7 @@ import java.util.List;
 public class InspectAutoexecJobSearchApi extends PrivateApiComponentBase {
     @Override
     public String getName() {
-        return "巡检作业查询接口";
+        return "查询巡检作业";
     }
 
     @Override
