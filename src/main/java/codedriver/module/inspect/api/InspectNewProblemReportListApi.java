@@ -64,6 +64,7 @@ public class InspectNewProblemReportListApi extends PrivateApiComponentBase {
             for (Long id : resourceIdList) {
                 JSONObject inspectReport = new JSONObject();
                 inspectReport.put("id", id);
+                inspectReport.put("inspectResult", new JSONObject());
                 doc.put("RESOURCE_ID", id);
                 FindIterable<Document> findIterable = collection.find(doc);
                 Document reportDoc = findIterable.first();
@@ -72,11 +73,7 @@ public class InspectNewProblemReportListApi extends PrivateApiComponentBase {
                     JSONObject inspectResult = reportJson.getJSONObject("_inspect_result");
                     if (inspectResult != null) {
                         inspectReport.put("inspectResult", inspectResult);
-                    } else {
-                        inspectReport.put("inspectResult", new JSONObject());
                     }
-                } else {
-                    inspectReport.put("inspectResult", new JSONObject());
                 }
                 returnArray.add(inspectReport);
             }
