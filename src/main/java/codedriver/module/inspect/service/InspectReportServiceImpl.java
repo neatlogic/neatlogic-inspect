@@ -81,6 +81,7 @@ public class InspectReportServiceImpl implements InspectReportService {
     @Override
     public List<InspectResourceVo> getInspectAutoexecJobNodeList(Long jobId, ResourceSearchVo searchVo) {
         List<InspectResourceVo> inspectResourceVoList = null;
+        //如果idList为null或者有值，就去数据库查，如果idList为一个空数组，查询数据直接为空
         if (searchVo.getIdList() == null || CollectionUtils.isNotEmpty(searchVo.getIdList())) {
             int rowNum = inspectMapper.getInspectAutoexecJobNodeResourceCount(searchVo, jobId, TenantContext.get().getDataDbName());
             if (rowNum > 0) {
