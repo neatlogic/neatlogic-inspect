@@ -81,42 +81,46 @@ public class InspectReportServiceImpl implements InspectReportService {
     @Override
     public List<InspectResourceVo> getInspectAutoexecJobNodeList(Long jobId, ResourceSearchVo searchVo) {
         List<InspectResourceVo> inspectResourceVoList = null;
-        int rowNum = inspectMapper.getInspectAutoexecJobNodeResourceCount(searchVo, jobId, TenantContext.get().getDataDbName());
-        if (rowNum > 0) {
-            List<ResourceVo> resourceVoList = new ArrayList<>();
-            List<Long> resourceIdList = inspectMapper.getInspectAutoexecJobNodeResourceIdList(searchVo, jobId, TenantContext.get().getDataDbName());
-            inspectResourceVoList = inspectMapper.getInspectResourceVoListByIdListAndJobId(resourceIdList, jobId, TenantContext.get().getDataDbName());
-            if (CollectionUtils.isNotEmpty(inspectResourceVoList)) {
-                resourceVoList.addAll(inspectResourceVoList);
-                IResourceCenterResourceCrossoverService resourceCrossoverService = CrossoverServiceFactory.getApi(IResourceCenterResourceCrossoverService.class);
-                resourceCrossoverService.addResourceTag(resourceIdList, resourceVoList);
+        if (searchVo.getIdList() == null || CollectionUtils.isNotEmpty(searchVo.getIdList())) {
+            int rowNum = inspectMapper.getInspectAutoexecJobNodeResourceCount(searchVo, jobId, TenantContext.get().getDataDbName());
+            if (rowNum > 0) {
+                searchVo.setRowNum(rowNum);
+                List<ResourceVo> resourceVoList = new ArrayList<>();
+                List<Long> resourceIdList = inspectMapper.getInspectAutoexecJobNodeResourceIdList(searchVo, jobId, TenantContext.get().getDataDbName());
+                inspectResourceVoList = inspectMapper.getInspectResourceVoListByIdListAndJobId(resourceIdList, jobId, TenantContext.get().getDataDbName());
+                if (CollectionUtils.isNotEmpty(inspectResourceVoList)) {
+                    resourceVoList.addAll(inspectResourceVoList);
+                    IResourceCenterResourceCrossoverService resourceCrossoverService = CrossoverServiceFactory.getApi(IResourceCenterResourceCrossoverService.class);
+                    resourceCrossoverService.addResourceTag(resourceIdList, resourceVoList);
+                }
             }
         }
         if (inspectResourceVoList == null) {
             inspectResourceVoList = new ArrayList<>();
         }
-        searchVo.setRowNum(rowNum);
         return inspectResourceVoList;
     }
 
     @Override
     public List<InspectResourceVo> getInspectResourceReportList(ResourceSearchVo searchVo) {
         List<InspectResourceVo> inspectResourceVoList = null;
-        int rowNum = inspectMapper.getInspectResourceCount(searchVo);
-        if (rowNum > 0) {
-            List<ResourceVo> resourceVoList = new ArrayList<>();
-            List<Long> resourceIdList = inspectMapper.getInspectResourceIdList(searchVo);
-            inspectResourceVoList = inspectMapper.getInspectResourceVoListByIdList(resourceIdList, TenantContext.get().getDataDbName());
-            if (CollectionUtils.isNotEmpty(inspectResourceVoList)) {
-                IResourceCenterResourceCrossoverService resourceCrossoverService = CrossoverServiceFactory.getApi(IResourceCenterResourceCrossoverService.class);
-                resourceVoList.addAll(inspectResourceVoList);
-                resourceCrossoverService.addResourceTag(resourceIdList, resourceVoList);
+        if (searchVo.getIdList() == null || CollectionUtils.isNotEmpty(searchVo.getIdList())) {
+            int rowNum = inspectMapper.getInspectResourceCount(searchVo);
+            if (rowNum > 0) {
+                searchVo.setRowNum(rowNum);
+                List<ResourceVo> resourceVoList = new ArrayList<>();
+                List<Long> resourceIdList = inspectMapper.getInspectResourceIdList(searchVo);
+                inspectResourceVoList = inspectMapper.getInspectResourceVoListByIdList(resourceIdList, TenantContext.get().getDataDbName());
+                if (CollectionUtils.isNotEmpty(inspectResourceVoList)) {
+                    IResourceCenterResourceCrossoverService resourceCrossoverService = CrossoverServiceFactory.getApi(IResourceCenterResourceCrossoverService.class);
+                    resourceVoList.addAll(inspectResourceVoList);
+                    resourceCrossoverService.addResourceTag(resourceIdList, resourceVoList);
+                }
             }
         }
         if (inspectResourceVoList == null) {
             inspectResourceVoList = new ArrayList<>();
         }
-        searchVo.setRowNum(rowNum);
         return inspectResourceVoList;
     }
 }
