@@ -4,8 +4,10 @@ import codedriver.framework.auth.core.AuthAction;
 import codedriver.framework.autoexec.dao.mapper.AutoexecJobMapper;
 import codedriver.framework.autoexec.dto.job.AutoexecJobVo;
 import codedriver.framework.autoexec.exception.AutoexecJobNotFoundException;
-import codedriver.framework.cmdb.crossover.IResourceCenterResourceCrossoverService;
+import codedriver.framework.cmdb.crossover.ICiCrossoverMapper;
+import codedriver.framework.cmdb.dto.ci.CiVo;
 import codedriver.framework.cmdb.dto.resourcecenter.ResourceSearchVo;
+import codedriver.framework.cmdb.exception.ci.CiNotFoundException;
 import codedriver.framework.common.constvalue.ApiParamType;
 import codedriver.framework.common.dto.BasePageVo;
 import codedriver.framework.crossover.CrossoverServiceFactory;
@@ -16,6 +18,7 @@ import codedriver.framework.restful.constvalue.OperationTypeEnum;
 import codedriver.framework.restful.core.privateapi.PrivateApiComponentBase;
 import codedriver.framework.util.TableResultUtil;
 import codedriver.module.inspect.service.InspectReportService;
+import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import org.springframework.stereotype.Service;
 
@@ -53,8 +56,8 @@ public class InspectAutoexecJobNodeSearchApi extends PrivateApiComponentBase {
 
     @Input({
             @Param(name = "keyword", type = ApiParamType.STRING, xss = true, desc = "模糊搜索"),
-            @Param(name = "typeId", type = ApiParamType.LONG, desc = "类型id"),
-            @Param(name = "jobId", type = ApiParamType.LONG,isRequired = true, desc = "类型id"),
+            @Param(name = "typeId", type = ApiParamType.LONG, isRequired = true, desc = "类型id"),
+            @Param(name = "jobId", type = ApiParamType.LONG, isRequired = true, desc = "类型id"),
             @Param(name = "protocolIdList", type = ApiParamType.JSONARRAY, desc = "协议id列表"),
             @Param(name = "stateIdList", type = ApiParamType.JSONARRAY, desc = "状态id列表"),
             @Param(name = "envIdList", type = ApiParamType.JSONARRAY, desc = "环境id列表"),
@@ -75,14 +78,19 @@ public class InspectAutoexecJobNodeSearchApi extends PrivateApiComponentBase {
     @Description(desc = "巡检作业节点资产查询接口")
     @Override
     public Object myDoService(JSONObject paramObj) throws Exception {
+        ResourceSearchVo searchVo = JSON.toJavaObject(paramObj, ResourceSearchVo.class);
         Long jobId = paramObj.getLong("jobId");
         AutoexecJobVo jobVo = autoexecJobMapper.getJobInfo(jobId);
         if (jobVo == null) {
             throw new AutoexecJobNotFoundException(jobId.toString());
         }
-        IResourceCenterResourceCrossoverService resourceCrossoverService = CrossoverServiceFactory.getApi(IResourceCenterResourceCrossoverService.class);
-        ResourceSearchVo searchVo = resourceCrossoverService.assembleResourceSearchVo(paramObj);
-        return TableResultUtil.getResult( inspectReportService.getInspectAutoexecJobNodeList(jobId, searchVo), searchVo);
+        ICiCrossoverMapper ciCrossoverMapper = CrossoverServiceFactory.getApi(ICiCrossoverMapper.class);
+        CiVo ciVo = ciCrossoverMapper.getCiById(searchVo.getTypeId());
+        if (ciVo == null) {
+            throw new CiNotFoundException(searchVo.getTypeId());
+        }
+        searchVo.setLft(ciVo.getLft());
+        searchVo.setRht(ciVo.getRht());
+        return TableResultUtil.getResult(inspectReportService.getInspectAutoexecJobNodeList(jobId, searchVo), searchVo);
     }
-
 }

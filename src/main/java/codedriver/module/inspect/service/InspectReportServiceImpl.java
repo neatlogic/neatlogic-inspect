@@ -1,16 +1,12 @@
 package codedriver.module.inspect.service;
 
 import codedriver.framework.asynchronization.threadlocal.TenantContext;
-import codedriver.framework.cmdb.crossover.IResourceCenterResourceCrossoverService;
 import codedriver.framework.cmdb.dto.resourcecenter.ResourceSearchVo;
-import codedriver.framework.cmdb.dto.resourcecenter.ResourceVo;
 import codedriver.framework.cmdb.dto.sync.CollectionVo;
 import codedriver.framework.common.constvalue.InspectStatus;
-import codedriver.framework.crossover.CrossoverServiceFactory;
 import codedriver.framework.inspect.dao.mapper.InspectMapper;
 import codedriver.framework.inspect.dto.InspectResourceVo;
 import com.alibaba.fastjson.JSONObject;
-import com.alibaba.nacos.common.utils.CollectionUtils;
 import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoCollection;
 import org.apache.commons.collections4.MapUtils;
@@ -43,7 +39,7 @@ public class InspectReportServiceImpl implements InspectReportService {
             //场景1：用id查历史报告
             //场景2：用jobId和resourceId查历史报告
             collection = mongoTemplate.getDb().getCollection("INSPECT_REPORTS_HIS");
-        }else {
+        } else {
             //场景3：用resourceId查最新报告
             collection = mongoTemplate.getDb().getCollection("INSPECT_REPORTS");
         }
@@ -81,20 +77,11 @@ public class InspectReportServiceImpl implements InspectReportService {
     @Override
     public List<InspectResourceVo> getInspectAutoexecJobNodeList(Long jobId, ResourceSearchVo searchVo) {
         List<InspectResourceVo> inspectResourceVoList = null;
-        //如果idList为null或者有值，就去数据库查，如果idList为一个空数组，查询数据直接为空
-        if (searchVo.getIdList() == null || CollectionUtils.isNotEmpty(searchVo.getIdList())) {
-            int rowNum = inspectMapper.getInspectAutoexecJobNodeResourceCount(searchVo, jobId, TenantContext.get().getDataDbName());
-            if (rowNum > 0) {
-                searchVo.setRowNum(rowNum);
-                List<ResourceVo> resourceVoList = new ArrayList<>();
-                List<Long> resourceIdList = inspectMapper.getInspectAutoexecJobNodeResourceIdList(searchVo, jobId, TenantContext.get().getDataDbName());
-                inspectResourceVoList = inspectMapper.getInspectResourceVoListByIdListAndJobId(resourceIdList, jobId, TenantContext.get().getDataDbName());
-                if (CollectionUtils.isNotEmpty(inspectResourceVoList)) {
-                    resourceVoList.addAll(inspectResourceVoList);
-                    IResourceCenterResourceCrossoverService resourceCrossoverService = CrossoverServiceFactory.getApi(IResourceCenterResourceCrossoverService.class);
-                    resourceCrossoverService.addResourceTag(resourceIdList, resourceVoList);
-                }
-            }
+        int resourceCount = inspectMapper.getInspectAutoexecJobNodeResourceCount(searchVo, jobId, TenantContext.get().getDataDbName());
+        if (resourceCount > 0) {
+            searchVo.setRowNum(resourceCount);
+            List<Long> resourceIdList = inspectMapper.getInspectAutoexecJobNodeResourceIdList(searchVo, jobId, TenantContext.get().getDataDbName());
+            inspectResourceVoList = inspectMapper.getInspectResourceVoListByIdListAndJobId(resourceIdList, jobId, TenantContext.get().getDataDbName());
         }
         if (inspectResourceVoList == null) {
             inspectResourceVoList = new ArrayList<>();
@@ -105,20 +92,11 @@ public class InspectReportServiceImpl implements InspectReportService {
     @Override
     public List<InspectResourceVo> getInspectResourceReportList(ResourceSearchVo searchVo) {
         List<InspectResourceVo> inspectResourceVoList = null;
-        //如果idList为null或者有值，就去数据库查，如果idList为一个空数组，查询数据直接为空
-        if (searchVo.getIdList() == null || CollectionUtils.isNotEmpty(searchVo.getIdList())) {
-            int rowNum = inspectMapper.getInspectResourceCount(searchVo);
-            if (rowNum > 0) {
-                searchVo.setRowNum(rowNum);
-                List<ResourceVo> resourceVoList = new ArrayList<>();
-                List<Long> resourceIdList = inspectMapper.getInspectResourceIdList(searchVo);
-                inspectResourceVoList = inspectMapper.getInspectResourceVoListByIdList(resourceIdList, TenantContext.get().getDataDbName());
-                if (CollectionUtils.isNotEmpty(inspectResourceVoList)) {
-                    IResourceCenterResourceCrossoverService resourceCrossoverService = CrossoverServiceFactory.getApi(IResourceCenterResourceCrossoverService.class);
-                    resourceVoList.addAll(inspectResourceVoList);
-                    resourceCrossoverService.addResourceTag(resourceIdList, resourceVoList);
-                }
-            }
+        int resourceCount = inspectMapper.getInspectResourceCount(searchVo);
+        if (resourceCount > 0) {
+            searchVo.setRowNum(resourceCount);
+            List<Long> resourceIdList = inspectMapper.getInspectResourceIdList(searchVo);
+            inspectResourceVoList = inspectMapper.getInspectResourceVoListByIdList(resourceIdList, TenantContext.get().getDataDbName());
         }
         if (inspectResourceVoList == null) {
             inspectResourceVoList = new ArrayList<>();
