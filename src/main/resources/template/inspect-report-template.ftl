@@ -154,10 +154,18 @@
                             <#else>
                                 <td style="word-break: break-all;word-wrap: break-word;">
                                     <!--有些命令行或环境变量太长，导致超出纸张大小，故强制换行-->
-                                    <#if cell?length gt 20>
-                                        <#assign n = cell?length / 20>
+                                    <#assign l = cell?length/>
+                                    <#assign step = 30/>
+                                    <#if l gt step>
+                                        <#assign n = (l / step)?int>
                                         <#list 0..n as i>
-                                            ${cell[i * 20..*(i + 1) * 20]}<br/>
+                                            <#assign start = i*step/>
+                                            <#assign end = (i+1)*step-1/>
+                                            <#if i lt n>
+                                                ${cell[start..end]}<br/>
+                                            <#else>
+                                                ${cell[start..(l-1)]}
+                                            </#if>
                                         </#list>
                                     <#else>
                                         ${cell}
