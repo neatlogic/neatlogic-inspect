@@ -6,9 +6,11 @@
 package codedriver.module.inspect.api;
 
 import codedriver.framework.auth.core.AuthAction;
-import codedriver.framework.cmdb.crossover.IResourceCenterResourceCrossoverService;
+import codedriver.framework.cmdb.crossover.ICiCrossoverMapper;
+import codedriver.framework.cmdb.dto.ci.CiVo;
 import codedriver.framework.cmdb.dto.resourcecenter.ResourceSearchVo;
 import codedriver.framework.cmdb.dto.resourcecenter.ResourceVo;
+import codedriver.framework.cmdb.exception.ci.CiNotFoundException;
 import codedriver.framework.common.constvalue.ApiParamType;
 import codedriver.framework.common.dto.BasePageVo;
 import codedriver.framework.crossover.CrossoverServiceFactory;
@@ -18,6 +20,7 @@ import codedriver.framework.restful.constvalue.OperationTypeEnum;
 import codedriver.framework.restful.core.privateapi.PrivateApiComponentBase;
 import codedriver.framework.util.TableResultUtil;
 import codedriver.module.inspect.service.InspectReportService;
+import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import org.springframework.stereotype.Service;
 
@@ -43,7 +46,7 @@ public class InspectResourceReportSearchApi extends PrivateApiComponentBase {
 
     @Input({
             @Param(name = "keyword", type = ApiParamType.STRING, xss = true, desc = "模糊搜索"),
-            @Param(name = "typeId", type = ApiParamType.LONG, desc = "类型id"),
+            @Param(name = "typeId", type = ApiParamType.LONG,isRequired = true, desc = "类型id"),
             @Param(name = "protocolIdList", type = ApiParamType.JSONARRAY, desc = "协议id列表"),
             @Param(name = "stateIdList", type = ApiParamType.JSONARRAY, desc = "状态id列表"),
             @Param(name = "envIdList", type = ApiParamType.JSONARRAY, desc = "环境id列表"),
@@ -65,8 +68,15 @@ public class InspectResourceReportSearchApi extends PrivateApiComponentBase {
     @Description(desc = "获取巡检资产报告接口")
     @Override
     public Object myDoService(JSONObject paramObj) throws Exception {
-        IResourceCenterResourceCrossoverService resourceCrossoverService = CrossoverServiceFactory.getApi(IResourceCenterResourceCrossoverService.class);
-        ResourceSearchVo searchVo = resourceCrossoverService.assembleResourceSearchVo(paramObj);
+        ResourceSearchVo searchVo = JSON.toJavaObject(paramObj, ResourceSearchVo.class);
+        Long typeId = searchVo.getTypeId();
+        ICiCrossoverMapper ciCrossoverMapper = CrossoverServiceFactory.getApi(ICiCrossoverMapper.class);
+        CiVo ciVo = ciCrossoverMapper.getCiById(typeId);
+        if (ciVo == null) {
+            throw new CiNotFoundException(typeId);
+        }
+        searchVo.setLft(ciVo.getLft());
+        searchVo.setRht(ciVo.getRht());
         return TableResultUtil.getResult(inspectReportService.getInspectResourceReportList(searchVo), searchVo);
     }
 
