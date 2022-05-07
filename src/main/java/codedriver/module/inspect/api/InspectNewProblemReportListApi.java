@@ -6,14 +6,10 @@ import codedriver.framework.inspect.auth.INSPECT_BASE;
 import codedriver.framework.restful.annotation.*;
 import codedriver.framework.restful.constvalue.OperationTypeEnum;
 import codedriver.framework.restful.core.privateapi.PrivateApiComponentBase;
+import codedriver.module.inspect.service.InspectReportService;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
-import com.mongodb.client.FindIterable;
-import com.mongodb.client.MongoCollection;
 import org.apache.commons.collections4.CollectionUtils;
-import org.apache.commons.collections4.MapUtils;
-import org.bson.Document;
-import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
@@ -29,7 +25,7 @@ import java.util.List;
 public class InspectNewProblemReportListApi extends PrivateApiComponentBase {
 
     @Resource
-    MongoTemplate mongoTemplate;
+    private InspectReportService inspectReportService;
 
     @Override
     public String getName() {
@@ -55,30 +51,12 @@ public class InspectNewProblemReportListApi extends PrivateApiComponentBase {
     @Description(desc = "获取巡检最新问题报告列表接口")
     @Override
     public Object myDoService(JSONObject paramObj) throws Exception {
-        JSONArray returnArray = new JSONArray();
         JSONArray resourceIdArray = paramObj.getJSONArray("resourceIdList");
         if (CollectionUtils.isNotEmpty(resourceIdArray)) {
             List<Long> resourceIdList = resourceIdArray.toJavaList(Long.class);
-            MongoCollection<Document> collection = mongoTemplate.getCollection("INSPECT_REPORTS");
-            Document doc = new Document();
-            for (Long id : resourceIdList) {
-                JSONObject inspectReport = new JSONObject();
-                inspectReport.put("id", id);
-                inspectReport.put("inspectResult", new JSONObject());
-                doc.put("RESOURCE_ID", id);
-                FindIterable<Document> findIterable = collection.find(doc);
-                Document reportDoc = findIterable.first();
-                if (MapUtils.isNotEmpty(reportDoc)) {
-                    JSONObject reportJson = JSONObject.parseObject(reportDoc.toJson());
-                    JSONObject inspectResult = reportJson.getJSONObject("_inspect_result");
-                    if (inspectResult != null) {
-                        inspectReport.put("inspectResult", inspectResult);
-                    }
-                }
-                returnArray.add(inspectReport);
-            }
+            return inspectReportService.getInspectDetailByResourceIdList(resourceIdList);
         }
-        return returnArray;
+        return CollectionUtils.EMPTY_COLLECTION;
     }
 
 }

@@ -6,9 +6,11 @@ import codedriver.framework.cmdb.dto.sync.CollectionVo;
 import codedriver.framework.common.constvalue.InspectStatus;
 import codedriver.framework.inspect.dao.mapper.InspectMapper;
 import codedriver.framework.inspect.dto.InspectResourceVo;
+import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoCollection;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.bson.Document;
@@ -102,5 +104,44 @@ public class InspectReportServiceImpl implements InspectReportService {
             inspectResourceVoList = new ArrayList<>();
         }
         return inspectResourceVoList;
+    }
+
+    @Override
+    public JSONArray getInspectDetailByResourceIdList(List<Long> resourceIdList) {
+        JSONArray returnArray = new JSONArray();
+        if (CollectionUtils.isNotEmpty(resourceIdList)) {
+            MongoCollection<Document> collection = mongoTemplate.getCollection("INSPECT_REPORTS");
+            for (Long id : resourceIdList) {
+                returnArray.add(getBatchInspectDetailByResourceId(id, collection));
+            }
+        }
+        return returnArray;
+    }
+
+    @Override
+    public JSONObject getInspectDetailByResourceId(Long resourceId) {
+        MongoCollection<Document> collection = mongoTemplate.getCollection("INSPECT_REPORTS");
+        return getBatchInspectDetailByResourceId(resourceId, collection);
+    }
+
+    @Override
+    public JSONObject getBatchInspectDetailByResourceId(Long resourceId, MongoCollection<Document> collection) {
+        JSONObject inspectReport = new JSONObject();
+        if (resourceId != null) {
+            Document doc = new Document();
+            inspectReport.put("id", resourceId);
+            inspectReport.put("inspectResult", new JSONObject());
+            doc.put("RESOURCE_ID", resourceId);
+            FindIterable<Document> findIterable = collection.find(doc);
+            Document reportDoc = findIterable.first();
+            if (MapUtils.isNotEmpty(reportDoc)) {
+                JSONObject reportJson = JSONObject.parseObject(reportDoc.toJson());
+                JSONObject inspectResult = reportJson.getJSONObject("_inspect_result");
+                if (inspectResult != null) {
+                    inspectReport.put("inspectResult", inspectResult);
+                }
+            }
+        }
+        return inspectReport;
     }
 }
