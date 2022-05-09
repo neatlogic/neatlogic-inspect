@@ -137,8 +137,14 @@ public class InspectReportServiceImpl implements InspectReportService {
             if (MapUtils.isNotEmpty(reportDoc)) {
                 JSONObject reportJson = JSONObject.parseObject(reportDoc.toJson());
                 JSONObject inspectResult = reportJson.getJSONObject("_inspect_result");
-                if (inspectResult != null) {
+                if (MapUtils.isNotEmpty(inspectResult)) {
+                    String name = inspectResult.getString("name");
+                    CollectionVo collectionVo = mongoTemplate.findOne(new Query(Criteria.where("name").is(name)), CollectionVo.class, "_dictionary");
+                    if (collectionVo != null) {
+                        reportJson.put("fields", collectionVo.getFields());
+                    }
                     inspectReport.put("inspectResult", inspectResult);
+                    inspectReport.put("reportJson", reportJson);
                 }
             }
         }
