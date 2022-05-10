@@ -8,6 +8,7 @@ import com.mongodb.client.MongoCollection;
 import org.bson.Document;
 
 import java.util.List;
+import java.util.Map;
 
 public interface InspectReportService {
 
@@ -44,7 +45,7 @@ public interface InspectReportService {
      * @param resourceIdList 资产id列表
      * @return 对应巡检报告
      */
-    JSONArray getInspectDetailByResourceIdList(List<Long> resourceIdList);
+    JSONObject getInspectDetailByResourceIdList(List<Long> resourceIdList);
 
     /**
      * 根据resourceId 获取 对应巡检报告
@@ -60,4 +61,22 @@ public interface InspectReportService {
      * @return 对应巡检报告
      */
     JSONObject getBatchInspectDetailByResourceId(Long resourceId, MongoCollection<Document> collection);
+
+    /**
+     * 从mongodb分析出告警对象，并翻译
+     * @param reportJson 资产巡检报告
+     * @param alert 告警
+     * @param threholdJson threholdJson
+     * @param fieldPathTextMap 用于翻译field
+     * @return 告警对象
+     */
+    Object getInspectAlertObject(JSONObject reportJson, JSONObject alert, JSONObject threholdJson, Map<String, String> fieldPathTextMap);
+
+    /**
+     * 递归获取fieldTextMap
+     * @param fieldPathTextMap field 和 fieldText map
+     * @param parentPath 父节点路径
+     * @param subsetArray 子节点数组
+     */
+    void getFieldPathTextMap(Map<String, String> fieldPathTextMap, String parentPath, JSONArray subsetArray);
 }

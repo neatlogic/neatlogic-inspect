@@ -25,7 +25,6 @@ import codedriver.module.inspect.service.InspectReportService;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
-import com.alibaba.fastjson.JSONPath;
 import com.mongodb.client.MongoCollection;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.MapUtils;
@@ -64,6 +63,9 @@ public class InspectNewProblemReportExportApi extends PrivateBinaryStreamApiComp
     @Resource
     InspectMapper inspectMapper;
 
+    @Resource
+    InspectReportService inspectReportService;
+
     @Override
     public String getName() {
         return "导出巡检最报告列表";
@@ -78,9 +80,6 @@ public class InspectNewProblemReportExportApi extends PrivateBinaryStreamApiComp
     public String getConfig() {
         return null;
     }
-
-    @Resource
-    private InspectReportService inspectReportService;
 
     @Input({
             @Param(name = "keyword", type = ApiParamType.STRING, xss = true, desc = "模糊搜索"),
@@ -176,6 +175,7 @@ public class InspectNewProblemReportExportApi extends PrivateBinaryStreamApiComp
                     .withHeaderList(headerList)
                     .withColumnList(columnList);
             Workbook workbook = builder.build();
+            List<String> nameList = new ArrayList<>();
             Map<String, String> fieldPathTextMap = new HashMap<>();
             for (int i = 1; i <= searchVo.getPageCount(); i++) {
                 searchVo.setCurrentPage(i);
@@ -187,14 +187,15 @@ public class InspectNewProblemReportExportApi extends PrivateBinaryStreamApiComp
                         JSONObject inspectResult = mongoInspectAlertDetail.getJSONObject("inspectResult");
                         JSONObject reportJson = mongoInspectAlertDetail.getJSONObject("reportJson");
                         //初始化fieldMap
-                        if (MapUtils.isEmpty(fieldPathTextMap)) {
+                        if (!nameList.contains(inspectResult.getString("name"))) {
+                            nameList.add(inspectResult.getString("name"));
                             JSONArray fields = reportJson.getJSONArray("fields");
                             if (CollectionUtils.isNotEmpty(fields)) {
                                 for (int k = 0; k < fields.size(); k++) {
                                     JSONObject field = fields.getJSONObject(k);
                                     fieldPathTextMap.put(field.getString("name"), field.getString("desc"));
                                     if (Objects.equals("JsonArray", field.getString("type"))) {
-                                        getFieldPathTextMap(fieldPathTextMap, field.getString("name"), field.getJSONArray("subset"));
+                                        inspectReportService.getFieldPathTextMap(fieldPathTextMap, field.getString("name"), field.getJSONArray("subset"));
                                     }
                                 }
                             }
@@ -213,30 +214,7 @@ public class InspectNewProblemReportExportApi extends PrivateBinaryStreamApiComp
                                     dataMap.put("alertRule", threholdJson.getString("rule"));
                                     dataMap.put("alertValue", alert.getString("fieldValue"));
                                     //补充告警对象
-                                    Object alertObject;
-                                    String namePath = threholdJson.getString("rule").split(" ")[0].substring(2);
-                                    String jsonPath = alert.getString("jsonPath");
-                                    StringBuilder parentPath = new StringBuilder();
-                                    String[] subJsonPaths = jsonPath.split("\\.");
-                                    if (subJsonPaths.length > 2) {
-                                        parentPath.append(subJsonPaths[0]);
-                                        for (int k = 1; k < subJsonPaths.length - 1; k++) {
-                                            parentPath.append(".").append(subJsonPaths[k]);
-                                        }
-                                        alertObject = JSONPath.read(reportJson.toJSONString(), parentPath.toString());
-                                        JSONObject alertJson = JSON.parseObject(JSONObject.toJSONString(alertObject));
-                                        JSONObject alertTextJson = new JSONObject();
-                                        //遍历alertObject 翻译
-                                        for (Map.Entry<String, Object> entry : alertJson.entrySet()) {
-                                            String key = entry.getKey();
-                                            String keyText = fieldPathTextMap.get(namePath + "." + key);
-                                            alertTextJson.put(key + (keyText == null ? StringUtils.EMPTY : "(" + keyText + ")"), entry.getValue());
-                                        }
-                                        alertObject = alertTextJson;
-                                    } else {
-                                        alertObject = fieldPathTextMap.get(namePath);
-                                    }
-                                    dataMap.put("alertObject", alertObject);
+                                    dataMap.put("alertObject", inspectReportService.getInspectAlertObject(reportJson, alert, threholdJson, fieldPathTextMap));
                                     sheetBuilder.addData(dataMap);
                                 }
                             } else {
@@ -296,18 +274,4 @@ public class InspectNewProblemReportExportApi extends PrivateBinaryStreamApiComp
         dataMap.put("maintenanceWindow", inspectResourceVo.getMaintenanceWindow());
     }
 
-    /**
-     * @return
-     */
-    private void getFieldPathTextMap(Map<String, String> fieldPathTextMap, String parentPath, JSONArray subsetArray) {
-        StringBuilder parentPathBuilder = new StringBuilder(parentPath);
-        for (int i = 0; i < subsetArray.size(); i++) {
-            JSONObject subset = subsetArray.getJSONObject(i);
-            parentPathBuilder.append(".").append(subset.getString("name"));
-            fieldPathTextMap.put(parentPathBuilder.toString(), subset.getString("desc"));
-            if (Objects.equals("JsonArray", subset.getString("type"))) {
-                getFieldPathTextMap(fieldPathTextMap, parentPathBuilder.toString(), subset.getJSONArray("subset"));
-            }
-        }
-    }
 }

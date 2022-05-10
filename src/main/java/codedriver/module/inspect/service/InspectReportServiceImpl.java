@@ -6,8 +6,10 @@ import codedriver.framework.cmdb.dto.sync.CollectionVo;
 import codedriver.framework.common.constvalue.InspectStatus;
 import codedriver.framework.inspect.dao.mapper.InspectMapper;
 import codedriver.framework.inspect.dto.InspectResourceVo;
+import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
+import com.alibaba.fastjson.JSONPath;
 import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoCollection;
 import org.apache.commons.collections4.CollectionUtils;
@@ -21,8 +23,7 @@ import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 @Service
 public class InspectReportServiceImpl implements InspectReportService {
@@ -107,15 +108,53 @@ public class InspectReportServiceImpl implements InspectReportService {
     }
 
     @Override
-    public JSONArray getInspectDetailByResourceIdList(List<Long> resourceIdList) {
-        JSONArray returnArray = new JSONArray();
+    public JSONObject getInspectDetailByResourceIdList(List<Long> resourceIdList) {
+        JSONObject resourceAlert = new JSONObject();
         if (CollectionUtils.isNotEmpty(resourceIdList)) {
             MongoCollection<Document> collection = mongoTemplate.getCollection("INSPECT_REPORTS");
-            for (Long id : resourceIdList) {
-                returnArray.add(getBatchInspectDetailByResourceId(id, collection));
+            List<String> nameList = new ArrayList<>();
+            Map<String, String> fieldPathTextMap = new HashMap<>();
+            for (Long resourceId : resourceIdList) {
+                JSONArray resourceAlertArray = new JSONArray();
+                JSONObject mongoInspectAlertDetail = getBatchInspectDetailByResourceId(resourceId, collection);
+                JSONObject inspectResult = mongoInspectAlertDetail.getJSONObject("inspectResult");
+                JSONObject reportJson = mongoInspectAlertDetail.getJSONObject("reportJson");
+                //初始化fieldMap
+                if (!nameList.contains(inspectResult.getString("name"))) {
+                    nameList.add(inspectResult.getString("name"));
+                    JSONArray fields = reportJson.getJSONArray("fields");
+                    if (CollectionUtils.isNotEmpty(fields)) {
+                        for (int k = 0; k < fields.size(); k++) {
+                            JSONObject field = fields.getJSONObject(k);
+                            fieldPathTextMap.put(field.getString("name"), field.getString("desc"));
+                            if (Objects.equals("JsonArray", field.getString("type"))) {
+                                getFieldPathTextMap(fieldPathTextMap, field.getString("name"), field.getJSONArray("subset"));
+                            }
+                        }
+                    }
+                }
+                if (MapUtils.isNotEmpty(inspectResult)) {
+                    JSONObject thresholds = inspectResult.getJSONObject("thresholds");
+                    JSONArray alerts = inspectResult.getJSONArray("alerts");
+                    if (CollectionUtils.isNotEmpty(alerts)) {
+                        for (int j = 0; j < alerts.size(); j++) {
+                            JSONObject alert = alerts.getJSONObject(j);
+                            JSONObject threholdJson = thresholds.getJSONObject(alert.getString("ruleName"));
+                            Map<String, Object> dataMap = new HashMap<>();
+                            dataMap.put("alertLevel", threholdJson.getString("level"));
+                            dataMap.put("alertTips", threholdJson.getString("name"));
+                            dataMap.put("alertRule", threholdJson.getString("rule"));
+                            dataMap.put("alertValue", alert.getString("fieldValue"));
+                            //补充告警对象
+                            dataMap.put("alertObject", getInspectAlertObject(reportJson, alert, threholdJson, fieldPathTextMap));
+                            resourceAlertArray.add(dataMap);
+                        }
+                    }
+                }
+                resourceAlert.put(resourceId.toString(),resourceAlertArray);
             }
         }
-        return returnArray;
+        return resourceAlert;
     }
 
     @Override
@@ -149,5 +188,52 @@ public class InspectReportServiceImpl implements InspectReportService {
             }
         }
         return inspectReport;
+    }
+
+    @Override
+    public Object getInspectAlertObject(JSONObject reportJson, JSONObject alert, JSONObject threholdJson, Map<String, String> fieldPathTextMap) {
+        Object alertObject;
+        String namePath = threholdJson.getString("rule").split(" ")[0].substring(2);
+        String[] namePaths = namePath.split("\\.");
+        String jsonPath = alert.getString("jsonPath");
+        StringBuilder parentPath = new StringBuilder();
+        String[] subJsonPaths = jsonPath.split("\\.");
+        if (subJsonPaths.length > 2) {
+            StringBuilder parentNamePath = new StringBuilder(namePaths[0]);
+            for (int k = 1; k < namePaths.length - 1; k++) {
+                parentNamePath.append(".").append(namePaths[k]);
+            }
+            parentPath.append(subJsonPaths[0]);
+            for (int k = 1; k < subJsonPaths.length - 1; k++) {
+                parentPath.append(".").append(subJsonPaths[k]);
+            }
+            alertObject = JSONPath.read(reportJson.toJSONString(), parentPath.toString());
+            JSONObject alertJson = JSON.parseObject(JSONObject.toJSONString(alertObject));
+            JSONObject alertTextJson = new JSONObject();
+            //遍历alertObject 翻译
+            for (Map.Entry<String, Object> entry : alertJson.entrySet()) {
+                String key = entry.getKey();
+                String keyText = fieldPathTextMap.get(parentNamePath + "." + key);
+                alertTextJson.put(key + (keyText == null ? StringUtils.EMPTY : "(" + keyText + ")"), entry.getValue());
+            }
+            alertObject = alertTextJson;
+        } else {
+            String keyText = fieldPathTextMap.get(namePath);
+            alertObject = namePath + (keyText == null ? StringUtils.EMPTY : "(" + keyText + ")");
+        }
+        return alertObject;
+    }
+
+    @Override
+    public void getFieldPathTextMap(Map<String, String> fieldPathTextMap, String parentPath, JSONArray subsetArray) {
+        for (int i = 0; i < subsetArray.size(); i++) {
+            StringBuilder parentPathBuilder = new StringBuilder(parentPath);
+            JSONObject subset = subsetArray.getJSONObject(i);
+            parentPathBuilder.append(".").append(subset.getString("name"));
+            fieldPathTextMap.put(parentPathBuilder.toString(), subset.getString("desc"));
+            if (Objects.equals("JsonArray", subset.getString("type"))) {
+                getFieldPathTextMap(fieldPathTextMap, parentPathBuilder.toString(), subset.getJSONArray("subset"));
+            }
+        }
     }
 }
