@@ -213,7 +213,7 @@ public class InspectNewProblemReportExportApi extends PrivateBinaryStreamApiComp
                                     dataMap.put("alertRule", threholdJson.getString("rule"));
                                     dataMap.put("alertValue", alert.getString("fieldValue"));
                                     //补充告警对象
-                                    Object alertObject = null;
+                                    Object alertObject;
                                     String namePath = threholdJson.getString("rule").split(" ")[0].substring(2);
                                     String jsonPath = alert.getString("jsonPath");
                                     StringBuilder parentPath = new StringBuilder();
@@ -237,8 +237,6 @@ public class InspectNewProblemReportExportApi extends PrivateBinaryStreamApiComp
                                         alertObject = fieldPathTextMap.get(namePath);
                                     }
                                     dataMap.put("alertObject", alertObject);
-
-
                                     sheetBuilder.addData(dataMap);
                                 }
                             } else {

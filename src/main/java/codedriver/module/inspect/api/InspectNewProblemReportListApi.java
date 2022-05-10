@@ -59,4 +59,9 @@ public class InspectNewProblemReportListApi extends PrivateApiComponentBase {
         return CollectionUtils.EMPTY_COLLECTION;
     }
 
+    @Override
+    public boolean disableReturnCircularReferenceDetect() {
+        return true;
+    }
+
 }
