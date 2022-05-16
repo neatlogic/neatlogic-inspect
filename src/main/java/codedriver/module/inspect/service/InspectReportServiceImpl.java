@@ -193,6 +193,7 @@ public class InspectReportServiceImpl implements InspectReportService {
     @Override
     public Object getInspectAlertObject(JSONObject reportJson, JSONObject alert, JSONObject threholdJson, Map<String, String> fieldPathTextMap) {
         Object alertObject;
+        StringBuilder valueSB = new StringBuilder();
         String namePath = threholdJson.getString("rule").split(" ")[0].substring(2);
         String[] namePaths = namePath.split("\\.");
         String jsonPath = alert.getString("jsonPath");
@@ -214,14 +215,16 @@ public class InspectReportServiceImpl implements InspectReportService {
             for (Map.Entry<String, Object> entry : alertJson.entrySet()) {
                 String key = entry.getKey();
                 String keyText = fieldPathTextMap.get(parentNamePath + "." + key);
-                alertTextJson.put(key + (keyText == null ? StringUtils.EMPTY : "(" + keyText + ")"), entry.getValue());
+                //alertTextJson.put(key + (keyText == null ? StringUtils.EMPTY : "(" + keyText + ")"), entry.getValue());
+                valueSB.append(key).append(keyText == null ? StringUtils.EMPTY : "(" + keyText + ")").append(" = ").append(entry.getValue()).append("\r\n");
             }
             alertObject = alertTextJson;
         } else {
             String keyText = fieldPathTextMap.get(namePath);
-            alertObject = namePath + (keyText == null ? StringUtils.EMPTY : "(" + keyText + ")");
+            //alertObject = namePath + (keyText == null ? StringUtils.EMPTY : "(" + keyText + ")");
+            valueSB.append(namePath).append(keyText == null ? StringUtils.EMPTY : "(" + keyText + ")").append("\r\n");
         }
-        return alertObject;
+        return valueSB.toString();
     }
 
     @Override
