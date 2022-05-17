@@ -5,6 +5,7 @@ import codedriver.framework.inspect.dto.InspectResourceVo;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.mongodb.client.MongoCollection;
+import org.apache.poi.ss.usermodel.Workbook;
 import org.bson.Document;
 
 import java.util.List;
@@ -14,9 +15,10 @@ public interface InspectReportService {
 
     /**
      * 获取单个资产的巡检报告
-     *  可用id查历史报告
-     *  可用jobId和resourceId查历史报告
-     *  可用resourceId查最新报告
+     * 可用id查历史报告
+     * 可用jobId和resourceId查历史报告
+     * 可用resourceId查最新报告
+     *
      * @param resourceId
      * @param id
      * @param jobId
@@ -35,6 +37,7 @@ public interface InspectReportService {
 
     /**
      * 获取最新资产巡检报告
+     *
      * @param searchVo
      * @return
      */
@@ -42,6 +45,7 @@ public interface InspectReportService {
 
     /**
      * 根据resourceIdList 获取 对应巡检报告
+     *
      * @param resourceIdList 资产id列表
      * @return 对应巡检报告
      */
@@ -49,6 +53,7 @@ public interface InspectReportService {
 
     /**
      * 根据resourceId 获取 对应巡检报告
+     *
      * @param resourceId 资产id
      * @return 对应巡检报告
      */
@@ -56,6 +61,7 @@ public interface InspectReportService {
 
     /**
      * 循环根据resourceId 获取 对应巡检报告
+     *
      * @param resourceId 资产id
      * @param collection mongoCollection
      * @return 对应巡检报告
@@ -64,9 +70,10 @@ public interface InspectReportService {
 
     /**
      * 从mongodb分析出告警对象，并翻译
-     * @param reportJson 资产巡检报告
-     * @param alert 告警
-     * @param threholdJson threholdJson
+     *
+     * @param reportJson       资产巡检报告
+     * @param alert            告警
+     * @param threholdJson     threholdJson
      * @param fieldPathTextMap 用于翻译field
      * @return 告警对象
      */
@@ -74,9 +81,19 @@ public interface InspectReportService {
 
     /**
      * 递归获取fieldTextMap
+     *
      * @param fieldPathTextMap field 和 fieldText map
-     * @param parentPath 父节点路径
-     * @param subsetArray 子节点数组
+     * @param parentPath       父节点路径
+     * @param subsetArray      子节点数组
      */
     void getFieldPathTextMap(Map<String, String> fieldPathTextMap, String parentPath, JSONArray subsetArray);
+
+    /**
+     * 获取巡检最新报告列表Workbook
+     *
+     * @param searchVo          查询条件
+     * @param isNeedAlertDetail 1:会导出具体告警信息；0：不会导出具体告警信息
+     * @return
+     */
+    Workbook getInspectNewProblemReportWorkbook(ResourceSearchVo searchVo, Integer isNeedAlertDetail);
 }
