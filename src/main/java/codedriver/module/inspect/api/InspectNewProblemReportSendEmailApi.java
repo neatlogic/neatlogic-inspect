@@ -11,20 +11,16 @@ import codedriver.framework.common.constvalue.ApiParamType;
 import codedriver.framework.common.constvalue.GroupSearch;
 import codedriver.framework.common.constvalue.MimeType;
 import codedriver.framework.crossover.CrossoverServiceFactory;
-import codedriver.framework.dao.mapper.RoleMapper;
-import codedriver.framework.dao.mapper.TeamMapper;
 import codedriver.framework.dao.mapper.UserMapper;
-import codedriver.framework.dto.RoleTeamVo;
-import codedriver.framework.dto.TeamVo;
 import codedriver.framework.inspect.auth.INSPECT_BASE;
 import codedriver.framework.restful.annotation.*;
 import codedriver.framework.restful.constvalue.OperationTypeEnum;
 import codedriver.framework.restful.core.privateapi.PrivateApiComponentBase;
+import codedriver.framework.service.UserService;
 import codedriver.framework.util.EmailUtil;
 import codedriver.module.inspect.service.InspectReportService;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
-import org.apache.commons.collections4.CollectionUtils;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,7 +31,6 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.util.*;
-import java.util.stream.Collectors;
 
 /**
  * @author laiwt
@@ -52,10 +47,7 @@ public class InspectNewProblemReportSendEmailApi extends PrivateApiComponentBase
     UserMapper userMapper;
 
     @Resource
-    RoleMapper roleMapper;
-
-    @Resource
-    TeamMapper teamMapper;
+    UserService userService;
 
     @Resource
     private InspectReportService inspectReportService;
@@ -134,22 +126,9 @@ public class InspectNewProblemReportSendEmailApi extends PrivateApiComponentBase
                             } else if (GroupSearch.ROLE.getValue().equals(type)) {
                                 userUuidList.addAll(userMapper.getUserUuidListByRoleUuid(uuid));
                                 // 查询角色关联的组，如果组有穿透，则穿透查询
-                                List<RoleTeamVo> roleTeamList = roleMapper.getRoleTeamListByRoleUuid(uuid);
-                                if (roleTeamList.size() > 0) {
-                                    List<String> allTeamUuidList = roleTeamList.stream().map(RoleTeamVo::getTeamUuid).collect(Collectors.toList());
-                                    List<String> list = roleTeamList.stream().filter(o -> Objects.equals(o.getCheckedChildren(), 0)).map(RoleTeamVo::getTeamUuid).collect(Collectors.toList());
-                                    if (CollectionUtils.isNotEmpty(list)) {
-                                        teamUuidList.addAll(list);  // 没有穿透的team直接add到teamUuidList
-                                        allTeamUuidList.removeAll(list);
-                                        // 剩下有穿透的team，挨个找出其子节点并add到teamUuidList
-                                        if (allTeamUuidList.size() > 0) {
-                                            teamUuidList.addAll(allTeamUuidList);
-                                            List<TeamVo> teamList = teamMapper.getTeamByUuidList(allTeamUuidList);
-                                            for (TeamVo team : teamList) {
-                                                teamUuidList.addAll(teamMapper.getChildrenUuidListByLeftRightCode(team.getLft(), team.getRht()));
-                                            }
-                                        }
-                                    }
+                                Set<String> teamUuidSet = userService.getRoleTeamUuidSet(uuid);
+                                if (teamUuidSet != null) {
+                                    teamUuidList.addAll(teamUuidSet);
                                 }
                             }
                         }
