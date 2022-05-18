@@ -31,6 +31,7 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * @author laiwt
@@ -42,6 +43,8 @@ import java.util.*;
 public class InspectNewProblemReportSendEmailApi extends PrivateApiComponentBase {
 
     final Logger logger = LoggerFactory.getLogger(InspectNewProblemReportSendEmailApi.class);
+
+    final Integer receiverLimit = 100;
 
     @Resource
     UserMapper userMapper;
@@ -106,53 +109,58 @@ public class InspectNewProblemReportSendEmailApi extends PrivateApiComponentBase
         searchVo.setCurrentPage(1);
         Workbook workbook = inspectReportService.getInspectNewProblemReportWorkbook(searchVo, isNeedAlertDetail);
         if (workbook != null) {
+            List<String> receiverList = paramObj.getJSONArray("receiverList").toJavaList(String.class);
+            Set<String> userUuidList = new HashSet<>();
+            Set<String> teamUuidList = new HashSet<>();
+            Set<String> emailList = new HashSet<>();
+            for (String receiver : receiverList) {
+                String[] split = receiver.split("#");
+                String type = split[0];
+                String uuid = split[1];
+                if (GroupSearch.USER.getValue().equals(type)) {
+                    userUuidList.add(uuid);
+                } else if (GroupSearch.TEAM.getValue().equals(type)) {
+                    teamUuidList.add(uuid); // 不穿透查询
+                } else if (GroupSearch.ROLE.getValue().equals(type)) {
+                    userUuidList.addAll(userMapper.getUserUuidListByRoleUuid(uuid));
+                    // 查询角色关联的组，如果组有穿透，则穿透查询
+                    Set<String> teamUuidSet = userService.getTeamUuidSetByRoleUuid(uuid);
+                    if (teamUuidSet != null) {
+                        teamUuidList.addAll(teamUuidSet);
+                    }
+                }
+            }
+            if (userUuidList.size() > 0) {
+                emailList.addAll(userMapper.getActiveUserEmailListByUserUuidList(new ArrayList<>(userUuidList)));
+            }
+            if (emailList.size() > receiverLimit) {
+                emailList = emailList.stream().limit(receiverLimit).collect(Collectors.toSet());
+                logger.error("巡检最新问题报告邮件收件人数量超过{}", receiverLimit);
+            } else {
+                if (teamUuidList.size() > 0) {
+                    for (String teamUuid : teamUuidList) {
+                        emailList.addAll(userMapper.getActiveUserEmailListByTeamUuid(teamUuid));
+                        if (emailList.size() > receiverLimit) {
+                            emailList = emailList.stream().limit(receiverLimit).collect(Collectors.toSet());
+                            logger.error("巡检最新问题报告邮件收件人数量超过{}", receiverLimit);
+                            break;
+                        }
+                    }
+                }
+            }
             // 发送邮件耗时过长，另开线程执行
-            CachedThreadPool.execute(new CodeDriverThread(this.getClassName()) {
+            Set<String> finalEmailList = emailList;
+            CachedThreadPool.execute(new CodeDriverThread(this.getClassName() + "-Thread") {
                 @Override
                 protected void execute() {
                     try (ByteArrayOutputStream os = new ByteArrayOutputStream()) {
-                        workbook.write(os);
-                        List<String> receiverList = paramObj.getJSONArray("receiverList").toJavaList(String.class);
-                        Set<String> userUuidList = new HashSet<>();
-                        Set<String> teamUuidList = new HashSet<>();
-                        for (String receiver : receiverList) {
-                            String[] split = receiver.split("#");
-                            String type = split[0];
-                            String uuid = split[1];
-                            if (GroupSearch.USER.getValue().equals(type)) {
-                                userUuidList.add(uuid);
-                            } else if (GroupSearch.TEAM.getValue().equals(type)) {
-                                teamUuidList.add(uuid); // 不穿透查询
-                            } else if (GroupSearch.ROLE.getValue().equals(type)) {
-                                userUuidList.addAll(userMapper.getUserUuidListByRoleUuid(uuid));
-                                // 查询角色关联的组，如果组有穿透，则穿透查询
-                                Set<String> teamUuidSet = userService.getTeamUuidSetByRoleUuid(uuid);
-                                if (teamUuidSet != null) {
-                                    teamUuidList.addAll(teamUuidSet);
-                                }
-                            }
-                        }
-                        if (userUuidList.size() > 0) {
+                        if (finalEmailList.size() > 0) {
+                            workbook.write(os);
                             InputStream is = new ByteArrayInputStream(os.toByteArray());
                             Map<String, InputStream> attachmentMap = new HashMap<>();
                             attachmentMap.put(title, is);
-                            List<String> emailList = userMapper.getActiveUserEmailListByUserUuidList(new ArrayList<>(userUuidList));
-                            if (emailList.size() > 0) {
-                                EmailUtil.sendEmailWithFile(title, title, String.join(",", emailList), null, attachmentMap, MimeType.XLSX);
-                            }
+                            EmailUtil.sendEmailWithFile(title, title, String.join(",", finalEmailList), null, attachmentMap, MimeType.XLSX);
                             is.close();
-                        }
-                        if (teamUuidList.size() > 0) {
-                            for (String teamUuid : teamUuidList) {
-                                InputStream is = new ByteArrayInputStream(os.toByteArray());
-                                Map<String, InputStream> attachmentMap = new HashMap<>();
-                                attachmentMap.put(title, is);
-                                List<String> emailList = userMapper.getActiveUserEmailListByTeamUuid(teamUuid);
-                                if (emailList.size() > 0) {
-                                    EmailUtil.sendEmailWithFile(title, title, String.join(",", emailList), null, attachmentMap, MimeType.XLSX);
-                                }
-                                is.close();
-                            }
                         }
                     } catch (Exception ex) {
                         logger.error(ex.getMessage(), ex);
