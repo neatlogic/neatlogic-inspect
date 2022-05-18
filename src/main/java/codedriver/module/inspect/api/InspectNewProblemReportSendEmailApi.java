@@ -1,5 +1,7 @@
 package codedriver.module.inspect.api;
 
+import codedriver.framework.asynchronization.thread.CodeDriverThread;
+import codedriver.framework.asynchronization.threadpool.CachedThreadPool;
 import codedriver.framework.auth.core.AuthAction;
 import codedriver.framework.cmdb.crossover.ICiCrossoverMapper;
 import codedriver.framework.cmdb.dto.ci.CiVo;
@@ -15,10 +17,7 @@ import codedriver.framework.dao.mapper.UserMapper;
 import codedriver.framework.dto.RoleTeamVo;
 import codedriver.framework.dto.TeamVo;
 import codedriver.framework.inspect.auth.INSPECT_BASE;
-import codedriver.framework.restful.annotation.Description;
-import codedriver.framework.restful.annotation.Input;
-import codedriver.framework.restful.annotation.OperationType;
-import codedriver.framework.restful.annotation.Param;
+import codedriver.framework.restful.annotation.*;
 import codedriver.framework.restful.constvalue.OperationTypeEnum;
 import codedriver.framework.restful.core.privateapi.PrivateApiComponentBase;
 import codedriver.framework.util.EmailUtil;
@@ -95,6 +94,7 @@ public class InspectNewProblemReportSendEmailApi extends PrivateApiComponentBase
     })
     @Description(desc = "发送巡检最新问题报告邮件")
     @Override
+    @ResubmitInterval(5)
     public Object myDoService(JSONObject paramObj) throws Exception {
         String title = paramObj.getString("title");
         ResourceSearchVo searchVo = JSON.toJavaObject(paramObj, ResourceSearchVo.class);
@@ -114,66 +114,72 @@ public class InspectNewProblemReportSendEmailApi extends PrivateApiComponentBase
         searchVo.setCurrentPage(1);
         Workbook workbook = inspectReportService.getInspectNewProblemReportWorkbook(searchVo, isNeedAlertDetail);
         if (workbook != null) {
-            try (ByteArrayOutputStream os = new ByteArrayOutputStream()) {
-                workbook.write(os);
-                List<String> receiverList = paramObj.getJSONArray("receiverList").toJavaList(String.class);
-                Set<String> userUuidList = new HashSet<>();
-                Set<String> teamUuidList = new HashSet<>();
-                for (String receiver : receiverList) {
-                    String[] split = receiver.split("#");
-                    String type = split[0];
-                    String uuid = split[1];
-                    if (GroupSearch.USER.getValue().equals(type)) {
-                        userUuidList.add(uuid);
-                    } else if (GroupSearch.TEAM.getValue().equals(type)) {
-                        teamUuidList.add(uuid); // 不穿透查询
-                    } else if (GroupSearch.ROLE.getValue().equals(type)) {
-                        userUuidList.addAll(userMapper.getUserUuidListByRoleUuid(uuid));
-                        // 查询角色关联的组，如果组有穿透，则穿透查询
-                        List<RoleTeamVo> roleTeamList = roleMapper.getRoleTeamListByRoleUuid(uuid);
-                        if (roleTeamList.size() > 0) {
-                            List<String> allTeamUuidList = roleTeamList.stream().map(RoleTeamVo::getTeamUuid).collect(Collectors.toList());
-                            List<String> list = roleTeamList.stream().filter(o -> Objects.equals(o.getCheckedChildren(), 0)).map(RoleTeamVo::getTeamUuid).collect(Collectors.toList());
-                            if (CollectionUtils.isNotEmpty(list)) {
-                                teamUuidList.addAll(list);  // 没有穿透的team直接add到teamUuidList
-                                allTeamUuidList.removeAll(list);
-                                // 剩下有穿透的team，挨个找出其子节点并add到teamUuidList
-                                if (allTeamUuidList.size() > 0) {
-                                    teamUuidList.addAll(allTeamUuidList);
-                                    List<TeamVo> teamList = teamMapper.getTeamByUuidList(allTeamUuidList);
-                                    for (TeamVo team : teamList) {
-                                        teamUuidList.addAll(teamMapper.getChildrenUuidListByLeftRightCode(team.getLft(), team.getRht()));
+            // 发送邮件耗时过长，另开线程执行
+            CachedThreadPool.execute(new CodeDriverThread(this.getClassName()) {
+                @Override
+                protected void execute() {
+                    try (ByteArrayOutputStream os = new ByteArrayOutputStream()) {
+                        workbook.write(os);
+                        List<String> receiverList = paramObj.getJSONArray("receiverList").toJavaList(String.class);
+                        Set<String> userUuidList = new HashSet<>();
+                        Set<String> teamUuidList = new HashSet<>();
+                        for (String receiver : receiverList) {
+                            String[] split = receiver.split("#");
+                            String type = split[0];
+                            String uuid = split[1];
+                            if (GroupSearch.USER.getValue().equals(type)) {
+                                userUuidList.add(uuid);
+                            } else if (GroupSearch.TEAM.getValue().equals(type)) {
+                                teamUuidList.add(uuid); // 不穿透查询
+                            } else if (GroupSearch.ROLE.getValue().equals(type)) {
+                                userUuidList.addAll(userMapper.getUserUuidListByRoleUuid(uuid));
+                                // 查询角色关联的组，如果组有穿透，则穿透查询
+                                List<RoleTeamVo> roleTeamList = roleMapper.getRoleTeamListByRoleUuid(uuid);
+                                if (roleTeamList.size() > 0) {
+                                    List<String> allTeamUuidList = roleTeamList.stream().map(RoleTeamVo::getTeamUuid).collect(Collectors.toList());
+                                    List<String> list = roleTeamList.stream().filter(o -> Objects.equals(o.getCheckedChildren(), 0)).map(RoleTeamVo::getTeamUuid).collect(Collectors.toList());
+                                    if (CollectionUtils.isNotEmpty(list)) {
+                                        teamUuidList.addAll(list);  // 没有穿透的team直接add到teamUuidList
+                                        allTeamUuidList.removeAll(list);
+                                        // 剩下有穿透的team，挨个找出其子节点并add到teamUuidList
+                                        if (allTeamUuidList.size() > 0) {
+                                            teamUuidList.addAll(allTeamUuidList);
+                                            List<TeamVo> teamList = teamMapper.getTeamByUuidList(allTeamUuidList);
+                                            for (TeamVo team : teamList) {
+                                                teamUuidList.addAll(teamMapper.getChildrenUuidListByLeftRightCode(team.getLft(), team.getRht()));
+                                            }
+                                        }
                                     }
                                 }
                             }
                         }
-                    }
-                }
-                if (userUuidList.size() > 0) {
-                    InputStream is = new ByteArrayInputStream(os.toByteArray());
-                    Map<String, InputStream> attachmentMap = new HashMap<>();
-                    attachmentMap.put(title, is);
-                    List<String> emailList = userMapper.getActiveUserEmailListByUserUuidList(new ArrayList<>(userUuidList));
-                    if (emailList.size() > 0) {
-                        EmailUtil.sendEmailWithFile(title, title, String.join(",", emailList), null, attachmentMap, MimeType.XLSX);
-                    }
-                    is.close();
-                }
-                if (teamUuidList.size() > 0) {
-                    for (String teamUuid : teamUuidList) {
-                        InputStream is = new ByteArrayInputStream(os.toByteArray());
-                        Map<String, InputStream> attachmentMap = new HashMap<>();
-                        attachmentMap.put(title, is);
-                        List<String> emailList = userMapper.getActiveUserEmailListByTeamUuid(teamUuid);
-                        if (emailList.size() > 0) {
-                            EmailUtil.sendEmailWithFile(title, title, String.join(",", emailList), null, attachmentMap, MimeType.XLSX);
+                        if (userUuidList.size() > 0) {
+                            InputStream is = new ByteArrayInputStream(os.toByteArray());
+                            Map<String, InputStream> attachmentMap = new HashMap<>();
+                            attachmentMap.put(title, is);
+                            List<String> emailList = userMapper.getActiveUserEmailListByUserUuidList(new ArrayList<>(userUuidList));
+                            if (emailList.size() > 0) {
+                                EmailUtil.sendEmailWithFile(title, title, String.join(",", emailList), null, attachmentMap, MimeType.XLSX);
+                            }
+                            is.close();
                         }
-                        is.close();
+                        if (teamUuidList.size() > 0) {
+                            for (String teamUuid : teamUuidList) {
+                                InputStream is = new ByteArrayInputStream(os.toByteArray());
+                                Map<String, InputStream> attachmentMap = new HashMap<>();
+                                attachmentMap.put(title, is);
+                                List<String> emailList = userMapper.getActiveUserEmailListByTeamUuid(teamUuid);
+                                if (emailList.size() > 0) {
+                                    EmailUtil.sendEmailWithFile(title, title, String.join(",", emailList), null, attachmentMap, MimeType.XLSX);
+                                }
+                                is.close();
+                            }
+                        }
+                    } catch (Exception ex) {
+                        logger.error(ex.getMessage(), ex);
                     }
                 }
-            } catch (Exception ex) {
-                logger.error(ex.getMessage(), ex);
-            }
+            });
         }
         return null;
     }
