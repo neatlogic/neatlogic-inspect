@@ -26,6 +26,7 @@ import codedriver.module.inspect.service.InspectReportService;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.io.IOUtils;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -116,9 +117,6 @@ public class InspectNewProblemReportSendEmailApi extends PrivateApiComponentBase
         if (workbook != null) {
             try (ByteArrayOutputStream os = new ByteArrayOutputStream()) {
                 workbook.write(os);
-                InputStream is = new ByteArrayInputStream(os.toByteArray());
-                Map<String, InputStream> attachmentMap = new HashMap<>();
-                attachmentMap.put(title, is);
                 List<String> receiverList = paramObj.getJSONArray("receiverList").toJavaList(String.class);
                 Set<String> userUuidList = new HashSet<>();
                 Set<String> teamUuidList = new HashSet<>();
@@ -153,20 +151,27 @@ public class InspectNewProblemReportSendEmailApi extends PrivateApiComponentBase
                     }
                 }
                 if (userUuidList.size() > 0) {
+                    InputStream is = new ByteArrayInputStream(os.toByteArray());
+                    Map<String, InputStream> attachmentMap = new HashMap<>();
+                    attachmentMap.put(title, is);
                     List<String> emailList = userMapper.getActiveUserEmailListByUserUuidList(new ArrayList<>(userUuidList));
                     if (emailList.size() > 0) {
                         EmailUtil.sendEmailWithFile(title, title, String.join(",", emailList), null, attachmentMap, MimeType.XLSX);
                     }
+                    is.close();
                 }
                 if (teamUuidList.size() > 0) {
                     for (String teamUuid : teamUuidList) {
+                        InputStream is = new ByteArrayInputStream(os.toByteArray());
+                        Map<String, InputStream> attachmentMap = new HashMap<>();
+                        attachmentMap.put(title, is);
                         List<String> emailList = userMapper.getActiveUserEmailListByTeamUuid(teamUuid);
                         if (emailList.size() > 0) {
                             EmailUtil.sendEmailWithFile(title, title, String.join(",", emailList), null, attachmentMap, MimeType.XLSX);
                         }
+                        is.close();
                     }
                 }
-                is.close();
             } catch (Exception ex) {
                 logger.error(ex.getMessage(), ex);
             }
