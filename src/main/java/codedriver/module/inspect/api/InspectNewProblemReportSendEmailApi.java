@@ -126,7 +126,7 @@ public class InspectNewProblemReportSendEmailApi extends PrivateApiComponentBase
                             } else if (GroupSearch.ROLE.getValue().equals(type)) {
                                 userUuidList.addAll(userMapper.getUserUuidListByRoleUuid(uuid));
                                 // 查询角色关联的组，如果组有穿透，则穿透查询
-                                Set<String> teamUuidSet = userService.getRoleTeamUuidSet(uuid);
+                                Set<String> teamUuidSet = userService.getTeamUuidSetByRoleUuid(uuid);
                                 if (teamUuidSet != null) {
                                     teamUuidList.addAll(teamUuidSet);
                                 }
