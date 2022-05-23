@@ -1,7 +1,7 @@
 package codedriver.module.inspect.api;
 
 import codedriver.framework.auth.core.AuthAction;
-import codedriver.framework.autoexec.crossover.IAutoexecServiceCrossoverService;
+import codedriver.framework.autoexec.crossover.IAutoexecJobCrossoverService;
 import codedriver.framework.autoexec.dto.job.AutoexecJobVo;
 import codedriver.framework.common.constvalue.ApiParamType;
 import codedriver.framework.common.dto.BasePageVo;
@@ -65,8 +65,8 @@ public class InspectAutoexecJobSearchApi extends PrivateApiComponentBase {
         List<String> sourceList = new ArrayList<>();
         sourceList.add("inspect");
         jobVo.setSourceList(sourceList);
-        IAutoexecServiceCrossoverService iAutoexecServiceCrossoverService = CrossoverServiceFactory.getApi(IAutoexecServiceCrossoverService.class);
-        return TableResultUtil.getResult(iAutoexecServiceCrossoverService.getJobList(jobVo), jobVo);
+        IAutoexecJobCrossoverService iAutoexecJobCrossoverService = CrossoverServiceFactory.getApi(IAutoexecJobCrossoverService.class);
+        return TableResultUtil.getResult(iAutoexecJobCrossoverService.getJobList(jobVo), jobVo);
     }
 
 }
