@@ -6,8 +6,6 @@ import codedriver.framework.restful.annotation.Input;
 import codedriver.framework.restful.annotation.Param;
 import codedriver.framework.restful.core.privateapi.PrivateApiComponentBase;
 import com.alibaba.fastjson.JSONObject;
-import com.mongodb.client.FindIterable;
-import com.mongodb.client.MongoCollection;
 import org.bson.Document;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.stereotype.Service;
@@ -46,15 +44,10 @@ public class InspectCollectionFieldsGetApi extends PrivateApiComponentBase {
     @Override
     public Object myDoService(JSONObject paramObj) throws Exception {
         JSONObject object = new JSONObject();
-        //获取规则
-        MongoCollection<Document> collection = mongoTemplate.getDb().getCollection("_inspectdef");
         Document doc = new Document();
         Document fieldDocument = new Document();
         doc.put("name", paramObj.getString("name"));
         fieldDocument.put("fields",true);
-        FindIterable<Document> inspectdef = collection.find(doc).projection(fieldDocument);
-        Document inspectdefDoc = inspectdef.first();
-        object.put("inspectdef", inspectdefDoc);
-        return object;
+        return JSONObject.parseObject(mongoTemplate.getDb().getCollection("_inspectdef").find(doc).projection(fieldDocument).first().toJson()).get("fields");
     }
 }
