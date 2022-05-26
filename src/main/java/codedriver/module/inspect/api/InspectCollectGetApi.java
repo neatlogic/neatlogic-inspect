@@ -8,9 +8,9 @@ import codedriver.framework.restful.annotation.OperationType;
 import codedriver.framework.restful.annotation.Param;
 import codedriver.framework.restful.constvalue.OperationTypeEnum;
 import codedriver.framework.restful.core.privateapi.PrivateApiComponentBase;
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
-import com.mongodb.client.FindIterable;
-import com.mongodb.client.MongoCollection;
 import org.bson.Document;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
@@ -18,6 +18,9 @@ import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Objects;
 
 @Service
 @AuthAction(action = INSPECT_MODIFY.class)
@@ -46,19 +49,43 @@ public class InspectCollectGetApi extends PrivateApiComponentBase {
     @Input({@Param(name = "name", type = ApiParamType.STRING, desc = "唯一标识")})
     @Override
     public Object myDoService(JSONObject paramObj) throws Exception {
-        JSONObject object = new JSONObject();
-        String label = paramObj.getString("name");
-        //获取数据结构
-        JSONObject dictionary = mongoTemplate.findOne(new Query(Criteria.where("name").is(label)), JSONObject.class, "_dictionary");
-        //获取规则
-        MongoCollection<Document> collection = mongoTemplate.getDb().getCollection("_inspectdef");
-        Document doc = new Document();
-        doc.put("name", label);
-        FindIterable<Document> inspectdef = collection.find(doc);
-        Document inspectdefDoc = inspectdef.first();
-        object.put("dictionary", dictionary);
-        object.put("inspectdef", inspectdefDoc);
-        return object;
-    }
+        JSONObject returnObject = new JSONObject();
+        JSONArray returnFieldsArray = new JSONArray();
 
+        //获取dictionary的数据结构（fields）
+        JSONArray fieldsArray = mongoTemplate.findOne(new Query(Criteria.where("name").is(paramObj.getString("name"))), JSONObject.class, "_dictionary").getJSONArray("fields");
+
+        //获取inspectdef 的指标过滤（fields）和告警规则（thresholds）
+        Document doc = new Document();
+        Document fieldDocument = new Document();
+        doc.put("name", paramObj.getString("name"));
+        fieldDocument.put("fields",true);
+        fieldDocument.put("thresholds",true);
+        JSONObject inspectdefJson = JSONObject.parseObject(mongoTemplate.getDb().getCollection("_inspectdef").find(doc).projection(fieldDocument).first().toJson());
+        JSONArray fieldsSelectedArray = inspectdefJson.getJSONArray("fields");
+
+        //数据结构Map
+        Map<String, JSONObject> fieldsMap = new HashMap<>();
+        for (Object object : fieldsArray) {
+            JSONObject dbObject = (JSONObject) JSON.toJSON(object);
+            fieldsMap.put(dbObject.getString("name"), dbObject);
+        }
+        //指标过滤Map
+        Map<String, Integer> fieldsSelectMap = new HashMap<>();
+        for (Object object : fieldsSelectedArray) {
+            JSONObject dbObject = (JSONObject) JSON.toJSON(object);
+            fieldsSelectMap.put(dbObject.getString("name"), dbObject.getInteger("selected"));
+        }
+
+        //根据指标过滤数据结构返回给前端
+        for (String name : fieldsSelectMap.keySet()) {
+            if (Objects.equals(fieldsSelectMap.get(name), 1)) {
+                returnFieldsArray.add(fieldsMap.get(name));
+            }
+        }
+
+        returnObject.put("fields", returnFieldsArray);
+        returnObject.put("thresholds", inspectdefJson.getJSONArray("thresholds"));
+        return returnObject;
+    }
 }
