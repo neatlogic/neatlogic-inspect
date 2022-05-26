@@ -12,7 +12,9 @@ import codedriver.framework.restful.annotation.*;
 import codedriver.framework.restful.constvalue.OperationTypeEnum;
 import codedriver.framework.restful.core.privateapi.PrivateApiComponentBase;
 import codedriver.framework.util.TableResultUtil;
+import codedriver.framework.util.TimeUtil;
 import com.alibaba.fastjson.JSONObject;
+import org.apache.commons.collections4.MapUtils;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -60,8 +62,16 @@ public class InspectAutoexecJobSearchApi extends PrivateApiComponentBase {
     })
     @Description(desc = "巡检作业搜索（作业执行视图）")
     @Override
-    public Object myDoService(JSONObject paramObj) throws Exception {
-        AutoexecJobVo jobVo = new AutoexecJobVo(paramObj);
+    public Object myDoService(JSONObject jsonObj) throws Exception {
+        JSONObject startTimeJson = jsonObj.getJSONObject("startTime");
+        if (MapUtils.isNotEmpty(startTimeJson)) {
+            JSONObject timeJson = TimeUtil.getStartTimeAndEndTimeByDateJson(startTimeJson);
+            jsonObj.put("startTime",timeJson.getDate("startTime"));
+            jsonObj.put("endTime",timeJson.getDate("endTime"));
+        }
+        jsonObj.put("operationId",jsonObj.getLong("combopId"));
+        jsonObj.put("invokeId",jsonObj.getLong("scheduleId"));
+        AutoexecJobVo jobVo = JSONObject.toJavaObject(jsonObj, AutoexecJobVo.class);
         List<String> sourceList = new ArrayList<>();
         sourceList.add("inspect");
         jobVo.setSourceList(sourceList);
