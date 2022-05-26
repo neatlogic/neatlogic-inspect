@@ -52,10 +52,10 @@ public class InspectCollectGetApi extends PrivateApiComponentBase {
         JSONObject returnObject = new JSONObject();
         JSONArray returnFieldsArray = new JSONArray();
 
-        //获取数据结构
-        JSONArray fieldArray = mongoTemplate.findOne(new Query(Criteria.where("name").is(paramObj.getString("name"))), JSONObject.class, "_dictionary").getJSONArray("fields");
+        //获取dictionary的数据结构（fields）
+        JSONArray fieldsArray = mongoTemplate.findOne(new Query(Criteria.where("name").is(paramObj.getString("name"))), JSONObject.class, "_dictionary").getJSONArray("fields");
 
-        //获取过滤指标 和 告警规则
+        //获取inspectdef 的指标过滤（fields）和告警规则（thresholds）
         Document doc = new Document();
         Document fieldDocument = new Document();
         doc.put("name", paramObj.getString("name"));
@@ -66,7 +66,7 @@ public class InspectCollectGetApi extends PrivateApiComponentBase {
 
         //数据结构Map
         Map<String, JSONObject> fieldsMap = new HashMap<>();
-        for (Object object : fieldArray) {
+        for (Object object : fieldsArray) {
             JSONObject dbObject = (JSONObject) JSON.toJSON(object);
             fieldsMap.put(dbObject.getString("name"), dbObject);
         }
