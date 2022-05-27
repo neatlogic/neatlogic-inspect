@@ -18,9 +18,7 @@ import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 
 @Service
 @AuthAction(action = INSPECT_MODIFY.class)
@@ -53,7 +51,7 @@ public class InspectCollectGetApi extends PrivateApiComponentBase {
         JSONArray returnFieldsArray = new JSONArray();
 
         //获取dictionary的数据结构（fields）
-        JSONArray fieldsArray = mongoTemplate.findOne(new Query(Criteria.where("name").is(paramObj.getString("name"))), JSONObject.class, "_dictionary").getJSONArray("fields");
+        JSONArray dictionaryArray = mongoTemplate.findOne(new Query(Criteria.where("name").is(paramObj.getString("name"))), JSONObject.class, "_dictionary").getJSONArray("fields");
 
         //获取inspectdef 的指标过滤（fields）和告警规则（thresholds）
         Document doc = new Document();
@@ -64,12 +62,6 @@ public class InspectCollectGetApi extends PrivateApiComponentBase {
         JSONObject inspectdefJson = JSONObject.parseObject(mongoTemplate.getDb().getCollection("_inspectdef").find(doc).projection(fieldDocument).first().toJson());
         JSONArray fieldsSelectedArray = inspectdefJson.getJSONArray("fields");
 
-        //数据结构Map
-        Map<String, JSONObject> fieldsMap = new HashMap<>();
-        for (Object object : fieldsArray) {
-            JSONObject dbObject = (JSONObject) JSON.toJSON(object);
-            fieldsMap.put(dbObject.getString("name"), dbObject);
-        }
         //指标过滤Map
         Map<String, Integer> fieldsSelectMap = new HashMap<>();
         for (Object object : fieldsSelectedArray) {
@@ -78,9 +70,10 @@ public class InspectCollectGetApi extends PrivateApiComponentBase {
         }
 
         //根据指标过滤数据结构返回给前端
-        for (String name : fieldsSelectMap.keySet()) {
-            if (Objects.equals(fieldsSelectMap.get(name), 1)) {
-                returnFieldsArray.add(fieldsMap.get(name));
+        for (Object object : dictionaryArray) {
+            JSONObject dbObject = (JSONObject) JSON.toJSON(object);
+            if (Objects.equals(fieldsSelectMap.get(dbObject.get("name")), 1)) {
+                returnFieldsArray.add(object);
             }
         }
 
