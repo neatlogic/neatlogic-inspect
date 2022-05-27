@@ -18,9 +18,7 @@ import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 
 @Service
 @AuthAction(action = INSPECT_MODIFY.class)
@@ -78,13 +76,17 @@ public class InspectCollectGetApi extends PrivateApiComponentBase {
         }
 
         //根据指标过滤数据结构返回给前端
-        for (String name : fieldsSelectMap.keySet()) {
+        for (String name : fieldsMap.keySet()) {
             if (Objects.equals(fieldsSelectMap.get(name), 1)) {
                 returnFieldsArray.add(fieldsMap.get(name));
             }
         }
 
-        returnObject.put("fields", returnFieldsArray);
+        //倒序
+        List<JSONObject> list = JSONArray.parseArray(returnFieldsArray.toJSONString(), JSONObject.class);
+        Collections.reverse(list);
+
+        returnObject.put("fields", list);
         returnObject.put("thresholds", inspectdefJson.getJSONArray("thresholds"));
         return returnObject;
     }
