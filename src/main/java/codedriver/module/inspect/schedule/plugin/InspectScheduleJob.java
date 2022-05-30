@@ -7,6 +7,7 @@ package codedriver.module.inspect.schedule.plugin;
 
 import codedriver.framework.asynchronization.threadlocal.TenantContext;
 import codedriver.framework.asynchronization.threadlocal.UserContext;
+import codedriver.framework.autoexec.constvalue.CombopOperationType;
 import codedriver.framework.autoexec.constvalue.JobAction;
 import codedriver.framework.autoexec.crossover.IAutoexecJobActionCrossoverService;
 import codedriver.framework.autoexec.dto.job.AutoexecJobVo;
@@ -102,7 +103,10 @@ public class InspectScheduleJob extends JobBase {
             JSONObject paramObj = new JSONObject();
             paramObj.put("combopId", combopId);
             paramObj.put("source", JobSource.INSPECT.getValue());
+            paramObj.put("operationId", combopId);
             paramObj.put("invokeId", inspectScheduleVo.getId());
+            paramObj.put("isFirstFire", 1);
+            paramObj.put("operationType", CombopOperationType.COMBOP.getValue());
             paramObj.put("name", ci.getLabel() + (ci.getName() != null ? "(" + ci.getName() + ")" : StringUtils.EMPTY) + " 巡检");
             JSONObject executeConfig = new JSONObject();
             executeConfig.put("executeNodeConfig", new JSONObject() {
