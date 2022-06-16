@@ -9,7 +9,6 @@ import codedriver.framework.cmdb.dto.resourcecenter.ResourceSearchVo;
 import codedriver.framework.cmdb.exception.ci.CiNotFoundException;
 import codedriver.framework.common.constvalue.ApiParamType;
 import codedriver.framework.common.constvalue.GroupSearch;
-import codedriver.framework.common.constvalue.MimeType;
 import codedriver.framework.crossover.CrossoverServiceFactory;
 import codedriver.framework.dao.mapper.UserMapper;
 import codedriver.framework.inspect.auth.INSPECT_BASE;
@@ -158,8 +157,8 @@ public class InspectNewProblemReportSendEmailApi extends PrivateApiComponentBase
                             workbook.write(os);
                             InputStream is = new ByteArrayInputStream(os.toByteArray());
                             Map<String, InputStream> attachmentMap = new HashMap<>();
-                            attachmentMap.put(title, is);
-                            EmailUtil.sendEmailWithFile(title, title, String.join(",", finalEmailList), null, attachmentMap, MimeType.XLSX);
+                            attachmentMap.put(title + ".xlsx", is);
+                            EmailUtil.sendEmailWithFile(title, title, String.join(",", finalEmailList), null, attachmentMap);
                             is.close();
                         }
                     } catch (Exception ex) {
