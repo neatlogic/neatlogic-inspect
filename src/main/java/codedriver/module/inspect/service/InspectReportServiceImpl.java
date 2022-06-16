@@ -1,3 +1,8 @@
+/*
+ * Copyright(c) 2022 TechSure Co., Ltd. All Rights Reserved.
+ * 本内容仅限于深圳市赞悦科技有限公司内部传阅，禁止外泄以及用于其他的商业项目。
+ */
+
 package codedriver.module.inspect.service;
 
 import codedriver.framework.asynchronization.threadlocal.TenantContext;
@@ -104,17 +109,21 @@ public class InspectReportServiceImpl implements InspectReportService {
 
     @Override
     public List<InspectResourceVo> getInspectResourceReportList(ResourceSearchVo searchVo) {
-        List<InspectResourceVo> inspectResourceVoList = null;
-        int resourceCount = inspectMapper.getInspectResourceCount(searchVo);
-        if (resourceCount > 0) {
-            searchVo.setRowNum(resourceCount);
-            List<Long> resourceIdList = inspectMapper.getInspectResourceIdList(searchVo);
-            inspectResourceVoList = inspectMapper.getInspectResourceVoListByIdList(resourceIdList, TenantContext.get().getDataDbName());
+        if (CollectionUtils.isEmpty(searchVo.getIdList())) {
+            List<InspectResourceVo> inspectResourceVoList = null;
+            int resourceCount = inspectMapper.getInspectResourceCount(searchVo);
+            if (resourceCount > 0) {
+                searchVo.setRowNum(resourceCount);
+                List<Long> resourceIdList = inspectMapper.getInspectResourceIdList(searchVo);
+                inspectResourceVoList = inspectMapper.getInspectResourceVoListByIdList(resourceIdList, TenantContext.get().getDataDbName());
+            }
+            if (inspectResourceVoList == null) {
+                inspectResourceVoList = new ArrayList<>();
+            }
+            return inspectResourceVoList;
+        } else {
+            return inspectMapper.getInspectResourceVoListByIdList(searchVo.getIdList(), TenantContext.get().getDataDbName());
         }
-        if (inspectResourceVoList == null) {
-            inspectResourceVoList = new ArrayList<>();
-        }
-        return inspectResourceVoList;
     }
 
     @Override
