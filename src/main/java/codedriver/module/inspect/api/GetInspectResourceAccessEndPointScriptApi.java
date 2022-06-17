@@ -1,25 +1,22 @@
 package codedriver.module.inspect.api;
 
 import codedriver.framework.asynchronization.threadlocal.TenantContext;
-import codedriver.framework.auth.core.AuthAction;
 import codedriver.framework.cmdb.dao.mapper.resourcecenter.ResourceCenterMapper;
-import codedriver.framework.inspect.dao.mapper.InspectMapper;
-import codedriver.framework.inspect.dto.InspectResourceScriptVo;
 import codedriver.framework.cmdb.exception.resourcecenter.ResourceNotFoundException;
 import codedriver.framework.common.constvalue.ApiParamType;
-import codedriver.framework.inspect.auth.INSPECT_MODIFY;
+import codedriver.framework.inspect.dao.mapper.InspectMapper;
+import codedriver.framework.inspect.dto.InspectResourceScriptVo;
 import codedriver.framework.restful.annotation.*;
 import codedriver.framework.restful.constvalue.OperationTypeEnum;
-import codedriver.framework.restful.core.privateapi.PrivateApiComponentBase;
+import codedriver.framework.restful.core.publicapi.PublicApiComponentBase;
 import com.alibaba.fastjson.JSONObject;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
 
 @Service
-@AuthAction(action = INSPECT_MODIFY.class)
 @OperationType(type = OperationTypeEnum.SEARCH)
-public class GetInspectResourceScriptApi extends PrivateApiComponentBase {
+public class GetInspectResourceAccessEndPointScriptApi extends PublicApiComponentBase {
 
     @Resource
     private ResourceCenterMapper resourceCenterMapper;
@@ -29,17 +26,17 @@ public class GetInspectResourceScriptApi extends PrivateApiComponentBase {
 
     @Override
     public String getName() {
-        return "获取资源中心脚本";
+        return "根据资源id获取对应访问入口脚本信息";
+    }
+
+    @Override
+    public String getToken() {
+        return "inspect/resource/accessendpoint/get";
     }
 
     @Override
     public String getConfig() {
         return null;
-    }
-
-    @Override
-    public String getToken() {
-        return "inspect/accessendpoint/script/get";
     }
 
     @Input({
@@ -48,14 +45,22 @@ public class GetInspectResourceScriptApi extends PrivateApiComponentBase {
     @Output({
             @Param(explode = InspectResourceScriptVo.class)
     })
-    @Description(desc = "根据资源id获取对应的脚本")
+    @Description(desc = "根据资源id获取对应访问入口脚本信息")
     @Override
     public Object myDoService(JSONObject paramObj) throws Exception {
+        JSONObject returnObject = new JSONObject();
         Long resourceId = paramObj.getLong("resourceId");
         String schemaName = TenantContext.get().getDataDbName();
         if (resourceCenterMapper.checkResourceIsExists(resourceId, schemaName) == 0) {
             throw new ResourceNotFoundException(resourceId);
         }
-        return inspectMapper.getResourceScriptByResourceId(resourceId);
+        InspectResourceScriptVo resourceScriptVo = inspectMapper.getResourceScriptByResourceId(resourceId);
+        if (resourceScriptVo == null) {
+            return new JSONObject();
+        }
+        returnObject.put("config", resourceScriptVo.getConfig());
+        returnObject.put("scriptId", resourceScriptVo.getScriptId());
+        returnObject.put("resourceId", resourceScriptVo.getResourceId());
+        return returnObject;
     }
 }

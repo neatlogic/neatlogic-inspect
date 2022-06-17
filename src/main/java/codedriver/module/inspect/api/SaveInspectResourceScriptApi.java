@@ -9,6 +9,7 @@ import codedriver.framework.cmdb.dao.mapper.resourcecenter.ResourceCenterMapper;
 import codedriver.framework.cmdb.exception.resourcecenter.ResourceNotFoundException;
 import codedriver.framework.common.constvalue.ApiParamType;
 import codedriver.framework.inspect.auth.INSPECT_MODIFY;
+import codedriver.framework.inspect.dao.mapper.InspectMapper;
 import codedriver.framework.restful.annotation.Description;
 import codedriver.framework.restful.annotation.Input;
 import codedriver.framework.restful.annotation.OperationType;
@@ -34,6 +35,9 @@ public class SaveInspectResourceScriptApi extends PrivateApiComponentBase {
     @Resource
     private AutoexecScriptMapper autoexecScriptMapper;
 
+    @Resource
+    private InspectMapper inspectMapper;
+
     @Override
     public String getName() {
         return "保存资源脚本";
@@ -46,7 +50,7 @@ public class SaveInspectResourceScriptApi extends PrivateApiComponentBase {
 
     @Override
     public String getToken() {
-        return "inspect/resource/script/save";
+        return "inspect/accessendpoint/script/save";
     }
 
     @Input({
@@ -56,7 +60,6 @@ public class SaveInspectResourceScriptApi extends PrivateApiComponentBase {
     @Description(desc = "保存资源脚本")
     @Override
     public Object myDoService(JSONObject paramObj) throws Exception {
-
         Long scriptId = null;
         Long resourceId = paramObj.getLong("resourceId");
         JSONObject config = paramObj.getJSONObject("config");
@@ -64,8 +67,7 @@ public class SaveInspectResourceScriptApi extends PrivateApiComponentBase {
         if (resourceCenterMapper.checkResourceIsExists(resourceId, schemaName) == 0) {
             throw new ResourceNotFoundException(resourceId);
         }
-        resourceCenterMapper.deleteResourceScriptByResourceId(resourceId);
-
+        inspectMapper.deleteResourceScriptByResourceId(resourceId);
         if (StringUtils.equals(config.getString("type"), "script")) {
             scriptId = config.getLong("script");
             AutoexecScriptVo script = autoexecScriptMapper.getScriptBaseInfoById(scriptId);
@@ -73,10 +75,7 @@ public class SaveInspectResourceScriptApi extends PrivateApiComponentBase {
                 throw new AutoexecScriptNotFoundException(scriptId);
             }
         }
-        resourceCenterMapper.insertResourceScript(resourceId, scriptId, String.valueOf(config));
-
+        inspectMapper.insertResourceScript(resourceId, scriptId, String.valueOf(config));
         return null;
     }
-
-
 }

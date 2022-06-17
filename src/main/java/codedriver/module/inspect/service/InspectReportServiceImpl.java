@@ -12,6 +12,7 @@ import codedriver.framework.cmdb.dto.sync.CollectionVo;
 import codedriver.framework.common.constvalue.InspectStatus;
 import codedriver.framework.inspect.dao.mapper.InspectMapper;
 import codedriver.framework.inspect.dto.InspectResourceVo;
+import codedriver.framework.inspect.dto.InspectResourceScriptVo;
 import codedriver.framework.util.TimeUtil;
 import codedriver.framework.util.excel.ExcelBuilder;
 import codedriver.framework.util.excel.SheetBuilder;
@@ -117,15 +118,15 @@ public class InspectReportServiceImpl implements InspectReportService {
                 searchVo.setRowNum(resourceCount);
                 List<Long> resourceIdList = inspectMapper.getInspectResourceIdList(searchVo);
                 inspectResourceVoList = inspectMapper.getInspectResourceListByIdList(resourceIdList, TenantContext.get().getDataDbName());
-                Map<Long, ResourceScriptVo> resourceScriptVoMap = new HashMap<>();
-                List<ResourceScriptVo> resourceScriptVoList = resourceCenterMapper.getResourceScriptListByResourceIdList(resourceIdList);
+                Map<Long, InspectResourceScriptVo> resourceScriptVoMap = new HashMap<>();
+                List<InspectResourceScriptVo> resourceScriptVoList = inspectMapper.getResourceScriptListByResourceIdList(resourceIdList);
                 if (CollectionUtils.isNotEmpty(resourceScriptVoList)) {
-                    for (ResourceScriptVo resourceScriptVo : resourceScriptVoList) {
+                    for (InspectResourceScriptVo resourceScriptVo : resourceScriptVoList) {
                         resourceScriptVoMap.put(resourceScriptVo.getResourceId(), resourceScriptVo);
                     }
                 }
-                for (ResourceVo resourceVo : inspectResourceVoList) {
-                    ResourceScriptVo scriptVo = resourceScriptVoMap.get(resourceVo.getId());
+                for (InspectResourceVo resourceVo : inspectResourceVoList) {
+                    InspectResourceScriptVo scriptVo = resourceScriptVoMap.get(resourceVo.getId());
                     resourceVo.setScriptVo(scriptVo);
                 }
             }
