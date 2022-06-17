@@ -118,16 +118,12 @@ public class InspectReportServiceImpl implements InspectReportService {
                 searchVo.setRowNum(resourceCount);
                 List<Long> resourceIdList = inspectMapper.getInspectResourceIdList(searchVo);
                 inspectResourceVoList = inspectMapper.getInspectResourceListByIdList(resourceIdList, TenantContext.get().getDataDbName());
-                Map<Long, InspectResourceScriptVo> resourceScriptVoMap = new HashMap<>();
+                Map<Long, InspectResourceVo> inspectResourceMap = inspectResourceVoList.stream().collect(Collectors.toMap(InspectResourceVo::getId, e -> e));
                 List<InspectResourceScriptVo> resourceScriptVoList = inspectMapper.getResourceScriptListByResourceIdList(resourceIdList);
                 if (CollectionUtils.isNotEmpty(resourceScriptVoList)) {
                     for (InspectResourceScriptVo resourceScriptVo : resourceScriptVoList) {
-                        resourceScriptVoMap.put(resourceScriptVo.getResourceId(), resourceScriptVo);
+                        inspectResourceMap.get(resourceScriptVo.getResourceId()).setScript(resourceScriptVo);
                     }
-                }
-                for (InspectResourceVo resourceVo : inspectResourceVoList) {
-                    InspectResourceScriptVo scriptVo = resourceScriptVoMap.get(resourceVo.getId());
-                    resourceVo.setScriptVo(scriptVo);
                 }
             }
             if (inspectResourceVoList == null) {
