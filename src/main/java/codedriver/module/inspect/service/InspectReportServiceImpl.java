@@ -99,7 +99,7 @@ public class InspectReportServiceImpl implements InspectReportService {
         if (resourceCount > 0) {
             searchVo.setRowNum(resourceCount);
             List<Long> resourceIdList = inspectMapper.getInspectAutoexecJobNodeResourceIdList(searchVo, jobId, TenantContext.get().getDataDbName());
-            inspectResourceVoList = inspectMapper.getInspectResourceVoListByIdListAndJobId(resourceIdList, jobId, TenantContext.get().getDataDbName());
+            inspectResourceVoList = inspectMapper.getInspectResourceListByIdListAndJobId(resourceIdList, jobId, TenantContext.get().getDataDbName());
         }
         if (inspectResourceVoList == null) {
             inspectResourceVoList = new ArrayList<>();
@@ -115,14 +115,14 @@ public class InspectReportServiceImpl implements InspectReportService {
             if (resourceCount > 0) {
                 searchVo.setRowNum(resourceCount);
                 List<Long> resourceIdList = inspectMapper.getInspectResourceIdList(searchVo);
-                inspectResourceVoList = inspectMapper.getInspectResourceVoListByIdList(resourceIdList, TenantContext.get().getDataDbName());
+                inspectResourceVoList = inspectMapper.getInspectResourceListByIdList(resourceIdList, TenantContext.get().getDataDbName());
             }
             if (inspectResourceVoList == null) {
                 inspectResourceVoList = new ArrayList<>();
             }
             return inspectResourceVoList;
         } else {
-            return inspectMapper.getInspectResourceVoListByIdList(searchVo.getIdList(), TenantContext.get().getDataDbName());
+            return inspectMapper.getInspectResourceListByIdList(searchVo.getIdList(), TenantContext.get().getDataDbName());
         }
     }
 
@@ -325,7 +325,7 @@ public class InspectReportServiceImpl implements InspectReportService {
             for (int i = 1; i <= searchVo.getPageCount(); i++) {
                 searchVo.setCurrentPage(i);
                 List<Long> resourceIdList = inspectMapper.getInspectResourceIdList(searchVo);
-                List<InspectResourceVo> inspectResourceVos = inspectMapper.getInspectResourceVoListByIdList(resourceIdList, TenantContext.get().getDataDbName());
+                List<InspectResourceVo> inspectResourceVos = inspectMapper.getInspectResourceListByIdList(resourceIdList, TenantContext.get().getDataDbName());
                 for (InspectResourceVo inspectResourceVo : inspectResourceVos) {
                     if (isNeedAlertDetail == 1) {
                         JSONObject mongoInspectAlertDetail = getBatchInspectDetailByResourceId(inspectResourceVo.getId(), collection);
