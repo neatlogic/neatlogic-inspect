@@ -6,14 +6,13 @@
 package codedriver.module.inspect.service;
 
 import codedriver.framework.asynchronization.threadlocal.TenantContext;
-import codedriver.framework.cmdb.dto.resourcecenter.BgVo;
-import codedriver.framework.cmdb.dto.resourcecenter.IpVo;
-import codedriver.framework.cmdb.dto.resourcecenter.OwnerVo;
-import codedriver.framework.cmdb.dto.resourcecenter.ResourceSearchVo;
+import codedriver.framework.cmdb.dao.mapper.resourcecenter.ResourceCenterMapper;
+import codedriver.framework.cmdb.dto.resourcecenter.*;
 import codedriver.framework.cmdb.dto.sync.CollectionVo;
 import codedriver.framework.common.constvalue.InspectStatus;
 import codedriver.framework.inspect.dao.mapper.InspectMapper;
 import codedriver.framework.inspect.dto.InspectResourceVo;
+import codedriver.framework.inspect.dto.InspectResourceScriptVo;
 import codedriver.framework.util.TimeUtil;
 import codedriver.framework.util.excel.ExcelBuilder;
 import codedriver.framework.util.excel.SheetBuilder;
@@ -48,6 +47,9 @@ public class InspectReportServiceImpl implements InspectReportService {
 
     @Resource
     InspectMapper inspectMapper;
+
+    @Resource
+    ResourceCenterMapper resourceCenterMapper;
 
     @Override
     public Document getInspectReport(Long resourceId, String id, Long jobId) {
@@ -116,6 +118,13 @@ public class InspectReportServiceImpl implements InspectReportService {
                 searchVo.setRowNum(resourceCount);
                 List<Long> resourceIdList = inspectMapper.getInspectResourceIdList(searchVo);
                 inspectResourceVoList = inspectMapper.getInspectResourceListByIdList(resourceIdList, TenantContext.get().getDataDbName());
+                Map<Long, InspectResourceVo> inspectResourceMap = inspectResourceVoList.stream().collect(Collectors.toMap(InspectResourceVo::getId, e -> e));
+                List<InspectResourceScriptVo> resourceScriptVoList = inspectMapper.getResourceScriptListByResourceIdList(resourceIdList);
+                if (CollectionUtils.isNotEmpty(resourceScriptVoList)) {
+                    for (InspectResourceScriptVo resourceScriptVo : resourceScriptVoList) {
+                        inspectResourceMap.get(resourceScriptVo.getResourceId()).setScript(resourceScriptVo);
+                    }
+                }
             }
             if (inspectResourceVoList == null) {
                 inspectResourceVoList = new ArrayList<>();
