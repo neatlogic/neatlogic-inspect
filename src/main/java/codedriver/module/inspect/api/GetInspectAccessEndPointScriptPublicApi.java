@@ -16,7 +16,7 @@ import javax.annotation.Resource;
 
 @Service
 @OperationType(type = OperationTypeEnum.SEARCH)
-public class GetInspectResourceAccessEndPointScriptApi extends PublicApiComponentBase {
+public class GetInspectAccessEndPointScriptPublicApi extends PublicApiComponentBase {
 
     @Resource
     private ResourceCenterMapper resourceCenterMapper;
@@ -31,7 +31,7 @@ public class GetInspectResourceAccessEndPointScriptApi extends PublicApiComponen
 
     @Override
     public String getToken() {
-        return "inspect/resource/accessendpoint/get";
+        return "inspect/accessendpoint/script/get/public";
     }
 
     @Override

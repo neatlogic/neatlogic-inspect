@@ -27,7 +27,7 @@ import javax.annotation.Resource;
 @Transactional
 @AuthAction(action = INSPECT_MODIFY.class)
 @OperationType(type = OperationTypeEnum.UPDATE)
-public class SaveInspectResourceScriptApi extends PrivateApiComponentBase {
+public class SaveInspectAccessEndPointScriptApi extends PrivateApiComponentBase {
 
     @Resource
     private ResourceCenterMapper resourceCenterMapper;

@@ -19,7 +19,7 @@ import javax.annotation.Resource;
 @Service
 @AuthAction(action = INSPECT_MODIFY.class)
 @OperationType(type = OperationTypeEnum.SEARCH)
-public class GetInspectResourceScriptApi extends PrivateApiComponentBase {
+public class GetInspectAccessEndPointScriptApi extends PrivateApiComponentBase {
 
     @Resource
     private ResourceCenterMapper resourceCenterMapper;
