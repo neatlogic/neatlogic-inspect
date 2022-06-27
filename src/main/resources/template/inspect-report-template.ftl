@@ -21,7 +21,7 @@
         }
 
         .lineTd {
-            text-align: right;
+            text-align: left;
             word-break: break-all;
             word-wrap: break-word;
         }
