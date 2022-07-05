@@ -1,10 +1,13 @@
 package codedriver.module.inspect.service;
 
 import codedriver.framework.cmdb.dto.resourcecenter.ResourceSearchVo;
+import codedriver.framework.cmdb.dto.resourcecenter.config.ResourceInfo;
+import codedriver.framework.cmdb.utils.ResourceSearchGenerateSqlUtil;
 import codedriver.framework.inspect.dto.InspectResourceVo;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.mongodb.client.MongoCollection;
+import net.sf.jsqlparser.statement.select.PlainSelect;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.bson.Document;
 
@@ -41,7 +44,7 @@ public interface InspectReportService {
      * @param searchVo
      * @return
      */
-    List<InspectResourceVo> getInspectResourceReportList(ResourceSearchVo searchVo);
+//    List<InspectResourceVo> getInspectResourceReportList(ResourceSearchVo searchVo);
 
     /**
      * 根据resourceIdList 获取 对应巡检报告
@@ -96,4 +99,34 @@ public interface InspectReportService {
      * @return
      */
     Workbook getInspectNewProblemReportWorkbook(ResourceSearchVo searchVo, Integer isNeedAlertDetail);
+
+    /**
+     * 拼装查询当前页id列表sql语句
+     * @param searchVo
+     * @param unavailableResourceInfoList
+     * @return
+     */
+    String getResourceIdListSql(ResourceSearchVo searchVo, List<ResourceInfo> unavailableResourceInfoList);
+
+    /**
+     * 拼装查询总数sql语句
+     * @param searchVo
+     * @param unavailableResourceInfoList
+     * @return
+     */
+    String getResourceCountSql(ResourceSearchVo searchVo, List<ResourceInfo> unavailableResourceInfoList);
+
+    /**
+     * 根据需要查询的列，生成对应的sql语句
+     * @param idList
+     * @param unavailableResourceInfoList
+     * @return
+     */
+    String getResourceListByIdListSql(List<Long> idList, List<ResourceInfo> unavailableResourceInfoList);
+
+    /**
+     * 添加其他信息，账号、标签、巡检作业状态、脚本
+     * @param inspectResourceList
+     */
+    void addInspectResourceOtherInfo(List<InspectResourceVo> inspectResourceList);
 }
