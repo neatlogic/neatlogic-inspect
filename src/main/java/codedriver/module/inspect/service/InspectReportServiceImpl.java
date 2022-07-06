@@ -111,20 +111,20 @@ public class InspectReportServiceImpl implements InspectReportService {
         return reportDoc;
     }
 
-    @Override
-    public List<InspectResourceVo> getInspectAutoexecJobNodeList(Long jobId, ResourceSearchVo searchVo) {
-        List<InspectResourceVo> inspectResourceVoList = null;
-        int resourceCount = inspectMapper.getInspectAutoexecJobNodeResourceCount(searchVo, jobId, TenantContext.get().getDataDbName());
-        if (resourceCount > 0) {
-            searchVo.setRowNum(resourceCount);
-            List<Long> resourceIdList = inspectMapper.getInspectAutoexecJobNodeResourceIdList(searchVo, jobId, TenantContext.get().getDataDbName());
-            inspectResourceVoList = inspectMapper.getInspectResourceListByIdListAndJobId(resourceIdList, jobId, TenantContext.get().getDataDbName());
-        }
-        if (inspectResourceVoList == null) {
-            inspectResourceVoList = new ArrayList<>();
-        }
-        return inspectResourceVoList;
-    }
+//    @Override
+//    public List<InspectResourceVo> getInspectAutoexecJobNodeList(Long jobId, ResourceSearchVo searchVo) {
+//        List<InspectResourceVo> inspectResourceVoList = null;
+//        int resourceCount = inspectMapper.getInspectAutoexecJobNodeResourceCount(searchVo, jobId, TenantContext.get().getDataDbName());
+//        if (resourceCount > 0) {
+//            searchVo.setRowNum(resourceCount);
+//            List<Long> resourceIdList = inspectMapper.getInspectAutoexecJobNodeResourceIdList(searchVo, jobId, TenantContext.get().getDataDbName());
+//            inspectResourceVoList = inspectMapper.getInspectResourceListByIdListAndJobId(resourceIdList, jobId, TenantContext.get().getDataDbName());
+//        }
+//        if (inspectResourceVoList == null) {
+//            inspectResourceVoList = new ArrayList<>();
+//        }
+//        return inspectResourceVoList;
+//    }
 
 //    @Override
 //    public List<InspectResourceVo> getInspectResourceReportList(ResourceSearchVo searchVo) {
@@ -846,7 +846,7 @@ public class InspectReportServiceImpl implements InspectReportService {
         Map<Long, List<TagVo>> resourceTagVoMap = resourceCenterResourceCrossoverService.getResourceTagByResourceIdList(idList);
         List<InspectResourceScriptVo> resourceScriptVoList = inspectMapper.getResourceScriptListByResourceIdList(idList);
         Map<Long, InspectResourceScriptVo> resourceScriptMap = resourceScriptVoList.stream().collect(Collectors.toMap(e -> e.getResourceId(), e -> e));
-        List<AutoexecJobPhaseNodeVo> autoexecJobPhaseNodeList = autoexecJobMapper.getAutoexecJobNodeListByResourceId(idList);
+        List<AutoexecJobPhaseNodeVo> autoexecJobPhaseNodeList = autoexecJobMapper.getAutoexecJobNodeListByResourceIdList(idList);
         Map<Long, AutoexecJobPhaseNodeVo> autoexecJobPhaseNodeMap = autoexecJobPhaseNodeList.stream().collect(Collectors.toMap(e -> e.getResourceId(), e -> e));
         for (InspectResourceVo inspectResourceVo : inspectResourceList) {
             Long id = inspectResourceVo.getId();
