@@ -108,7 +108,7 @@ public class InspectResourceReportSearchApi extends PrivateApiComponentBase {
         List<ResourceInfo> unavailableResourceInfoList = new ArrayList<>();
         String sql = inspectReportService.getResourceCountSql(searchVo, unavailableResourceInfoList);
         if (StringUtils.isBlank(sql)) {
-            TableResultUtil.getResult(inspectResourceVoList, searchVo);
+            return TableResultUtil.getResult(inspectResourceVoList, searchVo);
         }
 //        System.out.println(sql + ";");
 //        long startTime = System.currentTimeMillis();
@@ -123,7 +123,7 @@ public class InspectResourceReportSearchApi extends PrivateApiComponentBase {
             searchVo.setRowNum(count);
             sql = inspectReportService.getResourceIdListSql(searchVo, unavailableResourceInfoList);
             if (StringUtils.isBlank(sql)) {
-                TableResultUtil.getResult(inspectResourceVoList, searchVo);
+                return TableResultUtil.getResult(inspectResourceVoList, searchVo);
             }
 //            System.out.println(sql + ";");
             List<Long> idList = inspectMapper.getInspectResourceIdListNew(sql);
@@ -142,7 +142,7 @@ public class InspectResourceReportSearchApi extends PrivateApiComponentBase {
             if (CollectionUtils.isNotEmpty(idList)) {
                 sql = inspectReportService.getResourceListByIdListSql(idList, unavailableResourceInfoList);
                 if (StringUtils.isBlank(sql)) {
-                    TableResultUtil.getResult(inspectResourceVoList, searchVo);
+                    return TableResultUtil.getResult(inspectResourceVoList, searchVo);
                 }
                 inspectResourceVoList = inspectMapper.getInspectResourceListByIdListNew(sql);
                 if (CollectionUtils.isNotEmpty(inspectResourceVoList)) {
