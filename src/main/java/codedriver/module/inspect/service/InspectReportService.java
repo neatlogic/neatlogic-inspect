@@ -1,6 +1,7 @@
 package codedriver.module.inspect.service;
 
 import codedriver.framework.cmdb.dto.resourcecenter.ResourceSearchVo;
+import codedriver.framework.cmdb.dto.resourcecenter.ResourceVo;
 import codedriver.framework.cmdb.dto.resourcecenter.config.ResourceInfo;
 import codedriver.framework.cmdb.utils.ResourceSearchGenerateSqlUtil;
 import codedriver.framework.inspect.dto.InspectResourceVo;
@@ -13,6 +14,7 @@ import org.bson.Document;
 
 import java.util.List;
 import java.util.Map;
+import java.util.function.BiConsumer;
 
 public interface InspectReportService {
 
@@ -100,33 +102,9 @@ public interface InspectReportService {
      */
     Workbook getInspectNewProblemReportWorkbook(ResourceSearchVo searchVo, Integer isNeedAlertDetail);
 
-    /**
-     * 拼装查询当前页id列表sql语句
-     * @param searchVo
-     * @param unavailableResourceInfoList
-     * @return
-     */
-    String getResourceIdListSql(ResourceSearchVo searchVo, List<ResourceInfo> unavailableResourceInfoList);
+    BiConsumer<ResourceSearchGenerateSqlUtil, PlainSelect> getBiConsumerByInspectJobPhaseNodeStatusList(List<String> inspectJobPhaseNodeStatusList);
 
-    /**
-     * 拼装查询总数sql语句
-     * @param searchVo
-     * @param unavailableResourceInfoList
-     * @return
-     */
-    String getResourceCountSql(ResourceSearchVo searchVo, List<ResourceInfo> unavailableResourceInfoList);
+    List<InspectResourceVo> convertInspectResourceList(List<ResourceVo> resourceList);
 
-    /**
-     * 根据需要查询的列，生成对应的sql语句
-     * @param idList
-     * @param unavailableResourceInfoList
-     * @return
-     */
-    String getResourceListByIdListSql(List<Long> idList, List<ResourceInfo> unavailableResourceInfoList);
-
-    /**
-     * 添加其他信息，账号、标签、巡检作业状态、脚本
-     * @param inspectResourceList
-     */
-    void addInspectResourceOtherInfo(List<InspectResourceVo> inspectResourceList);
+    List<ResourceInfo> getTheadList();
 }
