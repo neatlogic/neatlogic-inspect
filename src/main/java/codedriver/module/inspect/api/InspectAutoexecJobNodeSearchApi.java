@@ -138,8 +138,8 @@ public class InspectAutoexecJobNodeSearchApi extends PrivateApiComponentBase {
         commonConditionObj.put("typeIdList", typeIdList);
         commonConditionObj.remove("inspectStatusList");
         biConsumerList.add(resourceCenterCommonGenerateSqlCrossoverService.getBiConsumerByCommonCondition(commonConditionObj, unavailableResourceInfoList));
-        biConsumerList.add(resourceCenterCustomGenerateSqlCrossoverService.getBiConsumerByProtocolIdList(paramObj, unavailableResourceInfoList));
-        biConsumerList.add(resourceCenterCustomGenerateSqlCrossoverService.getBiConsumerByTagIdList(paramObj, unavailableResourceInfoList));
+        biConsumerList.add(resourceCenterCustomGenerateSqlCrossoverService.getBiConsumerByProtocolIdList(searchVo.getProtocolIdList(), unavailableResourceInfoList));
+        biConsumerList.add(resourceCenterCustomGenerateSqlCrossoverService.getBiConsumerByTagIdList(searchVo.getTagIdList(), unavailableResourceInfoList));
         biConsumerList.add(resourceCenterCustomGenerateSqlCrossoverService.getBiConsumerByKeyword(paramObj, unavailableResourceInfoList));
         biConsumerList.add(getBiConsumerByJobIdAndInspectJobPhaseNodeStatusList(searchVo.getJobId(), searchVo.getInspectJobPhaseNodeStatusList()));
         biConsumerList.add(getBiConsumerByInspectStatusList(searchVo.getInspectStatusList()));

@@ -115,7 +115,7 @@ public class InspectResourceReportSearchApi extends PrivateApiComponentBase {
         JSONArray idArray = paramObj.getJSONArray("idList");
         if (CollectionUtils.isNotEmpty(idArray)) {
             List<Long> idList = idArray.toJavaList(Long.class);
-            String sql = resourceCenterCommonGenerateSqlCrossoverService.getResourceListByIdListSql(inspectReportService.getTheadList(), idList, unavailableResourceInfoList);
+            String sql = resourceCenterCommonGenerateSqlCrossoverService.getResourceListByIdListSql(inspectReportService.getTheadList(), idList, unavailableResourceInfoList, "resource_ipobject");
             if (StringUtils.isBlank(sql)) {
                 return TableResultUtil.getResult(inspectResourceVoList, searchVo);
             }
@@ -131,9 +131,9 @@ public class InspectResourceReportSearchApi extends PrivateApiComponentBase {
         JSONObject commonConditionObj = new JSONObject(paramObj);
         commonConditionObj.put("typeIdList", typeIdList);
         biConsumerList.add(resourceCenterCommonGenerateSqlCrossoverService.getBiConsumerByCommonCondition(commonConditionObj, unavailableResourceInfoList));
-        biConsumerList.add(resourceCenterCustomGenerateSqlCrossoverService.getBiConsumerByProtocolIdList(paramObj, unavailableResourceInfoList));
-        biConsumerList.add(resourceCenterCustomGenerateSqlCrossoverService.getBiConsumerByTagIdList(paramObj, unavailableResourceInfoList));
-        biConsumerList.add(resourceCenterCustomGenerateSqlCrossoverService.getBiConsumerByKeyword(paramObj, unavailableResourceInfoList));
+        biConsumerList.add(resourceCenterCustomGenerateSqlCrossoverService.getBiConsumerByProtocolIdList(searchVo.getProtocolIdList(), unavailableResourceInfoList));
+        biConsumerList.add(resourceCenterCustomGenerateSqlCrossoverService.getBiConsumerByTagIdList(searchVo.getTagIdList(), unavailableResourceInfoList));
+        biConsumerList.add(resourceCenterCustomGenerateSqlCrossoverService.getBiConsumerByKeyword(searchVo.getKeyword(), unavailableResourceInfoList));
         biConsumerList.add(inspectReportService.getBiConsumerByInspectJobPhaseNodeStatusList(searchVo.getInspectJobPhaseNodeStatusList()));
 
         List<ResourceVo> resourceList = resourceCenterCommonGenerateSqlCrossoverService.getResourceList(biConsumerList, searchVo, unavailableResourceInfoList, "resource_ipobject", inspectReportService.getTheadList());

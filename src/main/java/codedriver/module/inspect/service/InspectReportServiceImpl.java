@@ -299,12 +299,12 @@ public class InspectReportServiceImpl implements InspectReportService {
         JSONObject paramObj = (JSONObject) JSONObject.toJSON(searchVo);
         paramObj.put("typeIdList", typeIdList);
         biConsumerList.add(resourceCenterCommonGenerateSqlCrossoverService.getBiConsumerByCommonCondition(paramObj, unavailableResourceInfoList));
-        biConsumerList.add(resourceCenterCustomGenerateSqlCrossoverService.getBiConsumerByProtocolIdList(paramObj, unavailableResourceInfoList));
-        biConsumerList.add(resourceCenterCustomGenerateSqlCrossoverService.getBiConsumerByTagIdList(paramObj, unavailableResourceInfoList));
-        biConsumerList.add(resourceCenterCustomGenerateSqlCrossoverService.getBiConsumerByKeyword(paramObj, unavailableResourceInfoList));
+        biConsumerList.add(resourceCenterCustomGenerateSqlCrossoverService.getBiConsumerByProtocolIdList(searchVo.getProtocolIdList(), unavailableResourceInfoList));
+        biConsumerList.add(resourceCenterCustomGenerateSqlCrossoverService.getBiConsumerByTagIdList(searchVo.getTagIdList(), unavailableResourceInfoList));
+        biConsumerList.add(resourceCenterCustomGenerateSqlCrossoverService.getBiConsumerByKeyword(searchVo.getKeyword(), unavailableResourceInfoList));
         biConsumerList.add(getBiConsumerByInspectJobPhaseNodeStatusList(searchVo.getInspectJobPhaseNodeStatusList()));
 
-        PlainSelect plainSelect = resourceCenterCommonGenerateSqlCrossoverService.getResourceCountPlainSelect("", biConsumerList);
+        PlainSelect plainSelect = resourceCenterCommonGenerateSqlCrossoverService.getResourceCountPlainSelect("resource_ipobject", biConsumerList);
         if (plainSelect == null) {
             return null;
         }
@@ -378,7 +378,7 @@ public class InspectReportServiceImpl implements InspectReportService {
                 }
                 List<Long> resourceIdList = resourceCenterCommonGenerateSqlCrossoverService.getIdList(sql);
 //                List<Long> resourceIdList = inspectMapper.getInspectResourceIdList(searchVo);
-                sql = resourceCenterCommonGenerateSqlCrossoverService.getResourceListByIdListSql(getTheadList(), resourceIdList, unavailableResourceInfoList);
+                sql = resourceCenterCommonGenerateSqlCrossoverService.getResourceListByIdListSql(getTheadList(), resourceIdList, unavailableResourceInfoList, "resource_ipobject");
                 if (StringUtils.isBlank(sql)) {
                     continue;
                 }
