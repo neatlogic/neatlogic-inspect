@@ -5,10 +5,9 @@
 
 package codedriver.module.inspect.service;
 
+import codedriver.framework.asynchronization.threadlocal.TenantContext;
 import codedriver.framework.autoexec.dao.mapper.AutoexecJobMapper;
 import codedriver.framework.autoexec.dto.job.AutoexecJobPhaseNodeVo;
-import codedriver.framework.cmdb.crossover.IResourceCenterCommonGenerateSqlCrossoverService;
-import codedriver.framework.cmdb.crossover.IResourceCenterCustomGenerateSqlCrossoverService;
 import codedriver.framework.cmdb.crossover.IResourceCenterResourceCrossoverService;
 import codedriver.framework.cmdb.dto.resourcecenter.*;
 import codedriver.framework.cmdb.dto.resourcecenter.config.ResourceInfo;
@@ -110,46 +109,46 @@ public class InspectReportServiceImpl implements InspectReportService {
         return reportDoc;
     }
 
-//    @Override
-//    public List<InspectResourceVo> getInspectAutoexecJobNodeList(Long jobId, ResourceSearchVo searchVo) {
-//        List<InspectResourceVo> inspectResourceVoList = null;
-//        int resourceCount = inspectMapper.getInspectAutoexecJobNodeResourceCount(searchVo, jobId, TenantContext.get().getDataDbName());
-//        if (resourceCount > 0) {
-//            searchVo.setRowNum(resourceCount);
-//            List<Long> resourceIdList = inspectMapper.getInspectAutoexecJobNodeResourceIdList(searchVo, jobId, TenantContext.get().getDataDbName());
-//            inspectResourceVoList = inspectMapper.getInspectResourceListByIdListAndJobId(resourceIdList, jobId, TenantContext.get().getDataDbName());
-//        }
-//        if (inspectResourceVoList == null) {
-//            inspectResourceVoList = new ArrayList<>();
-//        }
-//        return inspectResourceVoList;
-//    }
+    @Override
+    public List<InspectResourceVo> getInspectAutoexecJobNodeList(Long jobId, ResourceSearchVo searchVo) {
+        List<InspectResourceVo> inspectResourceVoList = null;
+        int resourceCount = inspectMapper.getInspectAutoexecJobNodeResourceCount(searchVo, jobId, TenantContext.get().getDataDbName());
+        if (resourceCount > 0) {
+            searchVo.setRowNum(resourceCount);
+            List<Long> resourceIdList = inspectMapper.getInspectAutoexecJobNodeResourceIdList(searchVo, jobId, TenantContext.get().getDataDbName());
+            inspectResourceVoList = inspectMapper.getInspectResourceListByIdListAndJobId(resourceIdList, jobId, TenantContext.get().getDataDbName());
+        }
+        if (inspectResourceVoList == null) {
+            inspectResourceVoList = new ArrayList<>();
+        }
+        return inspectResourceVoList;
+    }
 
-//    @Override
-//    public List<InspectResourceVo> getInspectResourceReportList(ResourceSearchVo searchVo) {
-//        if (CollectionUtils.isEmpty(searchVo.getIdList())) {
-//            List<InspectResourceVo> inspectResourceVoList = null;
-//            int resourceCount = inspectMapper.getInspectResourceCount(searchVo);
-//            if (resourceCount > 0) {
-//                searchVo.setRowNum(resourceCount);
-//                List<Long> resourceIdList = inspectMapper.getInspectResourceIdList(searchVo);
-//                inspectResourceVoList = inspectMapper.getInspectResourceListByIdList(resourceIdList, TenantContext.get().getDataDbName());
-//                Map<Long, InspectResourceVo> inspectResourceMap = inspectResourceVoList.stream().collect(Collectors.toMap(InspectResourceVo::getId, e -> e));
-//                List<InspectResourceScriptVo> resourceScriptVoList = inspectMapper.getResourceScriptListByResourceIdList(resourceIdList);
-//                if (CollectionUtils.isNotEmpty(resourceScriptVoList)) {
-//                    for (InspectResourceScriptVo resourceScriptVo : resourceScriptVoList) {
-//                        inspectResourceMap.get(resourceScriptVo.getResourceId()).setScript(resourceScriptVo);
-//                    }
-//                }
-//            }
-//            if (inspectResourceVoList == null) {
-//                inspectResourceVoList = new ArrayList<>();
-//            }
-//            return inspectResourceVoList;
-//        } else {
-//            return inspectMapper.getInspectResourceListByIdList(searchVo.getIdList(), TenantContext.get().getDataDbName());
-//        }
-//    }
+    @Override
+    public List<InspectResourceVo> getInspectResourceReportList(ResourceSearchVo searchVo) {
+        if (CollectionUtils.isEmpty(searchVo.getIdList())) {
+            List<InspectResourceVo> inspectResourceVoList = null;
+            int resourceCount = inspectMapper.getInspectResourceCount(searchVo);
+            if (resourceCount > 0) {
+                searchVo.setRowNum(resourceCount);
+                List<Long> resourceIdList = inspectMapper.getInspectResourceIdList(searchVo);
+                inspectResourceVoList = inspectMapper.getInspectResourceListByIdList(resourceIdList, TenantContext.get().getDataDbName());
+                Map<Long, InspectResourceVo> inspectResourceMap = inspectResourceVoList.stream().collect(Collectors.toMap(InspectResourceVo::getId, e -> e));
+                List<InspectResourceScriptVo> resourceScriptVoList = inspectMapper.getResourceScriptListByResourceIdList(resourceIdList);
+                if (CollectionUtils.isNotEmpty(resourceScriptVoList)) {
+                    for (InspectResourceScriptVo resourceScriptVo : resourceScriptVoList) {
+                        inspectResourceMap.get(resourceScriptVo.getResourceId()).setScript(resourceScriptVo);
+                    }
+                }
+            }
+            if (inspectResourceVoList == null) {
+                inspectResourceVoList = new ArrayList<>();
+            }
+            return inspectResourceVoList;
+        } else {
+            return inspectMapper.getInspectResourceListByIdList(searchVo.getIdList(), TenantContext.get().getDataDbName());
+        }
+    }
 
     @Override
     public JSONObject getInspectDetailByResourceIdList(List<Long> resourceIdList) {
@@ -287,25 +286,9 @@ public class InspectReportServiceImpl implements InspectReportService {
     @Override
     public Workbook getInspectNewProblemReportWorkbook(ResourceSearchVo searchVo, Integer isNeedAlertDetail) {
         IResourceCenterResourceCrossoverService resourceCenterResourceCrossoverService = CrossoverServiceFactory.getApi(IResourceCenterResourceCrossoverService.class);
-        IResourceCenterCommonGenerateSqlCrossoverService resourceCenterCommonGenerateSqlCrossoverService = CrossoverServiceFactory.getApi(IResourceCenterCommonGenerateSqlCrossoverService.class);
-        IResourceCenterCustomGenerateSqlCrossoverService resourceCenterCustomGenerateSqlCrossoverService = CrossoverServiceFactory.getApi(IResourceCenterCustomGenerateSqlCrossoverService.class);
-        List<ResourceInfo> unavailableResourceInfoList = new ArrayList<>();
         List<Long> typeIdList = resourceCenterResourceCrossoverService.getDownwardCiIdListByCiIdList(Arrays.asList(searchVo.getTypeId()));
-        List<BiConsumer<ResourceSearchGenerateSqlUtil, PlainSelect>> biConsumerList = new ArrayList<>();
-        JSONObject paramObj = (JSONObject) JSONObject.toJSON(searchVo);
-        paramObj.put("typeIdList", typeIdList);
-        biConsumerList.add(resourceCenterCustomGenerateSqlCrossoverService.getBiConsumerByCommonCondition(paramObj, unavailableResourceInfoList));
-        biConsumerList.add(resourceCenterCustomGenerateSqlCrossoverService.getBiConsumerByProtocolIdList(searchVo.getProtocolIdList(), unavailableResourceInfoList));
-        biConsumerList.add(resourceCenterCustomGenerateSqlCrossoverService.getBiConsumerByTagIdList(searchVo.getTagIdList(), unavailableResourceInfoList));
-        biConsumerList.add(resourceCenterCustomGenerateSqlCrossoverService.getBiConsumerByKeyword(searchVo.getKeyword(), unavailableResourceInfoList));
-        biConsumerList.add(getBiConsumerByInspectJobPhaseNodeStatusList(searchVo.getInspectJobPhaseNodeStatusList()));
-
-        PlainSelect plainSelect = resourceCenterCommonGenerateSqlCrossoverService.getResourceCountPlainSelect("resource_ipobject", biConsumerList);
-        if (plainSelect == null) {
-            return null;
-        }
-        int resourceCount = resourceCenterCommonGenerateSqlCrossoverService.getCount(plainSelect.toString());
-//        int resourceCount = inspectMapper.getInspectResourceCount(searchVo);
+        searchVo.setTypeIdList(typeIdList);
+        int resourceCount = inspectMapper.getInspectResourceCount(searchVo);
         searchVo.setRowNum(resourceCount);
         if (resourceCount > 0) {
             MongoCollection<Document> collection = null;
@@ -368,23 +351,8 @@ public class InspectReportServiceImpl implements InspectReportService {
             Map<String, String> fieldPathTextMap = new HashMap<>();
             for (int i = 1; i <= searchVo.getPageCount(); i++) {
                 searchVo.setCurrentPage(i);
-                String sql = resourceCenterCommonGenerateSqlCrossoverService.getResourceIdListSql(plainSelect);
-                if (StringUtils.isBlank(sql)) {
-                    continue;
-                }
-                List<Long> resourceIdList = resourceCenterCommonGenerateSqlCrossoverService.getIdList(sql);
-//                List<Long> resourceIdList = inspectMapper.getInspectResourceIdList(searchVo);
-                sql = resourceCenterCommonGenerateSqlCrossoverService.getResourceListByIdListSql("resource_ipobject", getTheadList(), resourceIdList, unavailableResourceInfoList);
-                if (StringUtils.isBlank(sql)) {
-                    continue;
-                }
-                List<ResourceVo> resourceList = resourceCenterCommonGenerateSqlCrossoverService.getResourceList(sql);
-                if (CollectionUtils.isEmpty(resourceList)) {
-                    continue;
-                }
-                List<InspectResourceVo> inspectResourceVos = convertInspectResourceList(resourceList);
-//                addInspectResourceOtherInfo(inspectResourceVos);
-//                List<InspectResourceVo> inspectResourceVos = inspectMapper.getInspectResourceListByIdList(resourceIdList, TenantContext.get().getDataDbName());
+                List<Long> resourceIdList = inspectMapper.getInspectResourceIdList(searchVo);
+                List<InspectResourceVo> inspectResourceVos = inspectMapper.getInspectResourceListByIdList(resourceIdList, TenantContext.get().getDataDbName());
                 for (InspectResourceVo inspectResourceVo : inspectResourceVos) {
                     if (isNeedAlertDetail == 1) {
                         JSONObject mongoInspectAlertDetail = getBatchInspectDetailByResourceId(inspectResourceVo.getId(), collection);

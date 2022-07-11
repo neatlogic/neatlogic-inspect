@@ -6,33 +6,24 @@
 package codedriver.module.inspect.api;
 
 import codedriver.framework.auth.core.AuthAction;
-import codedriver.framework.cmdb.crossover.IResourceCenterCommonGenerateSqlCrossoverService;
-import codedriver.framework.cmdb.crossover.IResourceCenterCustomGenerateSqlCrossoverService;
-import codedriver.framework.cmdb.crossover.IResourceCenterResourceCrossoverService;
+import codedriver.framework.cmdb.crossover.ICiCrossoverMapper;
+import codedriver.framework.cmdb.dto.ci.CiVo;
 import codedriver.framework.cmdb.dto.resourcecenter.ResourceSearchVo;
 import codedriver.framework.cmdb.dto.resourcecenter.ResourceVo;
-import codedriver.framework.cmdb.dto.resourcecenter.config.ResourceInfo;
-import codedriver.framework.cmdb.utils.ResourceSearchGenerateSqlUtil;
+import codedriver.framework.cmdb.exception.ci.CiNotFoundException;
 import codedriver.framework.common.constvalue.ApiParamType;
 import codedriver.framework.common.dto.BasePageVo;
 import codedriver.framework.crossover.CrossoverServiceFactory;
 import codedriver.framework.inspect.auth.INSPECT_BASE;
-import codedriver.framework.inspect.dto.InspectResourceVo;
 import codedriver.framework.restful.annotation.*;
 import codedriver.framework.restful.constvalue.OperationTypeEnum;
 import codedriver.framework.restful.core.privateapi.PrivateApiComponentBase;
 import codedriver.framework.util.TableResultUtil;
 import codedriver.module.inspect.service.InspectReportService;
-import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
-import net.sf.jsqlparser.statement.select.PlainSelect;
-import org.apache.commons.collections4.CollectionUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
-import java.util.*;
-import java.util.function.BiConsumer;
 
 @Service
 @AuthAction(action = INSPECT_BASE.class)
@@ -77,52 +68,16 @@ public class InspectResourceReportSearchApi extends PrivateApiComponentBase {
     @Description(desc = "获取巡检资产报告接口")
     @Override
     public Object myDoService(JSONObject paramObj) throws Exception {
-//        ResourceSearchVo searchVo = JSON.toJavaObject(paramObj, ResourceSearchVo.class);
-//        Long typeId = searchVo.getTypeId();
-//        ICiCrossoverMapper ciCrossoverMapper = CrossoverServiceFactory.getApi(ICiCrossoverMapper.class);
-//        CiVo ciVo = ciCrossoverMapper.getCiById(typeId);
-//        if (ciVo == null) {
-//            throw new CiNotFoundException(typeId);
-//        }
-//        searchVo.setLft(ciVo.getLft());
-//        searchVo.setRht(ciVo.getRht());
-//        return TableResultUtil.getResult(inspectReportService.getInspectResourceReportList(searchVo), searchVo);
-        List<InspectResourceVo> inspectResourceVoList = new ArrayList<>();
-        List<ResourceInfo> unavailableResourceInfoList = new ArrayList<>();
-        IResourceCenterResourceCrossoverService resourceCenterResourceCrossoverService = CrossoverServiceFactory.getApi(IResourceCenterResourceCrossoverService.class);
-        IResourceCenterCommonGenerateSqlCrossoverService resourceCenterCommonGenerateSqlCrossoverService = CrossoverServiceFactory.getApi(IResourceCenterCommonGenerateSqlCrossoverService.class);
-        IResourceCenterCustomGenerateSqlCrossoverService resourceCenterCustomGenerateSqlCrossoverService = CrossoverServiceFactory.getApi(IResourceCenterCustomGenerateSqlCrossoverService.class);
         ResourceSearchVo searchVo = JSONObject.toJavaObject(paramObj, ResourceSearchVo.class);
-        JSONArray idArray = paramObj.getJSONArray("idList");
-        if (CollectionUtils.isNotEmpty(idArray)) {
-            List<Long> idList = idArray.toJavaList(Long.class);
-            String sql = resourceCenterCommonGenerateSqlCrossoverService.getResourceListByIdListSql("resource_ipobject", inspectReportService.getTheadList(), idList, unavailableResourceInfoList);
-            if (StringUtils.isBlank(sql)) {
-                return TableResultUtil.getResult(inspectResourceVoList, searchVo);
-            }
-            List<ResourceVo> resourceList = resourceCenterCommonGenerateSqlCrossoverService.getResourceList(sql);
-            if (CollectionUtils.isEmpty(resourceList)) {
-                return TableResultUtil.getResult(inspectResourceVoList, searchVo);
-            }
-            inspectResourceVoList = inspectReportService.convertInspectResourceList(resourceList);
-            return TableResultUtil.getResult(inspectResourceVoList, searchVo);
+        Long typeId = searchVo.getTypeId();
+        ICiCrossoverMapper ciCrossoverMapper = CrossoverServiceFactory.getApi(ICiCrossoverMapper.class);
+        CiVo ciVo = ciCrossoverMapper.getCiById(typeId);
+        if (ciVo == null) {
+            throw new CiNotFoundException(typeId);
         }
-        List<Long> typeIdList = resourceCenterResourceCrossoverService.getDownwardCiIdListByCiIdList(Arrays.asList(searchVo.getTypeId()));
-        List<BiConsumer<ResourceSearchGenerateSqlUtil, PlainSelect>> biConsumerList = new ArrayList<>();
-        JSONObject commonConditionObj = new JSONObject(paramObj);
-        commonConditionObj.put("typeIdList", typeIdList);
-        biConsumerList.add(resourceCenterCustomGenerateSqlCrossoverService.getBiConsumerByCommonCondition(commonConditionObj, unavailableResourceInfoList));
-        biConsumerList.add(resourceCenterCustomGenerateSqlCrossoverService.getBiConsumerByProtocolIdList(searchVo.getProtocolIdList(), unavailableResourceInfoList));
-        biConsumerList.add(resourceCenterCustomGenerateSqlCrossoverService.getBiConsumerByTagIdList(searchVo.getTagIdList(), unavailableResourceInfoList));
-        biConsumerList.add(resourceCenterCustomGenerateSqlCrossoverService.getBiConsumerByKeyword(searchVo.getKeyword(), unavailableResourceInfoList));
-        biConsumerList.add(inspectReportService.getBiConsumerByInspectJobPhaseNodeStatusList(searchVo.getInspectJobPhaseNodeStatusList()));
-
-        List<ResourceVo> resourceList = resourceCenterCommonGenerateSqlCrossoverService.getResourceList("resource_ipobject", inspectReportService.getTheadList(), biConsumerList, searchVo, unavailableResourceInfoList);
-        if (CollectionUtils.isEmpty(resourceList)) {
-            TableResultUtil.getResult(resourceList, searchVo);
-        }
-        inspectResourceVoList = inspectReportService.convertInspectResourceList(resourceList);
-        return TableResultUtil.getResult(inspectResourceVoList, searchVo);
+        searchVo.setLft(ciVo.getLft());
+        searchVo.setRht(ciVo.getRht());
+        return TableResultUtil.getResult(inspectReportService.getInspectResourceReportList(searchVo), searchVo);
     }
 
 

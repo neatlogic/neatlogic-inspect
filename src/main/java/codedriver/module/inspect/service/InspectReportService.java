@@ -38,7 +38,7 @@ public interface InspectReportService {
      * @param searchVo
      * @return
      */
-//    List<InspectResourceVo> getInspectAutoexecJobNodeList(Long jobId, ResourceSearchVo searchVo);
+    List<InspectResourceVo> getInspectAutoexecJobNodeList(Long jobId, ResourceSearchVo searchVo);
 
     /**
      * 获取最新资产巡检报告
@@ -46,7 +46,7 @@ public interface InspectReportService {
      * @param searchVo
      * @return
      */
-//    List<InspectResourceVo> getInspectResourceReportList(ResourceSearchVo searchVo);
+    List<InspectResourceVo> getInspectResourceReportList(ResourceSearchVo searchVo);
 
     /**
      * 根据resourceIdList 获取 对应巡检报告
