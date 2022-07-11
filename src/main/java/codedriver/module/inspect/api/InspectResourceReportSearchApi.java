@@ -115,7 +115,7 @@ public class InspectResourceReportSearchApi extends PrivateApiComponentBase {
         JSONArray idArray = paramObj.getJSONArray("idList");
         if (CollectionUtils.isNotEmpty(idArray)) {
             List<Long> idList = idArray.toJavaList(Long.class);
-            String sql = resourceCenterCommonGenerateSqlCrossoverService.getResourceListByIdListSql(inspectReportService.getTheadList(), idList, unavailableResourceInfoList, "resource_ipobject");
+            String sql = resourceCenterCommonGenerateSqlCrossoverService.getResourceListByIdListSql("resource_ipobject", inspectReportService.getTheadList(), idList, unavailableResourceInfoList);
             if (StringUtils.isBlank(sql)) {
                 return TableResultUtil.getResult(inspectResourceVoList, searchVo);
             }
@@ -130,13 +130,13 @@ public class InspectResourceReportSearchApi extends PrivateApiComponentBase {
         List<BiConsumer<ResourceSearchGenerateSqlUtil, PlainSelect>> biConsumerList = new ArrayList<>();
         JSONObject commonConditionObj = new JSONObject(paramObj);
         commonConditionObj.put("typeIdList", typeIdList);
-        biConsumerList.add(resourceCenterCommonGenerateSqlCrossoverService.getBiConsumerByCommonCondition(commonConditionObj, unavailableResourceInfoList));
+        biConsumerList.add(resourceCenterCustomGenerateSqlCrossoverService.getBiConsumerByCommonCondition(commonConditionObj, unavailableResourceInfoList));
         biConsumerList.add(resourceCenterCustomGenerateSqlCrossoverService.getBiConsumerByProtocolIdList(searchVo.getProtocolIdList(), unavailableResourceInfoList));
         biConsumerList.add(resourceCenterCustomGenerateSqlCrossoverService.getBiConsumerByTagIdList(searchVo.getTagIdList(), unavailableResourceInfoList));
         biConsumerList.add(resourceCenterCustomGenerateSqlCrossoverService.getBiConsumerByKeyword(searchVo.getKeyword(), unavailableResourceInfoList));
         biConsumerList.add(inspectReportService.getBiConsumerByInspectJobPhaseNodeStatusList(searchVo.getInspectJobPhaseNodeStatusList()));
 
-        List<ResourceVo> resourceList = resourceCenterCommonGenerateSqlCrossoverService.getResourceList(biConsumerList, searchVo, unavailableResourceInfoList, "resource_ipobject", inspectReportService.getTheadList());
+        List<ResourceVo> resourceList = resourceCenterCommonGenerateSqlCrossoverService.getResourceList("resource_ipobject", inspectReportService.getTheadList(), biConsumerList, searchVo, unavailableResourceInfoList);
         if (CollectionUtils.isEmpty(resourceList)) {
             TableResultUtil.getResult(resourceList, searchVo);
         }

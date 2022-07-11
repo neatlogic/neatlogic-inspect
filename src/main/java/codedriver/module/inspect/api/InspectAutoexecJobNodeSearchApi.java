@@ -137,14 +137,14 @@ public class InspectAutoexecJobNodeSearchApi extends PrivateApiComponentBase {
         JSONObject commonConditionObj = new JSONObject(paramObj);
         commonConditionObj.put("typeIdList", typeIdList);
         commonConditionObj.remove("inspectStatusList");
-        biConsumerList.add(resourceCenterCommonGenerateSqlCrossoverService.getBiConsumerByCommonCondition(commonConditionObj, unavailableResourceInfoList));
+        biConsumerList.add(resourceCenterCustomGenerateSqlCrossoverService.getBiConsumerByCommonCondition(commonConditionObj, unavailableResourceInfoList));
         biConsumerList.add(resourceCenterCustomGenerateSqlCrossoverService.getBiConsumerByProtocolIdList(searchVo.getProtocolIdList(), unavailableResourceInfoList));
         biConsumerList.add(resourceCenterCustomGenerateSqlCrossoverService.getBiConsumerByTagIdList(searchVo.getTagIdList(), unavailableResourceInfoList));
-        biConsumerList.add(resourceCenterCustomGenerateSqlCrossoverService.getBiConsumerByKeyword(paramObj, unavailableResourceInfoList));
+        biConsumerList.add(resourceCenterCustomGenerateSqlCrossoverService.getBiConsumerByKeyword(searchVo.getKeyword(), unavailableResourceInfoList));
         biConsumerList.add(getBiConsumerByJobIdAndInspectJobPhaseNodeStatusList(searchVo.getJobId(), searchVo.getInspectJobPhaseNodeStatusList()));
         biConsumerList.add(getBiConsumerByInspectStatusList(searchVo.getInspectStatusList()));
 
-        List<ResourceVo> resourceList = resourceCenterCommonGenerateSqlCrossoverService.getResourceList(biConsumerList, searchVo, unavailableResourceInfoList, "resource_ipobject", getTheadList());
+        List<ResourceVo> resourceList = resourceCenterCommonGenerateSqlCrossoverService.getResourceList("resource_ipobject", getTheadList(), biConsumerList, searchVo, unavailableResourceInfoList);
         if (CollectionUtils.isEmpty(resourceList)) {
             TableResultUtil.getResult(resourceList, searchVo);
         }

@@ -298,7 +298,7 @@ public class InspectReportServiceImpl implements InspectReportService {
         List<BiConsumer<ResourceSearchGenerateSqlUtil, PlainSelect>> biConsumerList = new ArrayList<>();
         JSONObject paramObj = (JSONObject) JSONObject.toJSON(searchVo);
         paramObj.put("typeIdList", typeIdList);
-        biConsumerList.add(resourceCenterCommonGenerateSqlCrossoverService.getBiConsumerByCommonCondition(paramObj, unavailableResourceInfoList));
+        biConsumerList.add(resourceCenterCustomGenerateSqlCrossoverService.getBiConsumerByCommonCondition(paramObj, unavailableResourceInfoList));
         biConsumerList.add(resourceCenterCustomGenerateSqlCrossoverService.getBiConsumerByProtocolIdList(searchVo.getProtocolIdList(), unavailableResourceInfoList));
         biConsumerList.add(resourceCenterCustomGenerateSqlCrossoverService.getBiConsumerByTagIdList(searchVo.getTagIdList(), unavailableResourceInfoList));
         biConsumerList.add(resourceCenterCustomGenerateSqlCrossoverService.getBiConsumerByKeyword(searchVo.getKeyword(), unavailableResourceInfoList));
@@ -378,7 +378,7 @@ public class InspectReportServiceImpl implements InspectReportService {
                 }
                 List<Long> resourceIdList = resourceCenterCommonGenerateSqlCrossoverService.getIdList(sql);
 //                List<Long> resourceIdList = inspectMapper.getInspectResourceIdList(searchVo);
-                sql = resourceCenterCommonGenerateSqlCrossoverService.getResourceListByIdListSql(getTheadList(), resourceIdList, unavailableResourceInfoList, "resource_ipobject");
+                sql = resourceCenterCommonGenerateSqlCrossoverService.getResourceListByIdListSql("resource_ipobject", getTheadList(), resourceIdList, unavailableResourceInfoList);
                 if (StringUtils.isBlank(sql)) {
                     continue;
                 }
