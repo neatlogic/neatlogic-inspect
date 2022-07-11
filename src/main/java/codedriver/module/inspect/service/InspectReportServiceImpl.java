@@ -11,7 +11,6 @@ import codedriver.framework.cmdb.crossover.IResourceCenterCommonGenerateSqlCross
 import codedriver.framework.cmdb.crossover.IResourceCenterCustomGenerateSqlCrossoverService;
 import codedriver.framework.cmdb.crossover.IResourceCenterResourceCrossoverService;
 import codedriver.framework.cmdb.dto.resourcecenter.*;
-import codedriver.framework.cmdb.dto.resourcecenter.config.ResourceEntityVo;
 import codedriver.framework.cmdb.dto.resourcecenter.config.ResourceInfo;
 import codedriver.framework.cmdb.dto.sync.CollectionVo;
 import codedriver.framework.cmdb.dto.tag.TagVo;
@@ -21,7 +20,6 @@ import codedriver.framework.crossover.CrossoverServiceFactory;
 import codedriver.framework.inspect.dao.mapper.InspectMapper;
 import codedriver.framework.inspect.dto.InspectResourceVo;
 import codedriver.framework.inspect.dto.InspectResourceScriptVo;
-import codedriver.framework.util.TableResultUtil;
 import codedriver.framework.util.TimeUtil;
 import codedriver.framework.util.excel.ExcelBuilder;
 import codedriver.framework.util.excel.SheetBuilder;
@@ -36,11 +34,9 @@ import net.sf.jsqlparser.expression.operators.conditional.AndExpression;
 import net.sf.jsqlparser.expression.operators.relational.EqualsTo;
 import net.sf.jsqlparser.expression.operators.relational.ExpressionList;
 import net.sf.jsqlparser.expression.operators.relational.InExpression;
-import net.sf.jsqlparser.expression.operators.relational.LikeExpression;
 import net.sf.jsqlparser.schema.Column;
 import net.sf.jsqlparser.schema.Table;
 import net.sf.jsqlparser.statement.select.*;
-import net.sf.jsqlparser.util.cnfexpression.MultiOrExpression;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -565,14 +561,6 @@ public class InspectReportServiceImpl implements InspectReportService {
         theadList.add(new ResourceInfo("resource_ipobject", "maintenance_window"));
         //16.描述
         theadList.add(new ResourceInfo("resource_ipobject", "description"));
-        //6.模块
-//        theadList.add(new ResourceInfo("resource_ipobject_appmodule", "app_module_id"));
-//        theadList.add(new ResourceInfo("resource_ipobject_appmodule", "app_module_name"));
-//        theadList.add(new ResourceInfo("resource_ipobject_appmodule", "app_module_abbr_name"));
-        //7.应用
-//        theadList.add(new ResourceInfo("resource_appmodule_appsystem", "app_system_id"));
-//        theadList.add(new ResourceInfo("resource_appmodule_appsystem", "app_system_name"));
-//        theadList.add(new ResourceInfo("resource_appmodule_appsystem", "app_system_abbr_name"));
         //8.IP列表
         theadList.add(new ResourceInfo("resource_ipobject_allip", "allip_id"));
         theadList.add(new ResourceInfo("resource_ipobject_allip", "allip_ip"));
@@ -588,9 +576,6 @@ public class InspectReportServiceImpl implements InspectReportService {
         theadList.add(new ResourceInfo("resource_ipobject_state", "state_id"));
         theadList.add(new ResourceInfo("resource_ipobject_state", "state_name"));
         theadList.add(new ResourceInfo("resource_ipobject_state", "state_label"));
-        //环境状态
-//        theadList.add(new ResourceInfo("resource_softwareservice_env", "env_id"));
-//        theadList.add(new ResourceInfo("resource_softwareservice_env", "env_name"));
         return theadList;
     }
 }

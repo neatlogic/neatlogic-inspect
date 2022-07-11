@@ -11,7 +11,6 @@ import codedriver.framework.cmdb.crossover.IResourceCenterResourceCrossoverServi
 import codedriver.framework.cmdb.dto.cientity.CiEntityInspectVo;
 import codedriver.framework.cmdb.dto.resourcecenter.AccountVo;
 import codedriver.framework.cmdb.dto.resourcecenter.ResourceVo;
-import codedriver.framework.cmdb.dto.resourcecenter.config.ResourceEntityVo;
 import codedriver.framework.cmdb.dto.resourcecenter.config.ResourceInfo;
 import codedriver.framework.cmdb.dto.tag.TagVo;
 import codedriver.framework.cmdb.utils.ResourceSearchGenerateSqlUtil;
@@ -27,22 +26,17 @@ import codedriver.framework.restful.annotation.*;
 import codedriver.framework.restful.constvalue.OperationTypeEnum;
 import codedriver.framework.restful.core.privateapi.PrivateApiComponentBase;
 import codedriver.framework.util.TableResultUtil;
-import codedriver.module.inspect.service.InspectReportService;
 import com.alibaba.fastjson.JSON;
-import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import net.sf.jsqlparser.expression.*;
 import net.sf.jsqlparser.expression.operators.conditional.AndExpression;
 import net.sf.jsqlparser.expression.operators.relational.EqualsTo;
 import net.sf.jsqlparser.expression.operators.relational.ExpressionList;
 import net.sf.jsqlparser.expression.operators.relational.InExpression;
-import net.sf.jsqlparser.expression.operators.relational.LikeExpression;
 import net.sf.jsqlparser.schema.Column;
 import net.sf.jsqlparser.schema.Table;
 import net.sf.jsqlparser.statement.select.*;
-import net.sf.jsqlparser.util.cnfexpression.MultiOrExpression;
 import org.apache.commons.collections4.CollectionUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
@@ -58,9 +52,6 @@ import java.util.stream.Collectors;
 @AuthAction(action = INSPECT_BASE.class)
 @OperationType(type = OperationTypeEnum.SEARCH)
 public class InspectAutoexecJobNodeSearchApi extends PrivateApiComponentBase {
-
-    @Resource
-    InspectReportService inspectReportService;
 
     @Resource
     AutoexecJobMapper autoexecJobMapper;
@@ -107,10 +98,8 @@ public class InspectAutoexecJobNodeSearchApi extends PrivateApiComponentBase {
     @Description(desc = "巡检作业节点资产查询接口")
     @Override
     public Object myDoService(JSONObject paramObj) throws Exception {
-//        long startTime = System.currentTimeMillis();
         InspectResourceSearchVo searchVo = JSON.toJavaObject(paramObj, InspectResourceSearchVo.class);
         Long jobId = searchVo.getJobId();
-//        System.out.println("jobId=" + jobId);
         AutoexecJobVo jobVo = autoexecJobMapper.getJobInfo(jobId);
         if (jobVo == null) {
             throw new AutoexecJobNotFoundException(jobId.toString());
@@ -128,11 +117,9 @@ public class InspectAutoexecJobNodeSearchApi extends PrivateApiComponentBase {
         IResourceCenterCommonGenerateSqlCrossoverService resourceCenterCommonGenerateSqlCrossoverService = CrossoverServiceFactory.getApi(IResourceCenterCommonGenerateSqlCrossoverService.class);
         IResourceCenterCustomGenerateSqlCrossoverService resourceCenterCustomGenerateSqlCrossoverService = CrossoverServiceFactory.getApi(IResourceCenterCustomGenerateSqlCrossoverService.class);
         List<Long> typeIdList = resourceCenterResourceCrossoverService.getDownwardCiIdListByCiIdList(Arrays.asList(searchVo.getTypeId()));
-//        System.out.println("0:" + (System.currentTimeMillis() - startTime));
         searchVo.setTypeIdList(typeIdList);
         List<ResourceInfo> unavailableResourceInfoList = new ArrayList<>();
         List<InspectResourceVo> inspectResourceList = new ArrayList<>();
-//        JSONObject paramObj = (JSONObject) JSONObject.toJSON(searchVo);
         List<BiConsumer<ResourceSearchGenerateSqlUtil, PlainSelect>> biConsumerList = new ArrayList<>();
         JSONObject commonConditionObj = new JSONObject(paramObj);
         commonConditionObj.put("typeIdList", typeIdList);
@@ -183,99 +170,6 @@ public class InspectAutoexecJobNodeSearchApi extends PrivateApiComponentBase {
             }
             inspectResourceList.add(inspectResourceVo);
         }
-//        String sql = getResourceCountSql(searchVo, unavailableResourceInfoList);
-////        System.out.println("0.5:" + (System.currentTimeMillis() - startTime));
-//        if (StringUtils.isBlank(sql)) {
-//            TableResultUtil.getResult(inspectResourceVoList, searchVo);
-//        }
-////        System.out.println(sql + ";");
-//        int count = inspectMapper.getInspectResourceCountNew(sql);
-////        System.out.println("1:" + (System.currentTimeMillis() - startTime));
-////        int resourceCount = inspectMapper.getInspectAutoexecJobNodeResourceCount(searchVo, jobId, TenantContext.get().getDataDbName());
-////        if (!Objects.equals(count, resourceCount)) {
-////            System.out.println("count=" + count);
-////            System.out.println("resourceCount=" + resourceCount);
-////        }
-//        if (count == 0) {
-//            return TableResultUtil.getResult(inspectResourceVoList, searchVo);
-//        }
-//        searchVo.setRowNum(count);
-//        sql = getResourceIdListSql(searchVo, unavailableResourceInfoList);
-//        if (StringUtils.isBlank(sql)) {
-//            return TableResultUtil.getResult(inspectResourceVoList, searchVo);
-//        }
-////        System.out.println(sql + ";");
-//        List<Long> idList = inspectMapper.getInspectResourceIdListNew(sql);
-////        System.out.println("2:" + (System.currentTimeMillis() - startTime));
-////        List<Long> resourceIdList = inspectMapper.getInspectAutoexecJobNodeResourceIdList(searchVo, jobId, TenantContext.get().getDataDbName());
-////        if (!Objects.equals(idList.size(), resourceIdList.size())) {
-////            System.out.println("idList.size()=" + idList.size());
-////            System.out.println("resourceIdList.size()=" + resourceIdList.size());
-////        }
-////        for (int i = 0; i < idList.size(); i++) {
-////            if (!Objects.equals(resourceIdList.get(i), idList.get(i))) {
-////                System.out.println("resourceIdList[" + i + "]=" + resourceIdList.get(i));
-////                System.out.println("idList[" + i + "]=" + idList.get(i));
-////            }
-////        }
-//        if (CollectionUtils.isEmpty(idList)) {
-//            return TableResultUtil.getResult(inspectResourceVoList, searchVo);
-//        }
-//        sql = getResourceListByIdListSql(idList, unavailableResourceInfoList);
-//        if (StringUtils.isBlank(sql)) {
-//            return TableResultUtil.getResult(inspectResourceVoList, searchVo);
-//        }
-////        System.out.println(sql + ";");
-//        inspectResourceVoList = inspectMapper.getInspectResourceListByIdListNew(sql);
-////        System.out.println("3:" + (System.currentTimeMillis() - startTime));
-//        if (CollectionUtils.isNotEmpty(inspectResourceVoList)) {
-//            inspectReportService.addInspectResourceOtherInfo(inspectResourceVoList);
-////            System.out.println("4:" + (System.currentTimeMillis() - startTime));
-//            List<CiEntityInspectVo> ciEntityInspectList = inspectMapper.getCiEntityInspectByJobIdAndCiEntityIdList(searchVo.getJobId(), idList);
-////            System.out.println("5:" + (System.currentTimeMillis() - startTime));
-//            List<AutoexecJobPhaseNodeVo> autoexecJobPhaseNodeList = autoexecJobMapper.getAutoexecJobNodeListByJobIdAndResourceIdList(searchVo.getJobId(), idList);
-////            System.out.println("6:" + (System.currentTimeMillis() - startTime));
-//            Map<Long, AutoexecJobPhaseNodeVo> autoexecJobPhaseNodeMap = autoexecJobPhaseNodeList.stream().collect(Collectors.toMap(e -> e.getResourceId(), e -> e));
-//            Map<Long, CiEntityInspectVo> ciEntityInspectMap = ciEntityInspectList.stream().collect(Collectors.toMap(e -> e.getCiEntityId(), e -> e));
-//            for (InspectResourceVo inspectResourceVo : inspectResourceVoList) {
-//                CiEntityInspectVo ciEntityInspectVo = ciEntityInspectMap.get(inspectResourceVo.getId());
-//                if (ciEntityInspectVo != null) {
-//                    inspectResourceVo.setInspectStatus(ciEntityInspectVo.getInspectStatus());
-//                    inspectResourceVo.setInspectTime(ciEntityInspectVo.getInspectTime());
-//                }
-//                AutoexecJobPhaseNodeVo autoexecJobPhaseNodeVo = autoexecJobPhaseNodeMap.get(inspectResourceVo.getId());
-//                if (autoexecJobPhaseNodeVo != null) {
-////                    autoexecJobPhaseNodeVo.setResourceId(null);
-//                    inspectResourceVo.setJobPhaseNodeVo(autoexecJobPhaseNodeVo);
-//                } else {
-//                    inspectResourceVo.setJobPhaseNodeVo(null);
-//                }
-//            }
-//        }
-////        List<InspectResourceVo> inspectResourceVoList2 = inspectMapper.getInspectResourceListByIdListAndJobId(resourceIdList, jobId, TenantContext.get().getDataDbName());
-////        Map<Long, InspectResourceVo> inspectResourceMap = inspectResourceVoList2.stream().collect(Collectors.toMap(InspectResourceVo::getId, e -> e));
-////        List<InspectResourceScriptVo> resourceScriptVoList = inspectMapper.getResourceScriptListByResourceIdList(resourceIdList);
-////        if (CollectionUtils.isNotEmpty(resourceScriptVoList)) {
-////            for (InspectResourceScriptVo resourceScriptVo : resourceScriptVoList) {
-////                inspectResourceMap.get(resourceScriptVo.getResourceId()).setScript(resourceScriptVo);
-////            }
-////        }
-////        Map<Long, List<AccountVo>> resourceAccountVoMap = resourceCenterResourceCrossoverService.getResourceAccountByResourceIdList(resourceIdList);
-////        for (InspectResourceVo inspectResourceVo : inspectResourceVoList2) {
-////            Long id = inspectResourceVo.getId();
-////            List<AccountVo> accountVoList = resourceAccountVoMap.get(id);
-////            if (CollectionUtils.isNotEmpty(accountVoList)) {
-////                inspectResourceVo.setAccountList(accountVoList);
-////            }
-////        }
-////        for (int i = 0; i < inspectResourceVoList.size(); i++) {
-////            InspectResourceVo resourceVo3 = inspectResourceVoList2.get(i);
-////            InspectResourceVo resourceVo = inspectResourceVoList.get(i);
-////            if (!Objects.equals(JSONObject.toJSONString(resourceVo3), JSONObject.toJSONString(resourceVo))) {
-////                System.out.println("resourceVo3[" + i + "]=" + JSONObject.toJSONString(resourceVo3));
-////                System.out.println("resourceVo [" + i + "]=" + JSONObject.toJSONString(resourceVo));
-////            }
-////        }
         return TableResultUtil.getResult(inspectResourceList, searchVo);
     }
 
@@ -303,14 +197,6 @@ public class InspectAutoexecJobNodeSearchApi extends PrivateApiComponentBase {
         theadList.add(new ResourceInfo("resource_ipobject", "maintenance_window"));
         //16.描述
         theadList.add(new ResourceInfo("resource_ipobject", "description"));
-        //6.模块
-//        theadList.add(new ResourceInfo("resource_ipobject_appmodule", "app_module_id"));
-//        theadList.add(new ResourceInfo("resource_ipobject_appmodule", "app_module_name"));
-//        theadList.add(new ResourceInfo("resource_ipobject_appmodule", "app_module_abbr_name"));
-        //7.应用
-//        theadList.add(new ResourceInfo("resource_appmodule_appsystem", "app_system_id"));
-//        theadList.add(new ResourceInfo("resource_appmodule_appsystem", "app_system_name"));
-//        theadList.add(new ResourceInfo("resource_appmodule_appsystem", "app_system_abbr_name"));
         //8.IP列表
         theadList.add(new ResourceInfo("resource_ipobject_allip", "allip_id"));
         theadList.add(new ResourceInfo("resource_ipobject_allip", "allip_ip"));
@@ -326,9 +212,6 @@ public class InspectAutoexecJobNodeSearchApi extends PrivateApiComponentBase {
         theadList.add(new ResourceInfo("resource_ipobject_state", "state_id"));
         theadList.add(new ResourceInfo("resource_ipobject_state", "state_name"));
         theadList.add(new ResourceInfo("resource_ipobject_state", "state_label"));
-        //环境状态
-//        theadList.add(new ResourceInfo("resource_softwareservice_env", "env_id"));
-//        theadList.add(new ResourceInfo("resource_softwareservice_env", "env_name"));
         return theadList;
     }
 
