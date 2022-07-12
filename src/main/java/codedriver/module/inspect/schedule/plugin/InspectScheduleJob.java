@@ -127,7 +127,7 @@ public class InspectScheduleJob extends JobBase {
             UserContext.init(fcuVo, SystemUser.SYSTEM.getTimezone());
             UserContext.get().setToken("GZIP_" + LoginAuthHandlerBase.buildJwt(fcuVo).getCc());
             IAutoexecJobActionCrossoverService autoexecJobActionCrossoverService = CrossoverServiceFactory.getApi(IAutoexecJobActionCrossoverService.class);
-            AutoexecJobVo jobVo = autoexecJobActionCrossoverService.validateCreateJobFromCombop(paramObj, false);
+            AutoexecJobVo jobVo = autoexecJobActionCrossoverService.validateAndCreateJobFromCombop(paramObj, false);
             jobVo.setAction(JobAction.FIRE.getValue());
             IAutoexecJobActionHandler fireAction = AutoexecJobActionHandlerFactory.getAction(JobAction.FIRE.getValue());
             fireAction.doService(jobVo);
