@@ -5,9 +5,10 @@ import codedriver.framework.auth.core.AuthAction;
 import codedriver.framework.autoexec.dao.mapper.AutoexecScriptMapper;
 import codedriver.framework.autoexec.dto.script.AutoexecScriptVo;
 import codedriver.framework.autoexec.exception.AutoexecScriptNotFoundException;
-import codedriver.framework.cmdb.dao.mapper.resourcecenter.ResourceCenterMapper;
+import codedriver.framework.cmdb.crossover.IResourceCrossoverMapper;
 import codedriver.framework.cmdb.exception.resourcecenter.ResourceNotFoundException;
 import codedriver.framework.common.constvalue.ApiParamType;
+import codedriver.framework.crossover.CrossoverServiceFactory;
 import codedriver.framework.inspect.auth.INSPECT_MODIFY;
 import codedriver.framework.inspect.dao.mapper.InspectMapper;
 import codedriver.framework.restful.annotation.Description;
@@ -28,9 +29,6 @@ import javax.annotation.Resource;
 @AuthAction(action = INSPECT_MODIFY.class)
 @OperationType(type = OperationTypeEnum.UPDATE)
 public class SaveInspectAccessEndPointScriptApi extends PrivateApiComponentBase {
-
-    @Resource
-    private ResourceCenterMapper resourceCenterMapper;
 
     @Resource
     private AutoexecScriptMapper autoexecScriptMapper;
@@ -64,7 +62,8 @@ public class SaveInspectAccessEndPointScriptApi extends PrivateApiComponentBase 
         Long resourceId = paramObj.getLong("resourceId");
         JSONObject config = paramObj.getJSONObject("config");
         String schemaName = TenantContext.get().getDataDbName();
-        if (resourceCenterMapper.checkResourceIsExists(resourceId, schemaName) == 0) {
+        IResourceCrossoverMapper resourceCrossoverMapper = CrossoverServiceFactory.getApi(IResourceCrossoverMapper.class);
+        if (resourceCrossoverMapper.checkResourceIsExists(resourceId, schemaName) == 0) {
             throw new ResourceNotFoundException(resourceId);
         }
         inspectMapper.deleteResourceScriptByResourceId(resourceId);
