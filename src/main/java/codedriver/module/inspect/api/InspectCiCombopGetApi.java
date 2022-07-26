@@ -10,7 +10,7 @@ import codedriver.framework.auth.core.AuthAction;
 import codedriver.framework.autoexec.dao.mapper.AutoexecCombopMapper;
 import codedriver.framework.autoexec.dto.combop.AutoexecCombopVo;
 import codedriver.framework.cmdb.crossover.ICiCrossoverMapper;
-import codedriver.framework.cmdb.dao.mapper.resourcecenter.ResourceCenterMapper;
+import codedriver.framework.cmdb.crossover.IResourceCrossoverMapper;
 import codedriver.framework.cmdb.dto.ci.CiVo;
 import codedriver.framework.cmdb.dto.resourcecenter.ResourceVo;
 import codedriver.framework.cmdb.exception.ci.CiNotFoundException;
@@ -40,8 +40,6 @@ public class InspectCiCombopGetApi extends PrivateApiComponentBase {
     @Resource
     AutoexecCombopMapper autoexecCombopMapper;
     @Resource
-    ResourceCenterMapper resourceCenterMapper;
-    @Resource
     InspectMapper inspectMapper;
 
     @Override
@@ -68,7 +66,8 @@ public class InspectCiCombopGetApi extends PrivateApiComponentBase {
         Long ciId = paramObj.getLong("ciId");
         Long resourceId = paramObj.getLong("resourceId");
         if(resourceId != null){
-            List<ResourceVo> resourceVoList = resourceCenterMapper.getResourceByIdList(Collections.singletonList(resourceId), TenantContext.get().getDataDbName());
+            IResourceCrossoverMapper resourceCrossoverMapper = CrossoverServiceFactory.getApi(IResourceCrossoverMapper.class);
+            List<ResourceVo> resourceVoList = resourceCrossoverMapper.getResourceByIdList(Collections.singletonList(resourceId), TenantContext.get().getDataDbName());
             if(CollectionUtils.isEmpty(resourceVoList)){
                 throw new ResourceNotFoundException(resourceId);
             }

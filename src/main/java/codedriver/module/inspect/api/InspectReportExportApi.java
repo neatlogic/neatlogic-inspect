@@ -7,9 +7,10 @@ package codedriver.module.inspect.api;
 
 import codedriver.framework.asynchronization.threadlocal.TenantContext;
 import codedriver.framework.auth.core.AuthAction;
-import codedriver.framework.cmdb.dao.mapper.resourcecenter.ResourceCenterMapper;
+import codedriver.framework.cmdb.crossover.IResourceCrossoverMapper;
 import codedriver.framework.cmdb.dto.resourcecenter.ResourceVo;
 import codedriver.framework.common.constvalue.ApiParamType;
+import codedriver.framework.crossover.CrossoverServiceFactory;
 import codedriver.framework.dao.mapper.UserMapper;
 import codedriver.framework.dto.UserVo;
 import codedriver.framework.inspect.auth.INSPECT_BASE;
@@ -68,9 +69,6 @@ public class InspectReportExportApi extends PrivateBinaryStreamApiComponentBase 
     private UserMapper userMapper;
 
     @Resource
-    private ResourceCenterMapper resourceCenterMapper;
-
-    @Resource
     private InspectReportService inspectReportService;
 
     @Override
@@ -102,7 +100,8 @@ public class InspectReportExportApi extends PrivateBinaryStreamApiComponentBase 
         String id = paramObj.getString("id");
         Long jobId = paramObj.getLong("jobId");
         String type = paramObj.getString("type");
-        ResourceVo resource = resourceCenterMapper.getResourceById(resourceId, TenantContext.get().getDataDbName());
+        IResourceCrossoverMapper resourceCrossoverMapper = CrossoverServiceFactory.getApi(IResourceCrossoverMapper.class);
+        ResourceVo resource = resourceCrossoverMapper.getResourceById(resourceId, TenantContext.get().getDataDbName());
         String fileName = resourceId.toString();
         if (resource != null && resource.getName() != null) {
             fileName = resource.getName();
