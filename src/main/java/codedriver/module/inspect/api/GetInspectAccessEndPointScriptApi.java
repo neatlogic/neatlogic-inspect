@@ -2,7 +2,8 @@ package codedriver.module.inspect.api;
 
 import codedriver.framework.asynchronization.threadlocal.TenantContext;
 import codedriver.framework.auth.core.AuthAction;
-import codedriver.framework.cmdb.dao.mapper.resourcecenter.ResourceCenterMapper;
+import codedriver.framework.cmdb.crossover.IResourceCrossoverMapper;
+import codedriver.framework.crossover.CrossoverServiceFactory;
 import codedriver.framework.inspect.dao.mapper.InspectMapper;
 import codedriver.framework.inspect.dto.InspectResourceScriptVo;
 import codedriver.framework.cmdb.exception.resourcecenter.ResourceNotFoundException;
@@ -20,9 +21,6 @@ import javax.annotation.Resource;
 @AuthAction(action = INSPECT_MODIFY.class)
 @OperationType(type = OperationTypeEnum.SEARCH)
 public class GetInspectAccessEndPointScriptApi extends PrivateApiComponentBase {
-
-    @Resource
-    private ResourceCenterMapper resourceCenterMapper;
 
     @Resource
     private InspectMapper inspectMapper;
@@ -53,7 +51,8 @@ public class GetInspectAccessEndPointScriptApi extends PrivateApiComponentBase {
     public Object myDoService(JSONObject paramObj) throws Exception {
         Long resourceId = paramObj.getLong("resourceId");
         String schemaName = TenantContext.get().getDataDbName();
-        if (resourceCenterMapper.checkResourceIsExists(resourceId, schemaName) == 0) {
+        IResourceCrossoverMapper resourceCrossoverMapper = CrossoverServiceFactory.getApi(IResourceCrossoverMapper.class);
+        if (resourceCrossoverMapper.checkResourceIsExists(resourceId, schemaName) == 0) {
             throw new ResourceNotFoundException(resourceId);
         }
         return inspectMapper.getResourceScriptByResourceId(resourceId);
