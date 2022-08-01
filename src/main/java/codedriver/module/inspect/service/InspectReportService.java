@@ -101,10 +101,4 @@ public interface InspectReportService {
      * @return
      */
     Workbook getInspectNewProblemReportWorkbook(ResourceSearchVo searchVo, Integer isNeedAlertDetail);
-
-    BiConsumer<ResourceSearchGenerateSqlUtil, PlainSelect> getBiConsumerByInspectJobPhaseNodeStatusList(List<String> inspectJobPhaseNodeStatusList);
-
-    List<InspectResourceVo> convertInspectResourceList(List<ResourceVo> resourceList);
-
-    List<ResourceInfo> getTheadList();
 }
