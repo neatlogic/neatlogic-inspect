@@ -85,7 +85,7 @@ public class ListInspectConfigurationFileResourceApi extends PrivateApiComponent
             @Param(explode = BasePageVo.class),
             @Param(name = "tbodyList", explode = ResourceVo[].class, desc = "数据列表")
     })
-    @Description(desc = "获取巡检资产报告接口")
+    @Description(desc = "inspect/configurationfile/resource/list")
     @Override
     public Object myDoService(JSONObject paramObj) throws Exception {
         List<InspectResourceVo> inspectResourceList = new ArrayList<>();
