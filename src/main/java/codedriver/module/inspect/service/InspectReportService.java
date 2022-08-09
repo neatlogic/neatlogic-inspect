@@ -1,6 +1,5 @@
 package codedriver.module.inspect.service;
 
-import codedriver.framework.autoexec.dto.job.AutoexecJobPhaseNodeVo;
 import codedriver.framework.cmdb.dto.resourcecenter.ResourceSearchVo;
 import codedriver.framework.cmdb.dto.resourcecenter.ResourceVo;
 import codedriver.framework.cmdb.dto.resourcecenter.config.ResourceInfo;
@@ -102,11 +101,4 @@ public interface InspectReportService {
      * @return
      */
     Workbook getInspectNewProblemReportWorkbook(ResourceSearchVo searchVo, Integer isNeedAlertDetail);
-
-    /**
-     * 通过资源id列表查询巡检作业状态列表
-     * @param resourceIdList
-     * @return
-     */
-    List<AutoexecJobPhaseNodeVo> getAutoexecJobPhaseNodeByResourceIdList(List<Long> resourceIdList);
 }
