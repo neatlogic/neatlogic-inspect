@@ -432,4 +432,11 @@ public class InspectReportServiceImpl implements InspectReportService {
         dataMap.put("tagList", inspectResourceVo.getTagList());
         dataMap.put("maintenanceWindow", inspectResourceVo.getMaintenanceWindow());
     }
+
+    @Override
+    public List<AutoexecJobPhaseNodeVo> getAutoexecJobPhaseNodeByResourceIdList(List<Long> resourceIdList) {
+
+        List<AutoexecJobPhaseNodeVo> autoexecJobPhaseNodeList = autoexecJobMapper.getAutoexecJobNodeListByResourceIdList(resourceIdList);
+        return null;
+    }
 }
