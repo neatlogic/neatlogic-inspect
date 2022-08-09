@@ -93,7 +93,7 @@ public class ListInspectConfigurationFileResourceApi extends PrivateApiComponent
         ResourceSearchVo searchVo = JSONObject.toJavaObject(paramObj, ResourceSearchVo.class);
         if (CollectionUtils.isNotEmpty(searchVo.getIdList())) {
             List<Long> idList = searchVo.getIdList();
-            inspectResourceList = inspectMapper.getInspectConfigurationFileResourceListByIdList(idList, TenantContext.get().getDataDbName());
+            inspectResourceList = inspectMapper.getInspectResourceListByIdList(idList, TenantContext.get().getDataDbName());
         } else {
             Long typeId = searchVo.getTypeId();
             ICiCrossoverMapper ciCrossoverMapper = CrossoverServiceFactory.getApi(ICiCrossoverMapper.class);
@@ -105,30 +105,12 @@ public class ListInspectConfigurationFileResourceApi extends PrivateApiComponent
             searchVo.setRht(ciVo.getRht());
             List<Long> typeIdList = resourceCenterResourceCrossoverService.getDownwardCiIdListByCiIdList(Arrays.asList(searchVo.getTypeId()));
             searchVo.setTypeIdList(typeIdList);
-            int count = inspectMapper.getInspectConfigurationFileResourceCount(searchVo);
+            int count = inspectMapper.getInspectResourceCount(searchVo);
             if (count > 0) {
                 searchVo.setRowNum(count);
-                List<Long> idList = inspectMapper.getInspectConfigurationFileResourceIdList(searchVo);
+                List<Long> idList = inspectMapper.getInspectResourceIdList(searchVo);
                 if (CollectionUtils.isNotEmpty(idList)) {
-                    inspectResourceList = inspectMapper.getInspectConfigurationFileResourceListByIdList(idList, TenantContext.get().getDataDbName());
-                }
-            }
-        }
-        if (CollectionUtils.isNotEmpty(inspectResourceList)) {
-            //补充 文件是否变更 巡检作业状态 标签
-            List<Long> idList = inspectResourceList.stream().map(InspectResourceVo::getId).collect(Collectors.toList());
-            List<AutoexecJobPhaseNodeVo> autoexecJobPhaseNodeList = autoexecJobMapper.getAutoexecJobNodeListByResourceIdList(idList);
-            Map<Long, AutoexecJobPhaseNodeVo> autoexecJobPhaseNodeMap = autoexecJobPhaseNodeList.stream().collect(Collectors.toMap(e -> e.getResourceId(), e -> e));
-            Map<Long, List<TagVo>> tagMap = resourceCenterResourceCrossoverService.getResourceTagByResourceIdList(idList);
-            for (InspectResourceVo inspectResourceVo : inspectResourceList) {
-                Long id = inspectResourceVo.getId();
-                AutoexecJobPhaseNodeVo autoexecJobPhaseNodeVo = autoexecJobPhaseNodeMap.get(id);
-                if (autoexecJobPhaseNodeVo != null) {
-                    inspectResourceVo.setJobPhaseNodeVo(autoexecJobPhaseNodeVo);
-                }
-                List<TagVo> tagList = tagMap.get(id);
-                if (CollectionUtils.isNotEmpty(tagList)) {
-                    inspectResourceVo.setTagList(tagList.stream().map(TagVo::getName).collect(Collectors.toList()));
+                    inspectResourceList = inspectMapper.getInspectResourceListByIdList(idList, TenantContext.get().getDataDbName());
                 }
             }
         }
