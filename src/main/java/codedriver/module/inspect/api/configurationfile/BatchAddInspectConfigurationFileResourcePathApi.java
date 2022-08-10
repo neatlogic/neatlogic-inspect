@@ -30,8 +30,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -125,8 +124,18 @@ public class BatchAddInspectConfigurationFileResourcePathApi extends PrivateApiC
      * @param pathArray 路径列表
      */
     private void addPath(List<Long> resourceIdList, JSONArray pathArray) {
+        Map<Long, List<InspectResourceConfigurationFilePathVo>> inspectResourceConfigurationFilePathMap = new HashMap<>();
+        List<InspectResourceConfigurationFilePathVo> inspectResourceConfigurationFilePathList = inspectConfigurationFileMapper.getInpectResourceConfigurationFilePathListByResourceIdList(resourceIdList);
+        for (InspectResourceConfigurationFilePathVo pathVo : inspectResourceConfigurationFilePathList) {
+            Long resourceId = pathVo.getResourceId();
+            inspectResourceConfigurationFilePathMap.computeIfAbsent(resourceId, key -> new ArrayList<>()).add(pathVo);
+        }
         for (Long resourceId : resourceIdList) {
-            List<String> oldPathList = inspectConfigurationFileMapper.getPathListByResourceId(resourceId);
+            List<String> oldPathList = new ArrayList<>();
+            inspectResourceConfigurationFilePathList = inspectResourceConfigurationFilePathMap.get(resourceId);
+            if (CollectionUtils.isNotEmpty(inspectResourceConfigurationFilePathList)) {
+                oldPathList = inspectResourceConfigurationFilePathList.stream().map(InspectResourceConfigurationFilePathVo::getPath).collect(Collectors.toList());
+            }
             List<String> pathList = pathArray.toJavaList(String.class);
             List<String> needInsertPathList = ListUtils.removeAll(pathList, oldPathList);
             for (String path : needInsertPathList) {

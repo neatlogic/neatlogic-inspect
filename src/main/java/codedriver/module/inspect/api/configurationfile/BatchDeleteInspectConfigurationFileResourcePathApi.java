@@ -30,9 +30,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -128,8 +126,14 @@ public class BatchDeleteInspectConfigurationFileResourcePathApi extends PrivateA
      * @param pathArray 路径列表
      */
     private void deletePath(List<Long> resourceIdList, JSONArray pathArray) {
+        Map<Long, List<InspectResourceConfigurationFilePathVo>> inspectResourceConfigurationFilePathMap = new HashMap<>();
+        List<InspectResourceConfigurationFilePathVo> inspectResourceConfigurationFilePathList = inspectConfigurationFileMapper.getInpectResourceConfigurationFilePathListByResourceIdList(resourceIdList);
+        for (InspectResourceConfigurationFilePathVo pathVo : inspectResourceConfigurationFilePathList) {
+            Long resourceId = pathVo.getResourceId();
+            inspectResourceConfigurationFilePathMap.computeIfAbsent(resourceId, key -> new ArrayList<>()).add(pathVo);
+        }
         for (Long resourceId : resourceIdList) {
-            List<InspectResourceConfigurationFilePathVo> inspectResourceConfigurationFilePathList = inspectConfigurationFileMapper.getInpectResourceConfigurationFilePathListByResourceId(resourceId);
+            inspectResourceConfigurationFilePathList = inspectResourceConfigurationFilePathMap.get(resourceId);
             if (CollectionUtils.isEmpty(inspectResourceConfigurationFilePathList)) {
                 continue;
             }

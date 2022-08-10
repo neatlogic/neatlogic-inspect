@@ -15,6 +15,8 @@ public interface InspectConfigurationFileMapper {
 
     List<InspectResourceConfigurationFilePathVo> getInpectResourceConfigurationFilePathListByResourceId(Long resourceId);
 
+    List<InspectResourceConfigurationFilePathVo> getInpectResourceConfigurationFilePathListByResourceIdList(List<Long> resourceIdList);
+
     int insertInpectResourceConfigurationFilePath(InspectResourceConfigurationFilePathVo pathVo);
 
     int deleteResourceConfigFilePathByResourceId(Long resourceId);

@@ -21,6 +21,21 @@
         WHERE `resource_id` = #{value}
     </select>
 
+    <select id="getInpectResourceConfigurationFilePathListByResourceIdList" parameterType="java.lang.Long" resultType="codedriver.framework.inspect.dto.InspectResourceConfigurationFilePathVo">
+        SELECT
+            `id`,
+            `resource_id` AS resourceId,
+            `path`,
+            `md5`,
+            `inspect_time` AS inspectTime,
+            `file_id` AS fileId
+        FROM `inspect_resource_configuration_file_path`
+        WHERE `resource_id` IN
+        <foreach collection="list" item="resourceId" open="(" separator="," close=")">
+            #{resourceId}
+        </foreach>
+    </select>
+
     <insert id="insertInpectResourceConfigurationFilePath" parameterType="codedriver.framework.inspect.dto.InspectResourceConfigurationFilePathVo">
         INSERT INTO `inspect_resource_configuration_file_path` (
             `id`,
