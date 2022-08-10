@@ -3,18 +3,15 @@
  * 本内容仅限于深圳市赞悦科技有限公司内部传阅，禁止外泄以及用于其他的商业项目。
  */
 
-package codedriver.module.inspect.api;
+package codedriver.module.inspect.api.configurationfile;
 
 import codedriver.framework.asynchronization.threadlocal.TenantContext;
 import codedriver.framework.auth.core.AuthAction;
-import codedriver.framework.autoexec.dao.mapper.AutoexecJobMapper;
-import codedriver.framework.autoexec.dto.job.AutoexecJobPhaseNodeVo;
 import codedriver.framework.cmdb.crossover.ICiCrossoverMapper;
 import codedriver.framework.cmdb.crossover.IResourceCenterResourceCrossoverService;
 import codedriver.framework.cmdb.dto.ci.CiVo;
 import codedriver.framework.cmdb.dto.resourcecenter.ResourceSearchVo;
 import codedriver.framework.cmdb.dto.resourcecenter.ResourceVo;
-import codedriver.framework.cmdb.dto.tag.TagVo;
 import codedriver.framework.cmdb.exception.ci.CiNotFoundException;
 import codedriver.framework.common.constvalue.ApiParamType;
 import codedriver.framework.common.dto.BasePageVo;
@@ -34,8 +31,6 @@ import javax.annotation.Resource;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
 
 @Service
 @AuthAction(action = INSPECT_BASE.class)
@@ -44,9 +39,6 @@ public class ListInspectConfigurationFileResourceApi extends PrivateApiComponent
 
     @Resource
     private InspectMapper inspectMapper;
-
-    @Resource
-    private AutoexecJobMapper autoexecJobMapper;
 
     @Override
     public String getToken() {
@@ -89,7 +81,6 @@ public class ListInspectConfigurationFileResourceApi extends PrivateApiComponent
     @Override
     public Object myDoService(JSONObject paramObj) throws Exception {
         List<InspectResourceVo> inspectResourceList = new ArrayList<>();
-        IResourceCenterResourceCrossoverService resourceCenterResourceCrossoverService = CrossoverServiceFactory.getApi(IResourceCenterResourceCrossoverService.class);
         ResourceSearchVo searchVo = JSONObject.toJavaObject(paramObj, ResourceSearchVo.class);
         if (CollectionUtils.isNotEmpty(searchVo.getIdList())) {
             List<Long> idList = searchVo.getIdList();
@@ -103,6 +94,7 @@ public class ListInspectConfigurationFileResourceApi extends PrivateApiComponent
             }
             searchVo.setLft(ciVo.getLft());
             searchVo.setRht(ciVo.getRht());
+            IResourceCenterResourceCrossoverService resourceCenterResourceCrossoverService = CrossoverServiceFactory.getApi(IResourceCenterResourceCrossoverService.class);
             List<Long> typeIdList = resourceCenterResourceCrossoverService.getDownwardCiIdListByCiIdList(Arrays.asList(searchVo.getTypeId()));
             searchVo.setTypeIdList(typeIdList);
             int count = inspectMapper.getInspectResourceCount(searchVo);

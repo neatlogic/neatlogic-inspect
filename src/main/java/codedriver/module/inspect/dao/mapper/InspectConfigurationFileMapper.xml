@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="codedriver.module.inspect.dao.mapper.InspectConfigurationFileMapper">
+
+    <select id="getPathListByResourceId" parameterType="java.lang.Long" resultType="java.lang.String">
+        SELECT
+            `path`
+        FROM `inspect_resource_configuration_file_path`
+        WHERE `resource_id` = #{value}
+    </select>
+
+    <select id="getInpectResourceConfigurationFilePathListByResourceId" parameterType="java.lang.Long" resultType="codedriver.framework.inspect.dto.InspectResourceConfigurationFilePathVo">
+        SELECT
+            `id`,
+            `resource_id` AS resourceId,
+            `path`,
+            `md5`,
+            `inspect_time` AS inspectTime,
+            `file_id` AS fileId
+        FROM `inspect_resource_configuration_file_path`
+        WHERE `resource_id` = #{value}
+    </select>
+
+    <select id="getInpectResourceConfigurationFilePathListByResourceIdList" parameterType="java.lang.Long" resultType="codedriver.framework.inspect.dto.InspectResourceConfigurationFilePathVo">
+        SELECT
+            `id`,
+            `resource_id` AS resourceId,
+            `path`,
+            `md5`,
+            `inspect_time` AS inspectTime,
+            `file_id` AS fileId
+        FROM `inspect_resource_configuration_file_path`
+        WHERE `resource_id` IN
+        <foreach collection="list" item="resourceId" open="(" separator="," close=")">
+            #{resourceId}
+        </foreach>
+    </select>
+
+    <insert id="insertInpectResourceConfigurationFilePath" parameterType="codedriver.framework.inspect.dto.InspectResourceConfigurationFilePathVo">
+        INSERT INTO `inspect_resource_configuration_file_path` (
+            `id`,
+            `resource_id`,
+            `path`
+        )
+        VALUES
+        (
+            #{id},
+            #{resourceId},
+            #{path}
+        )
+    </insert>
+
+    <delete id="deleteResourceConfigFilePathByResourceId" parameterType="java.lang.Long">
+        DELETE FROM `inspect_resource_configuration_file_path`
+        WHERE `resource_id` = #{value}
+    </delete>
+
+    <delete id="deleteResourceConfigFilePathById" parameterType="java.lang.Long">
+        DELETE FROM `inspect_resource_configuration_file_path`
+        WHERE `id` = #{value}
+    </delete>
+</mapper>
+
