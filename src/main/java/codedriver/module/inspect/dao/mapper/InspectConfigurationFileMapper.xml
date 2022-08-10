@@ -5,7 +5,7 @@
     <select id="getPathListByResourceId" parameterType="java.lang.Long" resultType="java.lang.String">
         SELECT
             `path`
-        FROM `inspect_resource_config_file_path`
+        FROM `inspect_resource_configuration_file_path`
         WHERE `resource_id` = #{value}
     </select>
 
@@ -17,7 +17,7 @@
             `md5`,
             `inspect_time` AS inspectTime,
             `file_id` AS fileId
-        FROM `inspect_resource_config_file_path`
+        FROM `inspect_resource_configuration_file_path`
         WHERE `resource_id` = #{value}
     </select>
 
@@ -36,12 +36,12 @@
     </insert>
 
     <delete id="deleteResourceConfigFilePathByResourceId" parameterType="java.lang.Long">
-        DELETE FROM `inspect_resource_config_file_path`
+        DELETE FROM `inspect_resource_configuration_file_path`
         WHERE `resource_id` = #{value}
     </delete>
 
     <delete id="deleteResourceConfigFilePathById" parameterType="java.lang.Long">
-        DELETE FROM `inspect_resource_config_file_path`
+        DELETE FROM `inspect_resource_configuration_file_path`
         WHERE `id` = #{value}
     </delete>
 </mapper>

@@ -27,19 +27,19 @@ import java.util.List;
 @Service
 @AuthAction(action = INSPECT_BASE.class)
 @OperationType(type = OperationTypeEnum.SEARCH)
-public class ListInspectConfigurationFileResourceFile extends PrivateApiComponentBase {
+public class ListInspectConfigurationFileResourcePathApi extends PrivateApiComponentBase {
 
     @Resource
     private InspectConfigurationFileMapper inspectConfigurationFileMapper;
 
     @Override
     public String getToken() {
-        return "inspect/configurationfile/resource/file/list";
+        return "inspect/configurationfile/resource/path/list";
     }
 
     @Override
     public String getName() {
-        return "巡检配置文件资源文件列表";
+        return "巡检配置文件资源文件路径列表";
     }
 
     @Override
@@ -51,9 +51,9 @@ public class ListInspectConfigurationFileResourceFile extends PrivateApiComponen
             @Param(name = "resourceId", type = ApiParamType.LONG, isRequired = true, desc = "资源id")
     })
     @Output({
-            @Param(name = "tbodyList", explode = InspectResourceConfigurationFilePathVo[].class, desc = "文件列表")
+            @Param(name = "tbodyList", explode = InspectResourceConfigurationFilePathVo[].class, desc = "文件路径列表")
     })
-    @Description(desc = "巡检配置文件资源文件列表")
+    @Description(desc = "巡检配置文件资源文件路径列表")
     @Override
     public Object myDoService(JSONObject paramObj) throws Exception {
         Long resourceId = paramObj.getLong("resourceId");

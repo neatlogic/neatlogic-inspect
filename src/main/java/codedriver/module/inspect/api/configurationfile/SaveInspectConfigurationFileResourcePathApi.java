@@ -33,7 +33,7 @@ import java.util.stream.Collectors;
 @Service
 @AuthAction(action = INSPECT_BASE.class)
 @OperationType(type = OperationTypeEnum.SEARCH)
-public class SaveInspectConfigurationFileResourcePath extends PrivateApiComponentBase {
+public class SaveInspectConfigurationFileResourcePathApi extends PrivateApiComponentBase {
 
     @Resource
     private InspectConfigurationFileMapper inspectConfigurationFileMapper;
