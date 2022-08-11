@@ -20,12 +20,15 @@ import codedriver.framework.restful.annotation.*;
 import codedriver.framework.restful.constvalue.OperationTypeEnum;
 import codedriver.framework.restful.core.privateapi.PrivateApiComponentBase;
 import codedriver.module.inspect.dao.mapper.InspectConfigurationFileMapper;
+import codedriver.module.inspect.service.InspectConfigurationFileService;
 import com.alibaba.fastjson.JSONObject;
 import org.apache.commons.collections4.CollectionUtils;
+import org.javers.common.collections.Arrays;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -37,6 +40,9 @@ public class ClearInspectConfigurationFileResourceFileApi extends PrivateApiComp
 
     @Resource
     private InspectConfigurationFileMapper inspectConfigurationFileMapper;
+
+    @Resource
+    private InspectConfigurationFileService inspectConfigurationFileService;
 
     @Override
     public String getToken() {
@@ -67,6 +73,8 @@ public class ClearInspectConfigurationFileResourceFileApi extends PrivateApiComp
         if (ciEntityVo == null) {
             throw new CiEntityNotFoundException(resourceId);
         }
+        List<Long> resourceIdList = new ArrayList<>();
+        resourceIdList.add(resourceId);
         IFileCrossoverService fileCrossoverService = CrossoverServiceFactory.getApi(IFileCrossoverService.class);
         Long pathId = paramObj.getLong("pathId");
         if (pathId != null) {
@@ -74,29 +82,12 @@ public class ClearInspectConfigurationFileResourceFileApi extends PrivateApiComp
             if (inspectResourceConfigurationFilePathVo == null) {
                 throw new InspectResourceConfigurationFilePathNotFoundException(pathId);
             }
-            List<InspectResourceConfigurationFileVersionVo> inpectResourceConfigurationFileVersionList = inspectConfigurationFileMapper.getInpectResourceConfigurationFileVersionListByPathId(pathId);
-            if (CollectionUtils.isNotEmpty(inpectResourceConfigurationFileVersionList)) {
-                for (InspectResourceConfigurationFileVersionVo fileVersionVo : inpectResourceConfigurationFileVersionList) {
-                    fileCrossoverService.deleteFile(fileVersionVo.getFileId(), null);
-                }
-            }
-            inspectConfigurationFileMapper.deleteResourceConfigFileRecordByPathId(pathId);
-            inspectConfigurationFileMapper.deleteResourceConfigFileVersionByPathId(pathId);
-            inspectConfigurationFileMapper.resetInpectResourceConfigurationFilePathFileInfoById(pathId);
+            List<InspectResourceConfigurationFilePathVo> inspectResourceConfigurationFilePathList = new ArrayList<>();
+            inspectResourceConfigurationFilePathList.add(inspectResourceConfigurationFilePathVo);
+            inspectConfigurationFileService.clearFile(resourceIdList, inspectResourceConfigurationFilePathList);
         } else {
             List<InspectResourceConfigurationFilePathVo> inspectResourceConfigurationFilePathList = inspectConfigurationFileMapper.getInpectResourceConfigurationFilePathListByResourceId(resourceId);
-            if (CollectionUtils.isNotEmpty(inspectResourceConfigurationFilePathList)) {
-                List<Long> idList = inspectResourceConfigurationFilePathList.stream().map(InspectResourceConfigurationFilePathVo::getId).collect(Collectors.toList());
-                List<InspectResourceConfigurationFileVersionVo> inpectResourceConfigurationFileVersionList = inspectConfigurationFileMapper.getInpectResourceConfigurationFileVersionListByPathIdList(idList);
-                if (CollectionUtils.isNotEmpty(inpectResourceConfigurationFileVersionList)) {
-                    for (InspectResourceConfigurationFileVersionVo fileVersionVo : inpectResourceConfigurationFileVersionList) {
-                        fileCrossoverService.deleteFile(fileVersionVo.getFileId(), null);
-                    }
-                }
-                inspectConfigurationFileMapper.deleteResourceConfigFileRecordByPathIdList(idList);
-                inspectConfigurationFileMapper.deleteResourceConfigFileVersionByPathIdList(idList);
-                inspectConfigurationFileMapper.resetInpectResourceConfigurationFilePathFileInfoByIdList(idList);
-            }
+            inspectConfigurationFileService.clearFile(resourceIdList, inspectResourceConfigurationFilePathList);
         }
         return null;
     }
