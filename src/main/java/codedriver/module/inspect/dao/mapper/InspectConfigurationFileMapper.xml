@@ -2,12 +2,12 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
 <mapper namespace="codedriver.module.inspect.dao.mapper.InspectConfigurationFileMapper">
 
-    <!--<select id="getPathListByResourceId" parameterType="java.lang.Long" resultType="java.lang.String">
+    <select id="getPathListByResourceId" parameterType="java.lang.Long" resultType="java.lang.String">
         SELECT
             `path`
         FROM `inspect_resource_configuration_file_path`
         WHERE `resource_id` = #{value}
-    </select>-->
+    </select>
 
     <select id="getInpectResourceConfigurationFilePathById" parameterType="java.lang.Long" resultType="codedriver.framework.inspect.dto.InspectResourceConfigurationFilePathVo">
         SELECT
@@ -48,14 +48,14 @@
         </foreach>
     </select>
 
-    <!--<select id="getInpectResourceConfigurationFileRecordIdListByPathId" parameterType="java.lang.Long" resultType="java.lang.Long">
+    <select id="getInpectResourceConfigurationFileRecordIdListByPathId" parameterType="java.lang.Long" resultType="java.lang.Long">
         SELECT
             `id`
         FROM `inspect_resource_configuration_file_record`
         WHERE `path_id` = #{value}
-    </select>-->
+    </select>
 
-    <!--<select id="getInpectResourceConfigurationFileRecordIdListByPathIdList" parameterType="java.lang.Long" resultType="java.lang.Long">
+    <select id="getInpectResourceConfigurationFileRecordIdListByPathIdList" parameterType="java.lang.Long" resultType="java.lang.Long">
         SELECT
             `id`
         FROM `inspect_resource_configuration_file_record`
@@ -63,7 +63,7 @@
         <foreach collection="list" item="pathId" open="(" separator="," close=")">
             #{pathId}
         </foreach>
-    </select>-->
+    </select>
 
     <select id="getInpectResourceConfigurationFileVersionListByPathId" parameterType="java.lang.Long" resultType="codedriver.framework.inspect.dto.InspectResourceConfigurationFileVersionVo">
         SELECT
@@ -146,13 +146,13 @@
         WHERE `id` = #{value}
     </delete>
 
-    <!--<delete id="deleteResourceConfigFilePathByIdList" parameterType="java.lang.Long">
+    <delete id="deleteResourceConfigFilePathByIdList" parameterType="java.lang.Long">
         DELETE FROM `inspect_resource_configuration_file_path`
         WHERE `id` IN
         <foreach collection="list" item="id" open="(" separator="," close=")">
             #{id}
         </foreach>
-    </delete>-->
+    </delete>
 
     <delete id="deleteResourceConfigFileVersionByPathId" parameterType="java.lang.Long">
         DELETE FROM `inspect_resource_configuration_file_version`
@@ -167,13 +167,13 @@
         </foreach>
     </delete>
 
-    <!--<delete id="deleteResourceConfigFileRecordByIdList" parameterType="java.lang.Long">
+    <delete id="deleteResourceConfigFileRecordByIdList" parameterType="java.lang.Long">
         DELETE FROM `inspect_resource_configuration_file_record`
         WHERE `id` IN
         <foreach collection="list" item="id" open="(" separator="," close=")">
             #{id}
         </foreach>
-    </delete>-->
+    </delete>
 
     <delete id="deleteResourceConfigFileRecordByPathId" parameterType="java.lang.Long">
         DELETE FROM `inspect_resource_configuration_file_record`

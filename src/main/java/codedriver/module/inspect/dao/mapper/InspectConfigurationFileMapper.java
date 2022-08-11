@@ -12,7 +12,7 @@ import java.util.List;
 
 public interface InspectConfigurationFileMapper {
 
-//    List<String> getPathListByResourceId(Long resourceId);
+    List<String> getPathListByResourceId(Long resourceId);
 
     InspectResourceConfigurationFilePathVo getInpectResourceConfigurationFilePathById(Long id);
 
@@ -20,9 +20,9 @@ public interface InspectConfigurationFileMapper {
 
     List<InspectResourceConfigurationFilePathVo> getInpectResourceConfigurationFilePathListByResourceIdList(List<Long> resourceIdList);
 
-//    List<Long> getInpectResourceConfigurationFileRecordIdListByPathId(Long pathId);
+    List<Long> getInpectResourceConfigurationFileRecordIdListByPathId(Long pathId);
 
-//    List<Long> getInpectResourceConfigurationFileRecordIdListByPathIdList(List<Long> pathIdList);
+    List<Long> getInpectResourceConfigurationFileRecordIdListByPathIdList(List<Long> pathIdList);
 
     List<InspectResourceConfigurationFileVersionVo> getInpectResourceConfigurationFileVersionListByPathId(Long pathId);
 
@@ -40,12 +40,12 @@ public interface InspectConfigurationFileMapper {
 
     int deleteResourceConfigFilePathById(Long id);
 
-//    int deleteResourceConfigFilePathByIdList(List<Long> idList);
+    int deleteResourceConfigFilePathByIdList(List<Long> idList);
 
     int deleteResourceConfigFileVersionByPathId(Long pathId);
     int deleteResourceConfigFileVersionByPathIdList(List<Long> pathIdList);
 
-//    int deleteResourceConfigFileRecordByIdList(List<Long> recordIdList);
+    int deleteResourceConfigFileRecordByIdList(List<Long> recordIdList);
 
     int deleteResourceConfigFileRecordByPathId(Long pathId);
 
