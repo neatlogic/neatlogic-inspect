@@ -61,7 +61,6 @@ public class BatchAddInspectConfigurationFileResourcePathApi extends PrivateApiC
 
     @Input({
             @Param(name = "keyword", type = ApiParamType.STRING, xss = true, desc = "模糊搜索"),
-            @Param(name = "idList", type = ApiParamType.JSONARRAY, desc = "id列表，用于刷新状态时精确匹配数据"),
             @Param(name = "typeId", type = ApiParamType.LONG, isRequired = true, desc = "类型id"),
             @Param(name = "protocolIdList", type = ApiParamType.JSONARRAY, desc = "协议id列表"),
             @Param(name = "stateIdList", type = ApiParamType.JSONARRAY, desc = "状态id列表"),
