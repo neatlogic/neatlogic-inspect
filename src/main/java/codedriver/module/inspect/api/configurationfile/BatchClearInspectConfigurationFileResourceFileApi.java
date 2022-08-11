@@ -15,9 +15,11 @@ import codedriver.framework.cmdb.dto.resourcecenter.ResourceSearchVo;
 import codedriver.framework.cmdb.exception.ci.CiNotFoundException;
 import codedriver.framework.common.constvalue.ApiParamType;
 import codedriver.framework.crossover.CrossoverServiceFactory;
+import codedriver.framework.crossover.IFileCrossoverService;
 import codedriver.framework.inspect.auth.INSPECT_BASE;
 import codedriver.framework.inspect.dao.mapper.InspectMapper;
 import codedriver.framework.inspect.dto.InspectResourceConfigurationFilePathVo;
+import codedriver.framework.inspect.dto.InspectResourceConfigurationFileVersionVo;
 import codedriver.framework.restful.annotation.*;
 import codedriver.framework.restful.constvalue.OperationTypeEnum;
 import codedriver.framework.restful.core.privateapi.PrivateApiComponentBase;
@@ -25,7 +27,6 @@ import codedriver.module.inspect.dao.mapper.InspectConfigurationFileMapper;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import org.apache.commons.collections4.CollectionUtils;
-import org.apache.commons.collections4.ListUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -37,7 +38,7 @@ import java.util.stream.Collectors;
 @Transactional
 @AuthAction(action = INSPECT_BASE.class)
 @OperationType(type = OperationTypeEnum.SEARCH)
-public class BatchDeleteInspectConfigurationFileResourcePathApi extends PrivateApiComponentBase {
+public class BatchClearInspectConfigurationFileResourceFileApi extends PrivateApiComponentBase {
 
     @Resource
     private InspectConfigurationFileMapper inspectConfigurationFileMapper;
@@ -46,12 +47,12 @@ public class BatchDeleteInspectConfigurationFileResourcePathApi extends PrivateA
 
     @Override
     public String getToken() {
-        return "inspect/configurationfile/resource/path/batchdelete";
+        return "inspect/configurationfile/resource/file/batchclear";
     }
 
     @Override
     public String getName() {
-        return "批量删除巡检配置文件资源路径";
+        return "批量删除巡检配置文件资源文件";
     }
 
     @Override
@@ -71,19 +72,12 @@ public class BatchDeleteInspectConfigurationFileResourcePathApi extends PrivateA
             @Param(name = "tagIdList", type = ApiParamType.JSONARRAY, desc = "标签id列表"),
             @Param(name = "defaultValue", type = ApiParamType.JSONARRAY, desc = "用于回显的资源ID列表"),
             @Param(name = "inspectStatusList", type = ApiParamType.JSONARRAY, desc = "巡检状态列表"),
-            @Param(name = "inspectJobPhaseNodeStatusList", type = ApiParamType.JSONARRAY, desc = "巡检作业状态列表"),
-            @Param(name = "pathList", type = ApiParamType.JSONARRAY, desc = "路径列表")
+            @Param(name = "inspectJobPhaseNodeStatusList", type = ApiParamType.JSONARRAY, desc = "巡检作业状态列表")
     })
-    @Output({
-
-    })
-    @Description(desc = "批量删除巡检配置文件资源路径")
+    @Output({})
+    @Description(desc = "批量删除巡检配置文件资源文件")
     @Override
     public Object myDoService(JSONObject paramObj) throws Exception {
-        JSONArray pathArray = paramObj.getJSONArray("pathList");
-        if (CollectionUtils.isEmpty(pathArray)) {
-            return null;
-        }
         ResourceSearchVo searchVo = JSONObject.toJavaObject(paramObj, ResourceSearchVo.class);
         JSONArray defaultVaule = searchVo.getDefaultValue();
         if (CollectionUtils.isNotEmpty(defaultVaule)) {
@@ -91,7 +85,7 @@ public class BatchDeleteInspectConfigurationFileResourcePathApi extends PrivateA
             ICiEntityCrossoverMapper ciEntityCrossoverMapper = CrossoverServiceFactory.getApi(ICiEntityCrossoverMapper.class);
             List<CiEntityVo> ciEntityList = ciEntityCrossoverMapper.getCiEntityBaseInfoByIdList(resourceIdList);
             resourceIdList = ciEntityList.stream().map(CiEntityVo::getId).collect(Collectors.toList());
-            deletePath(resourceIdList, pathArray);
+            clearFile(resourceIdList);
         } else {
             Long typeId = searchVo.getTypeId();
             ICiCrossoverMapper ciCrossoverMapper = CrossoverServiceFactory.getApi(ICiCrossoverMapper.class);
@@ -112,7 +106,7 @@ public class BatchDeleteInspectConfigurationFileResourcePathApi extends PrivateA
                 for (int currentPage = 1; currentPage <= pageCount; currentPage++) {
                     searchVo.setCurrentPage(currentPage);
                     List<Long> resourceIdList = inspectMapper.getInspectResourceIdList(searchVo);
-                    deletePath(resourceIdList, pathArray);
+                    clearFile(resourceIdList);
                 }
             }
         }
@@ -120,32 +114,23 @@ public class BatchDeleteInspectConfigurationFileResourcePathApi extends PrivateA
     }
 
     /**
-     * 批量删除路径
+     * 批量清空配置文件
      * @param resourceIdList 资源id列表
-     * @param pathArray 路径列表
      */
-    private void deletePath(List<Long> resourceIdList, JSONArray pathArray) {
-        Map<Long, List<InspectResourceConfigurationFilePathVo>> inspectResourceConfigurationFilePathMap = new HashMap<>();
+    private void clearFile(List<Long> resourceIdList) throws Exception {
         List<InspectResourceConfigurationFilePathVo> inspectResourceConfigurationFilePathList = inspectConfigurationFileMapper.getInpectResourceConfigurationFilePathListByResourceIdList(resourceIdList);
-        for (InspectResourceConfigurationFilePathVo pathVo : inspectResourceConfigurationFilePathList) {
-            Long resourceId = pathVo.getResourceId();
-            inspectResourceConfigurationFilePathMap.computeIfAbsent(resourceId, key -> new ArrayList<>()).add(pathVo);
-        }
-        for (Long resourceId : resourceIdList) {
-            inspectResourceConfigurationFilePathList = inspectResourceConfigurationFilePathMap.get(resourceId);
-            if (CollectionUtils.isEmpty(inspectResourceConfigurationFilePathList)) {
-                continue;
-            }
-            Map<String, Long> idMap = inspectResourceConfigurationFilePathList.stream().collect(Collectors.toMap(e -> e.getPath(), e -> e.getId()));
-            List<String> oldPathList = inspectResourceConfigurationFilePathList.stream().map(InspectResourceConfigurationFilePathVo::getPath).collect(Collectors.toList());
-            List<String> pathList = pathArray.toJavaList(String.class);
-            List<String> needDeletePathList = ListUtils.retainAll(pathList, oldPathList);
-            for (String path : needDeletePathList) {
-                Long id = idMap.get(path);
-                if (id != null) {
-                    inspectConfigurationFileMapper.deleteResourceConfigFilePathById(id);
+        if (CollectionUtils.isNotEmpty(inspectResourceConfigurationFilePathList)) {
+            List<Long> idList = inspectResourceConfigurationFilePathList.stream().map(InspectResourceConfigurationFilePathVo::getId).collect(Collectors.toList());
+            List<InspectResourceConfigurationFileVersionVo> inpectResourceConfigurationFileVersionList = inspectConfigurationFileMapper.getInpectResourceConfigurationFileVersionListByPathIdList(idList);
+            if (CollectionUtils.isNotEmpty(inpectResourceConfigurationFileVersionList)) {
+                IFileCrossoverService fileCrossoverService = CrossoverServiceFactory.getApi(IFileCrossoverService.class);
+                for (InspectResourceConfigurationFileVersionVo fileVersionVo : inpectResourceConfigurationFileVersionList) {
+                    fileCrossoverService.deleteFile(fileVersionVo.getFileId(), null);
                 }
             }
+            inspectConfigurationFileMapper.deleteResourceConfigFileRecordByPathIdList(idList);
+            inspectConfigurationFileMapper.deleteResourceConfigFileVersionByPathIdList(idList);
+            inspectConfigurationFileMapper.resetInpectResourceConfigurationFilePathFileInfoByIdList(idList);
         }
     }
 }
