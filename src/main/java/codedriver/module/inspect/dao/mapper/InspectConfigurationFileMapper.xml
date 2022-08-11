@@ -163,7 +163,7 @@
         DELETE FROM `inspect_resource_configuration_file_version`
         WHERE `path_id` IN
         <foreach collection="list" item="pathId" open="(" separator="," close=")">
-            #{recordId}
+            #{pathId}
         </foreach>
     </delete>
 
