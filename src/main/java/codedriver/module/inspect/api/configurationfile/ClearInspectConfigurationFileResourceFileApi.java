@@ -11,7 +11,6 @@ import codedriver.framework.cmdb.dto.cientity.CiEntityVo;
 import codedriver.framework.cmdb.exception.cientity.CiEntityNotFoundException;
 import codedriver.framework.common.constvalue.ApiParamType;
 import codedriver.framework.crossover.CrossoverServiceFactory;
-import codedriver.framework.crossover.IFileCrossoverService;
 import codedriver.framework.inspect.auth.INSPECT_BASE;
 import codedriver.framework.inspect.dto.InspectResourceConfigurationFilePathVo;
 import codedriver.framework.inspect.exception.InspectResourceConfigurationFilePathNotFoundException;
