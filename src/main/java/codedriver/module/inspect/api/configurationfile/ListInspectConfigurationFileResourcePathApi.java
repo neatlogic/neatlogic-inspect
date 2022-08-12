@@ -62,7 +62,7 @@ public class ListInspectConfigurationFileResourcePathApi extends PrivateApiCompo
         if (ciEntityVo == null) {
             throw new CiEntityNotFoundException(resourceId);
         }
-        List<InspectResourceConfigurationFilePathVo> inspectResourceConfigurationFilePathList = inspectConfigurationFileMapper.getInpectResourceConfigurationFilePathListByResourceId(resourceId);
+        List<InspectResourceConfigurationFilePathVo> inspectResourceConfigurationFilePathList = inspectConfigurationFileMapper.getInspectResourceConfigurationFilePathListByResourceId(resourceId);
         return TableResultUtil.getResult(inspectResourceConfigurationFilePathList);
     }
 }

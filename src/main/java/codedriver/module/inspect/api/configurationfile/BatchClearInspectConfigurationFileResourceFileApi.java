@@ -15,11 +15,9 @@ import codedriver.framework.cmdb.dto.resourcecenter.ResourceSearchVo;
 import codedriver.framework.cmdb.exception.ci.CiNotFoundException;
 import codedriver.framework.common.constvalue.ApiParamType;
 import codedriver.framework.crossover.CrossoverServiceFactory;
-import codedriver.framework.crossover.IFileCrossoverService;
 import codedriver.framework.inspect.auth.INSPECT_BASE;
 import codedriver.framework.inspect.dao.mapper.InspectMapper;
 import codedriver.framework.inspect.dto.InspectResourceConfigurationFilePathVo;
-import codedriver.framework.inspect.dto.InspectResourceConfigurationFileVersionVo;
 import codedriver.framework.restful.annotation.*;
 import codedriver.framework.restful.constvalue.OperationTypeEnum;
 import codedriver.framework.restful.core.privateapi.PrivateApiComponentBase;
@@ -82,13 +80,13 @@ public class BatchClearInspectConfigurationFileResourceFileApi extends PrivateAp
     @Override
     public Object myDoService(JSONObject paramObj) throws Exception {
         ResourceSearchVo searchVo = JSONObject.toJavaObject(paramObj, ResourceSearchVo.class);
-        JSONArray defaultVaule = searchVo.getDefaultValue();
-        if (CollectionUtils.isNotEmpty(defaultVaule)) {
-            List<Long> resourceIdList = defaultVaule.toJavaList(Long.class);
+        JSONArray defaultValue = searchVo.getDefaultValue();
+        if (CollectionUtils.isNotEmpty(defaultValue)) {
+            List<Long> resourceIdList = defaultValue.toJavaList(Long.class);
             ICiEntityCrossoverMapper ciEntityCrossoverMapper = CrossoverServiceFactory.getApi(ICiEntityCrossoverMapper.class);
             List<CiEntityVo> ciEntityList = ciEntityCrossoverMapper.getCiEntityBaseInfoByIdList(resourceIdList);
             resourceIdList = ciEntityList.stream().map(CiEntityVo::getId).collect(Collectors.toList());
-            List<InspectResourceConfigurationFilePathVo> inspectResourceConfigurationFilePathList = inspectConfigurationFileMapper.getInpectResourceConfigurationFilePathListByResourceIdList(resourceIdList);
+            List<InspectResourceConfigurationFilePathVo> inspectResourceConfigurationFilePathList = inspectConfigurationFileMapper.getInspectResourceConfigurationFilePathListByResourceIdList(resourceIdList);
             inspectConfigurationFileService.clearFile(resourceIdList, inspectResourceConfigurationFilePathList);
         } else {
             Long typeId = searchVo.getTypeId();
@@ -110,7 +108,7 @@ public class BatchClearInspectConfigurationFileResourceFileApi extends PrivateAp
                 for (int currentPage = 1; currentPage <= pageCount; currentPage++) {
                     searchVo.setCurrentPage(currentPage);
                     List<Long> resourceIdList = inspectMapper.getInspectResourceIdList(searchVo);
-                    List<InspectResourceConfigurationFilePathVo> inspectResourceConfigurationFilePathList = inspectConfigurationFileMapper.getInpectResourceConfigurationFilePathListByResourceIdList(resourceIdList);
+                    List<InspectResourceConfigurationFilePathVo> inspectResourceConfigurationFilePathList = inspectConfigurationFileMapper.getInspectResourceConfigurationFilePathListByResourceIdList(resourceIdList);
                     inspectConfigurationFileService.clearFile(resourceIdList, inspectResourceConfigurationFilePathList);
                 }
             }
