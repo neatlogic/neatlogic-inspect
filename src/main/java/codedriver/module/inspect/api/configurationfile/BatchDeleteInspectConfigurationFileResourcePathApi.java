@@ -85,9 +85,9 @@ public class BatchDeleteInspectConfigurationFileResourcePathApi extends PrivateA
             return null;
         }
         ResourceSearchVo searchVo = JSONObject.toJavaObject(paramObj, ResourceSearchVo.class);
-        JSONArray defaultVaule = searchVo.getDefaultValue();
-        if (CollectionUtils.isNotEmpty(defaultVaule)) {
-            List<Long> resourceIdList = defaultVaule.toJavaList(Long.class);
+        JSONArray defaultValue = searchVo.getDefaultValue();
+        if (CollectionUtils.isNotEmpty(defaultValue)) {
+            List<Long> resourceIdList = defaultValue.toJavaList(Long.class);
             ICiEntityCrossoverMapper ciEntityCrossoverMapper = CrossoverServiceFactory.getApi(ICiEntityCrossoverMapper.class);
             List<CiEntityVo> ciEntityList = ciEntityCrossoverMapper.getCiEntityBaseInfoByIdList(resourceIdList);
             resourceIdList = ciEntityList.stream().map(CiEntityVo::getId).collect(Collectors.toList());
@@ -126,7 +126,7 @@ public class BatchDeleteInspectConfigurationFileResourcePathApi extends PrivateA
      */
     private void deletePath(List<Long> resourceIdList, JSONArray pathArray) {
         Map<Long, List<InspectResourceConfigurationFilePathVo>> inspectResourceConfigurationFilePathMap = new HashMap<>();
-        List<InspectResourceConfigurationFilePathVo> inspectResourceConfigurationFilePathList = inspectConfigurationFileMapper.getInpectResourceConfigurationFilePathListByResourceIdList(resourceIdList);
+        List<InspectResourceConfigurationFilePathVo> inspectResourceConfigurationFilePathList = inspectConfigurationFileMapper.getInspectResourceConfigurationFilePathListByResourceIdList(resourceIdList);
         for (InspectResourceConfigurationFilePathVo pathVo : inspectResourceConfigurationFilePathList) {
             Long resourceId = pathVo.getResourceId();
             inspectResourceConfigurationFilePathMap.computeIfAbsent(resourceId, key -> new ArrayList<>()).add(pathVo);

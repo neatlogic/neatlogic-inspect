@@ -9,7 +9,7 @@
         WHERE `resource_id` = #{value}
     </select>
 
-    <select id="getInpectResourceConfigurationFilePathById" parameterType="java.lang.Long" resultType="codedriver.framework.inspect.dto.InspectResourceConfigurationFilePathVo">
+    <select id="getInspectResourceConfigurationFilePathById" parameterType="java.lang.Long" resultType="codedriver.framework.inspect.dto.InspectResourceConfigurationFilePathVo">
         SELECT
             `id`,
             `resource_id` AS resourceId,
@@ -21,7 +21,7 @@
         WHERE `id` = #{value}
     </select>
 
-    <select id="getInpectResourceConfigurationFilePathListByResourceId" parameterType="java.lang.Long" resultType="codedriver.framework.inspect.dto.InspectResourceConfigurationFilePathVo">
+    <select id="getInspectResourceConfigurationFilePathListByResourceId" parameterType="java.lang.Long" resultType="codedriver.framework.inspect.dto.InspectResourceConfigurationFilePathVo">
         SELECT
             `id`,
             `resource_id` AS resourceId,
@@ -33,7 +33,7 @@
         WHERE `resource_id` = #{value}
     </select>
 
-    <select id="getInpectResourceConfigurationFilePathListByResourceIdList" parameterType="java.lang.Long" resultType="codedriver.framework.inspect.dto.InspectResourceConfigurationFilePathVo">
+    <select id="getInspectResourceConfigurationFilePathListByResourceIdList" parameterType="java.lang.Long" resultType="codedriver.framework.inspect.dto.InspectResourceConfigurationFilePathVo">
         SELECT
             `id`,
             `resource_id` AS resourceId,
@@ -48,14 +48,7 @@
         </foreach>
     </select>
 
-    <select id="getInpectResourceConfigurationFileRecordIdListByPathId" parameterType="java.lang.Long" resultType="java.lang.Long">
-        SELECT
-            `id`
-        FROM `inspect_resource_configuration_file_record`
-        WHERE `path_id` = #{value}
-    </select>
-
-    <select id="getInpectResourceConfigurationFileRecordIdListByPathIdList" parameterType="java.lang.Long" resultType="java.lang.Long">
+    <select id="getInspectResourceConfigurationFileRecordIdListByPathIdList" parameterType="java.lang.Long" resultType="java.lang.Long">
         SELECT
             `id`
         FROM `inspect_resource_configuration_file_record`
@@ -65,7 +58,7 @@
         </foreach>
     </select>
 
-    <select id="getInpectResourceConfigurationFileVersionListByPathId" parameterType="java.lang.Long" resultType="codedriver.framework.inspect.dto.InspectResourceConfigurationFileVersionVo">
+    <select id="getInspectResourceConfigurationFileVersionListByPathId" parameterType="java.lang.Long" resultType="codedriver.framework.inspect.dto.InspectResourceConfigurationFileVersionVo">
         SELECT
             `id`,
             `md5`,
@@ -77,7 +70,7 @@
         WHERE `path_id` = #{value}
     </select>
 
-    <select id="getInpectResourceConfigurationFileVersionListByPathIdList" parameterType="java.lang.Long" resultType="codedriver.framework.inspect.dto.InspectResourceConfigurationFileVersionVo">
+    <select id="getInspectResourceConfigurationFileVersionListByPathIdList" parameterType="java.lang.Long" resultType="codedriver.framework.inspect.dto.InspectResourceConfigurationFileVersionVo">
         SELECT
             `id`,
             `md5`,
@@ -92,7 +85,68 @@
         </foreach>
     </select>
 
-    <insert id="insertInpectResourceConfigurationFilePath" parameterType="codedriver.framework.inspect.dto.InspectResourceConfigurationFilePathVo">
+    <select id="getInspectResourceConfigurationFileRecordCountByPathId" parameterType="java.lang.Long" resultType="int">
+        SELECT
+            COUNT(1)
+        FROM `inspect_resource_configuration_file_record`
+        WHERE `path_id` = #{value}
+    </select>
+
+    <select id="getInspectResourceConfigurationFileRecordIdListByPathId" parameterType="codedriver.framework.inspect.dto.InspectResourceConfigurationFileRecordVo" resultType="java.lang.Long">
+        SELECT
+            `id`
+        FROM `inspect_resource_configuration_file_record`
+        WHERE `path_id` = #{pathId}
+        ORDER BY `id` DESC
+        LIMIT #{startNum}, #{pageSize}
+    </select>
+
+    <select id="getInspectResourceConfigurationFileRecordListByIdList" parameterType="java.lang.Long" resultType="codedriver.framework.inspect.dto.InspectResourceConfigurationFileRecordVo">
+        SELECT
+            a.`id`,
+            a.`inspect_time` AS inspectTime,
+            a.`path_id` AS pathId,
+            b.`id` AS versionId
+        FROM `inspect_resource_configuration_file_record` a
+        LEFT JOIN `inspect_resource_configuration_file_version` b on b.`record_id` = a.`id`
+        WHERE a.`id` IN
+        <foreach collection="list" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </select>
+
+    <select id="getInspectResourceConfigurationFileVersionCountByPathId" parameterType="java.lang.Long" resultType="int">
+        SELECT
+            COUNT(1)
+        FROM `inspect_resource_configuration_file_version`
+        WHERE `path_id` = #{value}
+    </select>
+
+    <select id="getInspectResourceConfigurationFileVersionIdListByPathId" parameterType="codedriver.framework.inspect.dto.InspectResourceConfigurationFileVersionVo" resultType="java.lang.Long">
+        SELECT
+            `id`
+        FROM `inspect_resource_configuration_file_version`
+        WHERE `path_id` = #{pathId}
+        ORDER BY `id` DESC
+        LIMIT #{startNum}, #{pageSize}
+    </select>
+
+    <select id="getInspectResourceConfigurationFileVersionListByIdList" parameterType="java.lang.Long" resultType="codedriver.framework.inspect.dto.InspectResourceConfigurationFileVersionVo">
+        SELECT
+        `id`,
+        `md5`,
+        `inspect_time` AS inspectTime,
+        `file_id` AS fileId,
+        `record_id` AS recordId,
+        `path_id` AS pathId
+        FROM `inspect_resource_configuration_file_version`
+        WHERE `id` IN
+        <foreach collection="list" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </select>
+
+    <insert id="insertInspectResourceConfigurationFilePath" parameterType="codedriver.framework.inspect.dto.InspectResourceConfigurationFilePathVo">
         INSERT INTO `inspect_resource_configuration_file_path` (
             `id`,
             `resource_id`,
@@ -106,7 +160,41 @@
         )
     </insert>
 
-    <update id="updateInpectResourceConfigurationFilePath" parameterType="codedriver.framework.inspect.dto.InspectResourceConfigurationFilePathVo">
+    <insert id="insertInspectResourceConfigurationFileRecord" parameterType="codedriver.framework.inspect.dto.InspectResourceConfigurationFileRecordVo">
+        INSERT INTO `inspect_resource_configuration_file_record` (
+            `id`,
+            `inspect_time`,
+            `path_id`
+        )
+        VALUES
+        (
+            #{id},
+            #{inspectTime},
+            #{pathId}
+        )
+    </insert>
+
+    <insert id="insertInspectResourceConfigurationFileVersion" parameterType="codedriver.framework.inspect.dto.InspectResourceConfigurationFileVersionVo">
+        INSERT INTO `inspect_resource_configuration_file_version` (
+            `id`,
+            `md5`,
+            `inspect_time`,
+            `file_id`,
+            `record_id`,
+            `path_id`
+        )
+        VALUES
+        (
+            #{id},
+            #{md5},
+            #{inspectTime},
+            #{fileId},
+            #{recordId},
+            #{pathId}
+        )
+    </insert>
+
+    <update id="updateInspectResourceConfigurationFilePath" parameterType="codedriver.framework.inspect.dto.InspectResourceConfigurationFilePathVo">
         UPDATE `inspect_resource_configuration_file_path`
         SET
             `md5` = #{md5},
@@ -115,7 +203,7 @@
         WHERE `id` = #{id}
     </update>
 
-    <update id="resetInpectResourceConfigurationFilePathFileInfoById" parameterType="java.lang.Long">
+    <update id="resetInspectResourceConfigurationFilePathFileInfoById" parameterType="java.lang.Long">
         UPDATE `inspect_resource_configuration_file_path`
         SET
             `md5` = null,
@@ -124,7 +212,7 @@
         WHERE `id` = #{value}
     </update>
 
-    <update id="resetInpectResourceConfigurationFilePathFileInfoByIdList" parameterType="java.lang.Long">
+    <update id="resetInspectResourceConfigurationFilePathFileInfoByIdList" parameterType="java.lang.Long">
         UPDATE `inspect_resource_configuration_file_path`
         SET
             `md5` = null,

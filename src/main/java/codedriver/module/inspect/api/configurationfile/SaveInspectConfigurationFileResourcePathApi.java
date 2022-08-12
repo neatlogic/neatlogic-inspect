@@ -72,7 +72,7 @@ public class SaveInspectConfigurationFileResourcePathApi extends PrivateApiCompo
 
         Map<String, Long> idMap = new HashMap<>();
         List<String> oldPathList = new ArrayList<>();
-        List<InspectResourceConfigurationFilePathVo> inspectResourceConfigurationFilePathList = inspectConfigurationFileMapper.getInpectResourceConfigurationFilePathListByResourceId(resourceId);
+        List<InspectResourceConfigurationFilePathVo> inspectResourceConfigurationFilePathList = inspectConfigurationFileMapper.getInspectResourceConfigurationFilePathListByResourceId(resourceId);
         if (CollectionUtils.isNotEmpty(inspectResourceConfigurationFilePathList)) {
             oldPathList = inspectResourceConfigurationFilePathList.stream().map(InspectResourceConfigurationFilePathVo::getPath).collect(Collectors.toList());
             idMap = inspectResourceConfigurationFilePathList.stream().collect(Collectors.toMap(e -> e.getPath(), e -> e.getId()));
@@ -85,14 +85,14 @@ public class SaveInspectConfigurationFileResourcePathApi extends PrivateApiCompo
         }  else if (CollectionUtils.isNotEmpty(pathArray) && CollectionUtils.isEmpty(oldPathList)) {
             for (String path : pathArray.toJavaList(String.class)) {
                 InspectResourceConfigurationFilePathVo pathVo = new InspectResourceConfigurationFilePathVo(resourceId, path);
-                inspectConfigurationFileMapper.insertInpectResourceConfigurationFilePath(pathVo);
+                inspectConfigurationFileMapper.insertInspectResourceConfigurationFilePath(pathVo);
             }
         } else if (CollectionUtils.isNotEmpty(pathArray) && CollectionUtils.isNotEmpty(oldPathList)) {
             List<String> pathList = pathArray.toJavaList(String.class);
             List<String> needInsertPathList = ListUtils.removeAll(pathList, oldPathList);
             for (String path : needInsertPathList) {
                 InspectResourceConfigurationFilePathVo pathVo = new InspectResourceConfigurationFilePathVo(resourceId, path);
-                inspectConfigurationFileMapper.insertInpectResourceConfigurationFilePath(pathVo);
+                inspectConfigurationFileMapper.insertInspectResourceConfigurationFilePath(pathVo);
             }
             List<String> needDeletePathList = ListUtils.removeAll(oldPathList, pathList);
             for (String path : needDeletePathList) {

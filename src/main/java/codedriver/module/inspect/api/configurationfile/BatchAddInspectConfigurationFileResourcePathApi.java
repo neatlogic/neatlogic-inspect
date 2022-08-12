@@ -83,9 +83,9 @@ public class BatchAddInspectConfigurationFileResourcePathApi extends PrivateApiC
             return null;
         }
         ResourceSearchVo searchVo = JSONObject.toJavaObject(paramObj, ResourceSearchVo.class);
-        JSONArray defaultVaule = searchVo.getDefaultValue();
-        if (CollectionUtils.isNotEmpty(defaultVaule)) {
-            List<Long> resourceIdList = defaultVaule.toJavaList(Long.class);
+        JSONArray defaultValue = searchVo.getDefaultValue();
+        if (CollectionUtils.isNotEmpty(defaultValue)) {
+            List<Long> resourceIdList = defaultValue.toJavaList(Long.class);
             ICiEntityCrossoverMapper ciEntityCrossoverMapper = CrossoverServiceFactory.getApi(ICiEntityCrossoverMapper.class);
             List<CiEntityVo> ciEntityList = ciEntityCrossoverMapper.getCiEntityBaseInfoByIdList(resourceIdList);
             resourceIdList = ciEntityList.stream().map(CiEntityVo::getId).collect(Collectors.toList());
@@ -124,7 +124,7 @@ public class BatchAddInspectConfigurationFileResourcePathApi extends PrivateApiC
      */
     private void addPath(List<Long> resourceIdList, JSONArray pathArray) {
         Map<Long, List<InspectResourceConfigurationFilePathVo>> inspectResourceConfigurationFilePathMap = new HashMap<>();
-        List<InspectResourceConfigurationFilePathVo> inspectResourceConfigurationFilePathList = inspectConfigurationFileMapper.getInpectResourceConfigurationFilePathListByResourceIdList(resourceIdList);
+        List<InspectResourceConfigurationFilePathVo> inspectResourceConfigurationFilePathList = inspectConfigurationFileMapper.getInspectResourceConfigurationFilePathListByResourceIdList(resourceIdList);
         for (InspectResourceConfigurationFilePathVo pathVo : inspectResourceConfigurationFilePathList) {
             Long resourceId = pathVo.getResourceId();
             inspectResourceConfigurationFilePathMap.computeIfAbsent(resourceId, key -> new ArrayList<>()).add(pathVo);
@@ -139,7 +139,7 @@ public class BatchAddInspectConfigurationFileResourcePathApi extends PrivateApiC
             List<String> needInsertPathList = ListUtils.removeAll(pathList, oldPathList);
             for (String path : needInsertPathList) {
                 InspectResourceConfigurationFilePathVo pathVo = new InspectResourceConfigurationFilePathVo(resourceId, path);
-                inspectConfigurationFileMapper.insertInpectResourceConfigurationFilePath(pathVo);
+                inspectConfigurationFileMapper.insertInspectResourceConfigurationFilePath(pathVo);
             }
         }
     }

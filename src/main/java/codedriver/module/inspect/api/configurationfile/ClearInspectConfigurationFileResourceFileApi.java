@@ -11,10 +11,8 @@ import codedriver.framework.cmdb.dto.cientity.CiEntityVo;
 import codedriver.framework.cmdb.exception.cientity.CiEntityNotFoundException;
 import codedriver.framework.common.constvalue.ApiParamType;
 import codedriver.framework.crossover.CrossoverServiceFactory;
-import codedriver.framework.crossover.IFileCrossoverService;
 import codedriver.framework.inspect.auth.INSPECT_BASE;
 import codedriver.framework.inspect.dto.InspectResourceConfigurationFilePathVo;
-import codedriver.framework.inspect.dto.InspectResourceConfigurationFileVersionVo;
 import codedriver.framework.inspect.exception.InspectResourceConfigurationFilePathNotFoundException;
 import codedriver.framework.restful.annotation.*;
 import codedriver.framework.restful.constvalue.OperationTypeEnum;
@@ -22,15 +20,12 @@ import codedriver.framework.restful.core.privateapi.PrivateApiComponentBase;
 import codedriver.module.inspect.dao.mapper.InspectConfigurationFileMapper;
 import codedriver.module.inspect.service.InspectConfigurationFileService;
 import com.alibaba.fastjson.JSONObject;
-import org.apache.commons.collections4.CollectionUtils;
-import org.javers.common.collections.Arrays;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 @Transactional
@@ -75,18 +70,17 @@ public class ClearInspectConfigurationFileResourceFileApi extends PrivateApiComp
         }
         List<Long> resourceIdList = new ArrayList<>();
         resourceIdList.add(resourceId);
-        IFileCrossoverService fileCrossoverService = CrossoverServiceFactory.getApi(IFileCrossoverService.class);
         Long pathId = paramObj.getLong("pathId");
         if (pathId != null) {
-            InspectResourceConfigurationFilePathVo inspectResourceConfigurationFilePathVo = inspectConfigurationFileMapper.getInpectResourceConfigurationFilePathById(pathId);
+            InspectResourceConfigurationFilePathVo inspectResourceConfigurationFilePathVo = inspectConfigurationFileMapper.getInspectResourceConfigurationFilePathById(pathId);
             if (inspectResourceConfigurationFilePathVo == null) {
-                throw new InspectResourceConfigurationFilePathNotFoundException(pathId);
+                throw new InspectResourceConfigurationFilePathNotFoundException(ciEntityVo.getName(), pathId);
             }
             List<InspectResourceConfigurationFilePathVo> inspectResourceConfigurationFilePathList = new ArrayList<>();
             inspectResourceConfigurationFilePathList.add(inspectResourceConfigurationFilePathVo);
             inspectConfigurationFileService.clearFile(resourceIdList, inspectResourceConfigurationFilePathList);
         } else {
-            List<InspectResourceConfigurationFilePathVo> inspectResourceConfigurationFilePathList = inspectConfigurationFileMapper.getInpectResourceConfigurationFilePathListByResourceId(resourceId);
+            List<InspectResourceConfigurationFilePathVo> inspectResourceConfigurationFilePathList = inspectConfigurationFileMapper.getInspectResourceConfigurationFilePathListByResourceId(resourceId);
             inspectConfigurationFileService.clearFile(resourceIdList, inspectResourceConfigurationFilePathList);
         }
         return null;
