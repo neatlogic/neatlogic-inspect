@@ -39,6 +39,8 @@ public interface InspectConfigurationFileMapper {
 
     List<InspectResourceConfigurationFileVersionVo> getInspectResourceConfigurationFileVersionListByIdList(List<Long> idList);
 
+    InspectResourceConfigurationFileVersionVo getInspectResourceConfigurationFileVersionById(Long id);
+
     int insertInspectResourceConfigurationFilePath(InspectResourceConfigurationFilePathVo pathVo);
 
     int insertInspectResourceConfigurationFileRecord(InspectResourceConfigurationFileRecordVo recordVo);

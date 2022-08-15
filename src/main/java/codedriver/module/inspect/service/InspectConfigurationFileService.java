@@ -6,6 +6,7 @@
 package codedriver.module.inspect.service;
 
 import codedriver.framework.inspect.dto.InspectResourceConfigurationFilePathVo;
+import codedriver.framework.lcs.BaseLineVo;
 
 import java.util.List;
 
@@ -16,4 +17,12 @@ public interface InspectConfigurationFileService {
      * @param inspectResourceConfigurationFilePathList 路径列表
      */
     void clearFile(List<Long> resourceIdList, List<InspectResourceConfigurationFilePathVo> inspectResourceConfigurationFilePathList) throws Exception;
+
+    /**
+     * 根据文件id获取文件内容
+     * @param fileId 文件id
+     * @return
+     * @throws Exception
+     */
+    List<BaseLineVo> getLineList(Long fileId);
 }

@@ -113,6 +113,7 @@
         <foreach collection="list" item="id" open="(" separator="," close=")">
             #{id}
         </foreach>
+        ORDER BY a.`id` DESC
     </select>
 
     <select id="getInspectResourceConfigurationFileVersionCountByPathId" parameterType="java.lang.Long" resultType="int">
@@ -144,6 +145,19 @@
         <foreach collection="list" item="id" open="(" separator="," close=")">
             #{id}
         </foreach>
+        ORDER BY `id` DESC
+    </select>
+
+    <select id="getInspectResourceConfigurationFileVersionById" parameterType="java.lang.Long" resultType="codedriver.framework.inspect.dto.InspectResourceConfigurationFileVersionVo">
+        SELECT
+        `id`,
+        `md5`,
+        `inspect_time` AS inspectTime,
+        `file_id` AS fileId,
+        `record_id` AS recordId,
+        `path_id` AS pathId
+        FROM `inspect_resource_configuration_file_version`
+        WHERE `id` = #{value}
     </select>
 
     <insert id="insertInspectResourceConfigurationFilePath" parameterType="codedriver.framework.inspect.dto.InspectResourceConfigurationFilePathVo">
