@@ -47,7 +47,7 @@ public class SaveInspectConfigFileAuditApi extends PrivateApiComponentBase {
 
     @Override
     public String getToken() {
-        return "inspect/configfile/record/save";
+        return "inspect/configfile/audit/save";
     }
 
     @Override

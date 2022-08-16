@@ -67,15 +67,17 @@ public class GetInspectConfigFileVersionApi extends PrivateApiComponentBase  {
             if (pathVo == null) {
                 throw new InspectConfigFilePathNotFoundException(pathId);
             }
-            Long fileId = pathVo.getFileId();
             InspectConfigFileVersionVo versionVo = new InspectConfigFileVersionVo();
-            List<BaseLineVo> lineList = InspectConfigFileService.getLineList(fileId);
             versionVo.setId(-1L);
-            versionVo.setFileId(fileId);
             versionVo.setInspectTime(pathVo.getInspectTime());
             versionVo.setMd5(pathVo.getMd5());
             versionVo.setPathId(pathId);
-            versionVo.setLineList(lineList);
+            Long fileId = pathVo.getFileId();
+            if (fileId != null) {
+                List<BaseLineVo> lineList = InspectConfigFileService.getLineList(fileId);
+                versionVo.setFileId(fileId);
+                versionVo.setLineList(lineList);
+            }
             return versionVo;
         } else if (versionId != null) {
             InspectConfigFileVersionVo versionVo = inspectConfigFileMapper.getInspectConfigFileVersionById(versionId);
