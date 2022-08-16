@@ -14,6 +14,7 @@ import codedriver.framework.file.dto.FileVo;
 import codedriver.framework.inspect.dto.InspectResourceConfigurationFilePathVo;
 import codedriver.framework.inspect.dto.InspectResourceConfigurationFileVersionVo;
 import codedriver.framework.lcs.BaseLineVo;
+import codedriver.framework.lcs.constvalue.LineHandler;
 import codedriver.module.inspect.dao.mapper.InspectConfigurationFileMapper;
 import org.apache.commons.collections4.CollectionUtils;
 import org.slf4j.Logger;
@@ -70,7 +71,7 @@ public class InspectConfigurationFileServiceImpl implements InspectConfiguration
             int lineNumber = 1;
             String line;
             while ((line = bufferedReader.readLine()) != null) {
-                BaseLineVo lineVo = new BaseLineVo(lineNumber, "p", line);
+                BaseLineVo lineVo = new BaseLineVo(lineNumber, LineHandler.TEXT.getValue(), line);
                 lineList.add(lineVo);
                 lineNumber++;
             }
