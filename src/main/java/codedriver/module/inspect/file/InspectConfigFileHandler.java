@@ -14,7 +14,7 @@ import com.alibaba.fastjson.JSONObject;
 import org.springframework.stereotype.Component;
 
 @Component
-public class InspectResourceConfigurationFileHandler extends FileTypeHandlerBase {
+public class InspectConfigFileHandler extends FileTypeHandlerBase {
     @Override
     protected boolean myDeleteFile(FileVo fileVo, JSONObject paramObj) {
         return true;
@@ -27,7 +27,7 @@ public class InspectResourceConfigurationFileHandler extends FileTypeHandlerBase
 
     @Override
     public String getName() {
-        return "INSPECTRESOURCECONFIGFILE";
+        return "INSPECTRCONFIGFILE";
     }
 
     @Override

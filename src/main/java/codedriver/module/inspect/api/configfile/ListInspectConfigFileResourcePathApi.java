@@ -3,7 +3,7 @@
  * 本内容仅限于深圳市赞悦科技有限公司内部传阅，禁止外泄以及用于其他的商业项目。
  */
 
-package codedriver.module.inspect.api.configurationfile;
+package codedriver.module.inspect.api.configfile;
 
 import codedriver.framework.auth.core.AuthAction;
 import codedriver.framework.cmdb.crossover.ICiEntityCrossoverMapper;
@@ -12,12 +12,12 @@ import codedriver.framework.cmdb.exception.cientity.CiEntityNotFoundException;
 import codedriver.framework.common.constvalue.ApiParamType;
 import codedriver.framework.crossover.CrossoverServiceFactory;
 import codedriver.framework.inspect.auth.INSPECT_BASE;
-import codedriver.framework.inspect.dto.InspectResourceConfigurationFilePathVo;
+import codedriver.framework.inspect.dto.InspectConfigFilePathVo;
 import codedriver.framework.restful.annotation.*;
 import codedriver.framework.restful.constvalue.OperationTypeEnum;
 import codedriver.framework.restful.core.privateapi.PrivateApiComponentBase;
 import codedriver.framework.util.TableResultUtil;
-import codedriver.module.inspect.dao.mapper.InspectConfigurationFileMapper;
+import codedriver.module.inspect.dao.mapper.InspectConfigFileMapper;
 import com.alibaba.fastjson.JSONObject;
 import org.springframework.stereotype.Service;
 
@@ -27,14 +27,14 @@ import java.util.List;
 @Service
 @AuthAction(action = INSPECT_BASE.class)
 @OperationType(type = OperationTypeEnum.SEARCH)
-public class ListInspectConfigurationFileResourcePathApi extends PrivateApiComponentBase {
+public class ListInspectConfigFileResourcePathApi extends PrivateApiComponentBase {
 
     @Resource
-    private InspectConfigurationFileMapper inspectConfigurationFileMapper;
+    private InspectConfigFileMapper inspectConfigFileMapper;
 
     @Override
     public String getToken() {
-        return "inspect/configurationfile/resource/path/list";
+        return "inspect/configfile/resource/path/list";
     }
 
     @Override
@@ -51,7 +51,7 @@ public class ListInspectConfigurationFileResourcePathApi extends PrivateApiCompo
             @Param(name = "resourceId", type = ApiParamType.LONG, isRequired = true, desc = "资源id")
     })
     @Output({
-            @Param(name = "tbodyList", explode = InspectResourceConfigurationFilePathVo[].class, desc = "文件路径列表")
+            @Param(name = "tbodyList", explode = InspectConfigFilePathVo[].class, desc = "文件路径列表")
     })
     @Description(desc = "巡检配置文件资源文件路径列表")
     @Override
@@ -62,7 +62,7 @@ public class ListInspectConfigurationFileResourcePathApi extends PrivateApiCompo
         if (ciEntityVo == null) {
             throw new CiEntityNotFoundException(resourceId);
         }
-        List<InspectResourceConfigurationFilePathVo> inspectResourceConfigurationFilePathList = inspectConfigurationFileMapper.getInspectResourceConfigurationFilePathListByResourceId(resourceId);
-        return TableResultUtil.getResult(inspectResourceConfigurationFilePathList);
+        List<InspectConfigFilePathVo> inspectResourceConfigFilePathList = inspectConfigFileMapper.getInspectConfigFilePathListByResourceId(resourceId);
+        return TableResultUtil.getResult(inspectResourceConfigFilePathList);
     }
 }
