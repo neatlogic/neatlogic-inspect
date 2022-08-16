@@ -3,19 +3,19 @@
  * 本内容仅限于深圳市赞悦科技有限公司内部传阅，禁止外泄以及用于其他的商业项目。
  */
 
-package codedriver.module.inspect.api.configurationfile;
+package codedriver.module.inspect.api.configfile;
 
 import codedriver.framework.auth.core.AuthAction;
 import codedriver.framework.common.constvalue.ApiParamType;
 import codedriver.framework.inspect.auth.INSPECT_BASE;
-import codedriver.framework.inspect.dto.InspectResourceConfigurationFilePathVo;
-import codedriver.framework.inspect.dto.InspectResourceConfigurationFileVersionVo;
-import codedriver.framework.inspect.exception.InspectResourceConfigurationFilePathNotFoundException;
+import codedriver.framework.inspect.dto.InspectConfigFilePathVo;
+import codedriver.framework.inspect.dto.InspectConfigFileVersionVo;
+import codedriver.framework.inspect.exception.InspectConfigFilePathNotFoundException;
 import codedriver.framework.restful.annotation.*;
 import codedriver.framework.restful.constvalue.OperationTypeEnum;
 import codedriver.framework.restful.core.privateapi.PrivateApiComponentBase;
 import codedriver.framework.util.TableResultUtil;
-import codedriver.module.inspect.dao.mapper.InspectConfigurationFileMapper;
+import codedriver.module.inspect.dao.mapper.InspectConfigFileMapper;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import org.apache.commons.collections4.CollectionUtils;
@@ -28,14 +28,14 @@ import java.util.List;
 @Service
 @AuthAction(action = INSPECT_BASE.class)
 @OperationType(type = OperationTypeEnum.SEARCH)
-public class ListInspectConfigurationFileVersionApi extends PrivateApiComponentBase {
+public class ListInspectConfigFileVersionApi extends PrivateApiComponentBase {
 
     @Resource
-    private InspectConfigurationFileMapper inspectConfigurationFileMapper;
+    private InspectConfigFileMapper inspectConfigFileMapper;
 
     @Override
     public String getToken() {
-        return "inspect/configurationfile/resource/version/list";
+        return "inspect/configfile/resource/version/list";
     }
 
     @Override
@@ -56,40 +56,40 @@ public class ListInspectConfigurationFileVersionApi extends PrivateApiComponentB
             @Param(name = "needPage", type = ApiParamType.BOOLEAN, desc = "是否需要分页，默认true")
     })
     @Output({
-            @Param(name = "tbodyList", explode = InspectResourceConfigurationFilePathVo[].class, desc = "文件变更记录列表")
+            @Param(name = "tbodyList", explode = InspectConfigFilePathVo[].class, desc = "文件变更记录列表")
     })
     @Description(desc = "巡检配置文件资源文件变更记录列表")
     @Override
     public Object myDoService(JSONObject paramObj) throws Exception {
-        InspectResourceConfigurationFileVersionVo searchVo = paramObj.toJavaObject(InspectResourceConfigurationFileVersionVo.class);
+        InspectConfigFileVersionVo searchVo = paramObj.toJavaObject(InspectConfigFileVersionVo.class);
         Long pathId = searchVo.getPathId();
-        InspectResourceConfigurationFilePathVo inspectResourceConfigurationFilePathVo = inspectConfigurationFileMapper.getInspectResourceConfigurationFilePathById(pathId);
-        if (inspectResourceConfigurationFilePathVo == null) {
-            throw new InspectResourceConfigurationFilePathNotFoundException(pathId);
+        InspectConfigFilePathVo inspectConfigFilePathVo = inspectConfigFileMapper.getInspectConfigFilePathById(pathId);
+        if (inspectConfigFilePathVo == null) {
+            throw new InspectConfigFilePathNotFoundException(pathId);
         }
-        List<InspectResourceConfigurationFileVersionVo> tbodyList = new ArrayList<>();
+        List<InspectConfigFileVersionVo> tbodyList = new ArrayList<>();
         JSONArray defaultValue = searchVo.getDefaultValue();
         if (CollectionUtils.isNotEmpty(defaultValue)) {
             List<Long> idList = defaultValue.toJavaList(Long.class);
-            tbodyList = inspectConfigurationFileMapper.getInspectResourceConfigurationFileVersionListByIdList(idList);
+            tbodyList = inspectConfigFileMapper.getInspectConfigFileVersionListByIdList(idList);
         } else {
-            int rowNum = inspectConfigurationFileMapper.getInspectResourceConfigurationFileVersionCountByPathId(pathId);
+            int rowNum = inspectConfigFileMapper.getInspectConfigFileVersionCountByPathId(pathId);
             if (rowNum > 0) {
                 searchVo.setRowNum(rowNum);
                 Boolean needPage = paramObj.getBoolean("needPage");
                 needPage = needPage == null ? true : needPage;
                 if (needPage) {
-                    List<Long> idList = inspectConfigurationFileMapper.getInspectResourceConfigurationFileVersionIdListByPathId(searchVo);
+                    List<Long> idList = inspectConfigFileMapper.getInspectConfigFileVersionIdListByPathId(searchVo);
                     if (CollectionUtils.isNotEmpty(idList)) {
-                        tbodyList = inspectConfigurationFileMapper.getInspectResourceConfigurationFileVersionListByIdList(idList);
+                        tbodyList = inspectConfigFileMapper.getInspectConfigFileVersionListByIdList(idList);
                     }
                 } else {
                     int pageCount = searchVo.getPageCount();
                     for (int currentPage = 1; currentPage <= pageCount; currentPage++) {
                         searchVo.setCurrentPage(currentPage);
-                        List<Long> idList = inspectConfigurationFileMapper.getInspectResourceConfigurationFileVersionIdListByPathId(searchVo);
-                        List<InspectResourceConfigurationFileVersionVo> inspectResourceConfigurationFileVersionList = inspectConfigurationFileMapper.getInspectResourceConfigurationFileVersionListByIdList(idList);
-                        tbodyList.addAll(inspectResourceConfigurationFileVersionList);
+                        List<Long> idList = inspectConfigFileMapper.getInspectConfigFileVersionIdListByPathId(searchVo);
+                        List<InspectConfigFileVersionVo> inspectResourceConfigFileVersionList = inspectConfigFileMapper.getInspectConfigFileVersionListByIdList(idList);
+                        tbodyList.addAll(inspectResourceConfigFileVersionList);
                     }
                 }
             }

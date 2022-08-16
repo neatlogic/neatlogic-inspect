@@ -11,11 +11,11 @@ import codedriver.framework.crossover.IFileCrossoverService;
 import codedriver.framework.exception.file.FileNotFoundException;
 import codedriver.framework.file.dao.mapper.FileMapper;
 import codedriver.framework.file.dto.FileVo;
-import codedriver.framework.inspect.dto.InspectResourceConfigurationFilePathVo;
-import codedriver.framework.inspect.dto.InspectResourceConfigurationFileVersionVo;
+import codedriver.framework.inspect.dto.InspectConfigFilePathVo;
+import codedriver.framework.inspect.dto.InspectConfigFileVersionVo;
 import codedriver.framework.lcs.BaseLineVo;
 import codedriver.framework.lcs.constvalue.LineHandler;
-import codedriver.module.inspect.dao.mapper.InspectConfigurationFileMapper;
+import codedriver.module.inspect.dao.mapper.InspectConfigFileMapper;
 import org.apache.commons.collections4.CollectionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,29 +31,29 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
-public class InspectConfigurationFileServiceImpl implements InspectConfigurationFileService {
+public class InspectConfigFileServiceImpl implements InspectConfigFileService {
 
-    private final static Logger logger = LoggerFactory.getLogger(InspectConfigurationFileServiceImpl.class);
+    private final static Logger logger = LoggerFactory.getLogger(InspectConfigFileServiceImpl.class);
     @Resource
-    private InspectConfigurationFileMapper inspectConfigurationFileMapper;
+    private InspectConfigFileMapper inspectConfigFileMapper;
 
     @Autowired
     private FileMapper fileMapper;
 
     @Override
-    public void clearFile(List<Long> resourceIdList, List<InspectResourceConfigurationFilePathVo> inspectResourceConfigurationFilePathList) throws Exception {
-        if (CollectionUtils.isNotEmpty(inspectResourceConfigurationFilePathList)) {
-            List<Long> idList = inspectResourceConfigurationFilePathList.stream().map(InspectResourceConfigurationFilePathVo::getId).collect(Collectors.toList());
-            List<InspectResourceConfigurationFileVersionVo> inspectResourceConfigurationFileVersionList = inspectConfigurationFileMapper.getInspectResourceConfigurationFileVersionListByPathIdList(idList);
-            if (CollectionUtils.isNotEmpty(inspectResourceConfigurationFileVersionList)) {
+    public void clearFile(List<Long> resourceIdList, List<InspectConfigFilePathVo> inspectResourceConfigFilePathList) throws Exception {
+        if (CollectionUtils.isNotEmpty(inspectResourceConfigFilePathList)) {
+            List<Long> idList = inspectResourceConfigFilePathList.stream().map(InspectConfigFilePathVo::getId).collect(Collectors.toList());
+            List<InspectConfigFileVersionVo> inspectResourceConfigFileVersionList = inspectConfigFileMapper.getInspectConfigFileVersionListByPathIdList(idList);
+            if (CollectionUtils.isNotEmpty(inspectResourceConfigFileVersionList)) {
                 IFileCrossoverService fileCrossoverService = CrossoverServiceFactory.getApi(IFileCrossoverService.class);
-                for (InspectResourceConfigurationFileVersionVo fileVersionVo : inspectResourceConfigurationFileVersionList) {
+                for (InspectConfigFileVersionVo fileVersionVo : inspectResourceConfigFileVersionList) {
                     fileCrossoverService.deleteFile(fileVersionVo.getFileId(), null);
                 }
             }
-            inspectConfigurationFileMapper.deleteResourceConfigFileRecordByPathIdList(idList);
-            inspectConfigurationFileMapper.deleteResourceConfigFileVersionByPathIdList(idList);
-            inspectConfigurationFileMapper.resetInspectResourceConfigurationFilePathFileInfoByIdList(idList);
+            inspectConfigFileMapper.deleteInspectConfigFileAuditByPathIdList(idList);
+            inspectConfigFileMapper.deleteInspectConfigFileVersionByPathIdList(idList);
+            inspectConfigFileMapper.resetInspectConfigFilePathFileInfoByIdList(idList);
         }
     }
 

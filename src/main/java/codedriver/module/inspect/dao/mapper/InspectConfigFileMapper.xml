@@ -1,0 +1,229 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="codedriver.module.inspect.dao.mapper.InspectConfigFileMapper">
+
+    <select id="getInspectConfigFilePathById" parameterType="java.lang.Long" resultType="codedriver.framework.inspect.dto.InspectConfigFilePathVo">
+        SELECT
+            `id`,
+            `resource_id` AS resourceId,
+            `path`,
+            `md5`,
+            `inspect_time` AS inspectTime,
+            `file_id` AS fileId
+        FROM `inspect_config_file_path`
+        WHERE `id` = #{value}
+    </select>
+
+    <select id="getInspectConfigFilePathListByResourceId" parameterType="java.lang.Long" resultType="codedriver.framework.inspect.dto.InspectConfigFilePathVo">
+        SELECT
+            `id`,
+            `resource_id` AS resourceId,
+            `path`,
+            `md5`,
+            `inspect_time` AS inspectTime,
+            `file_id` AS fileId
+        FROM `inspect_config_file_path`
+        WHERE `resource_id` = #{value}
+    </select>
+
+    <select id="getInspectConfigFilePathListByResourceIdList" parameterType="java.lang.Long" resultType="codedriver.framework.inspect.dto.InspectConfigFilePathVo">
+        SELECT
+            `id`,
+            `resource_id` AS resourceId,
+            `path`,
+            `md5`,
+            `inspect_time` AS inspectTime,
+            `file_id` AS fileId
+        FROM `inspect_config_file_path`
+        WHERE `resource_id` IN
+        <foreach collection="list" item="resourceId" open="(" separator="," close=")">
+            #{resourceId}
+        </foreach>
+    </select>
+
+    <select id="getInspectConfigFileVersionListByPathIdList" parameterType="java.lang.Long" resultType="codedriver.framework.inspect.dto.InspectConfigFileVersionVo">
+        SELECT
+            `id`,
+            `md5`,
+            `inspect_time` AS inspectTime,
+            `file_id` AS fileId,
+            `audit_id` AS auditId,
+            `path_id` AS pathId
+        FROM `inspect_config_file_version`
+        WHERE `path_id` IN
+        <foreach collection="list" item="pathId" open="(" separator="," close=")">
+            #{pathId}
+        </foreach>
+    </select>
+
+    <select id="getInspectConfigFileAuditCountByPathId" parameterType="java.lang.Long" resultType="int">
+        SELECT
+            COUNT(1)
+        FROM `inspect_config_file_audit`
+        WHERE `path_id` = #{value}
+    </select>
+
+    <select id="getInspectConfigFileAuditIdListByPathId" parameterType="codedriver.framework.inspect.dto.InspectConfigFileAuditVo" resultType="java.lang.Long">
+        SELECT
+            `id`
+        FROM `inspect_config_file_audit`
+        WHERE `path_id` = #{pathId}
+        ORDER BY `id` DESC
+        LIMIT #{startNum}, #{pageSize}
+    </select>
+
+    <select id="getInspectConfigFileAuditListByIdList" parameterType="java.lang.Long" resultType="codedriver.framework.inspect.dto.InspectConfigFileAuditVo">
+        SELECT
+            a.`id`,
+            a.`inspect_time` AS inspectTime,
+            a.`path_id` AS pathId,
+            b.`id` AS versionId
+        FROM `inspect_config_file_audit` a
+        LEFT JOIN `inspect_config_file_version` b on b.`audit_id` = a.`id`
+        WHERE a.`id` IN
+        <foreach collection="list" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+        ORDER BY a.`id` DESC
+    </select>
+
+    <select id="getInspectConfigFileVersionCountByPathId" parameterType="java.lang.Long" resultType="int">
+        SELECT
+            COUNT(1)
+        FROM `inspect_config_file_version`
+        WHERE `path_id` = #{value}
+    </select>
+
+    <select id="getInspectConfigFileVersionIdListByPathId" parameterType="codedriver.framework.inspect.dto.InspectConfigFileVersionVo" resultType="java.lang.Long">
+        SELECT
+            `id`
+        FROM `inspect_config_file_version`
+        WHERE `path_id` = #{pathId}
+        ORDER BY `id` DESC
+        LIMIT #{startNum}, #{pageSize}
+    </select>
+
+    <select id="getInspectConfigFileVersionListByIdList" parameterType="java.lang.Long" resultType="codedriver.framework.inspect.dto.InspectConfigFileVersionVo">
+        SELECT
+        `id`,
+        `md5`,
+        `inspect_time` AS inspectTime,
+        `file_id` AS fileId,
+        `audit_id` AS auditId,
+        `path_id` AS pathId
+        FROM `inspect_config_file_version`
+        WHERE `id` IN
+        <foreach collection="list" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+        ORDER BY `id` DESC
+    </select>
+
+    <select id="getInspectConfigFileVersionById" parameterType="java.lang.Long" resultType="codedriver.framework.inspect.dto.InspectConfigFileVersionVo">
+        SELECT
+        `id`,
+        `md5`,
+        `inspect_time` AS inspectTime,
+        `file_id` AS fileId,
+        `audit_id` AS auditId,
+        `path_id` AS pathId
+        FROM `inspect_config_file_version`
+        WHERE `id` = #{value}
+    </select>
+
+    <insert id="insertInspectConfigFilePath" parameterType="codedriver.framework.inspect.dto.InspectConfigFilePathVo">
+        INSERT INTO `inspect_config_file_path` (
+            `id`,
+            `resource_id`,
+            `path`
+        )
+        VALUES
+        (
+            #{id},
+            #{resourceId},
+            #{path}
+        )
+    </insert>
+
+    <insert id="insertInspectConfigFileAudit" parameterType="codedriver.framework.inspect.dto.InspectConfigFileAuditVo">
+        INSERT INTO `inspect_config_file_audit` (
+            `id`,
+            `inspect_time`,
+            `path_id`
+        )
+        VALUES
+        (
+            #{id},
+            #{inspectTime},
+            #{pathId}
+        )
+    </insert>
+
+    <insert id="insertInspectConfigFileVersion" parameterType="codedriver.framework.inspect.dto.InspectConfigFileVersionVo">
+        INSERT INTO `inspect_config_file_version` (
+            `id`,
+            `md5`,
+            `inspect_time`,
+            `file_id`,
+            `audit_id`,
+            `path_id`
+        )
+        VALUES
+        (
+            #{id},
+            #{md5},
+            #{inspectTime},
+            #{fileId},
+            #{auditId},
+            #{pathId}
+        )
+    </insert>
+
+    <update id="updateInspectConfigFilePath" parameterType="codedriver.framework.inspect.dto.InspectConfigFilePathVo">
+        UPDATE `inspect_config_file_path`
+        SET
+            `md5` = #{md5},
+            `inspect_time` = #{inspectTime},
+            `file_id` = #{fileId}
+        WHERE `id` = #{id}
+    </update>
+
+    <update id="resetInspectConfigFilePathFileInfoByIdList" parameterType="java.lang.Long">
+        UPDATE `inspect_config_file_path`
+        SET
+            `md5` = null,
+            `inspect_time` = null,
+            `file_id` = null
+        WHERE `id` IN
+        <foreach collection="list" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </update>
+
+    <delete id="deleteInspectConfigFilePathByResourceId" parameterType="java.lang.Long">
+        DELETE FROM `inspect_config_file_path`
+        WHERE `resource_id` = #{value}
+    </delete>
+
+    <delete id="deleteInspectConfigFilePathById" parameterType="java.lang.Long">
+        DELETE FROM `inspect_config_file_path`
+        WHERE `id` = #{value}
+    </delete>
+
+    <delete id="deleteInspectConfigFileVersionByPathIdList" parameterType="java.lang.Long">
+        DELETE FROM `inspect_config_file_version`
+        WHERE `path_id` IN
+        <foreach collection="list" item="pathId" open="(" separator="," close=")">
+            #{pathId}
+        </foreach>
+    </delete>
+
+    <delete id="deleteInspectConfigFileAuditByPathIdList" parameterType="java.lang.Long">
+        DELETE FROM `inspect_config_file_audit`
+        WHERE `path_id` IN
+        <foreach collection="list" item="pathId" open="(" separator="," close=")">
+            #{pathId}
+        </foreach>
+    </delete>
+</mapper>
+

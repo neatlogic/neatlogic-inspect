@@ -3,7 +3,7 @@
  * 本内容仅限于深圳市赞悦科技有限公司内部传阅，禁止外泄以及用于其他的商业项目。
  */
 
-package codedriver.module.inspect.api.configurationfile;
+package codedriver.module.inspect.api.configfile;
 
 import codedriver.framework.asynchronization.threadlocal.TenantContext;
 import codedriver.framework.auth.core.AuthAction;
@@ -35,14 +35,14 @@ import java.util.List;
 @Service
 @AuthAction(action = INSPECT_BASE.class)
 @OperationType(type = OperationTypeEnum.SEARCH)
-public class ListInspectConfigurationFileResourceApi extends PrivateApiComponentBase {
+public class ListInspectConfigFileResourceApi extends PrivateApiComponentBase {
 
     @Resource
     private InspectMapper inspectMapper;
 
     @Override
     public String getToken() {
-        return "inspect/configurationfile/resource/list";
+        return "inspect/configfile/resource/list";
     }
 
     @Override
@@ -77,7 +77,7 @@ public class ListInspectConfigurationFileResourceApi extends PrivateApiComponent
             @Param(explode = BasePageVo.class),
             @Param(name = "tbodyList", explode = ResourceVo[].class, desc = "数据列表")
     })
-    @Description(desc = "inspect/configurationfile/resource/list")
+    @Description(desc = "巡检配置文件资源列表")
     @Override
     public Object myDoService(JSONObject paramObj) throws Exception {
         List<InspectResourceVo> inspectResourceList = new ArrayList<>();

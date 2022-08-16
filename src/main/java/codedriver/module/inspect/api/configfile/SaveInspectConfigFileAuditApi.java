@@ -3,7 +3,7 @@
  * 本内容仅限于深圳市赞悦科技有限公司内部传阅，禁止外泄以及用于其他的商业项目。
  */
 
-package codedriver.module.inspect.api.configurationfile;
+package codedriver.module.inspect.api.configfile;
 
 import codedriver.framework.auth.core.AuthAction;
 import codedriver.framework.cmdb.crossover.ICiEntityCrossoverMapper;
@@ -16,14 +16,14 @@ import codedriver.framework.exception.type.ParamNotExistsException;
 import codedriver.framework.file.dao.mapper.FileMapper;
 import codedriver.framework.file.dto.FileVo;
 import codedriver.framework.inspect.auth.INSPECT_BASE;
-import codedriver.framework.inspect.dto.InspectResourceConfigurationFilePathVo;
-import codedriver.framework.inspect.dto.InspectResourceConfigurationFileRecordVo;
-import codedriver.framework.inspect.dto.InspectResourceConfigurationFileVersionVo;
-import codedriver.framework.inspect.exception.InspectResourceConfigurationFilePathNotFoundException;
+import codedriver.framework.inspect.dto.InspectConfigFilePathVo;
+import codedriver.framework.inspect.dto.InspectConfigFileAuditVo;
+import codedriver.framework.inspect.dto.InspectConfigFileVersionVo;
+import codedriver.framework.inspect.exception.InspectConfigFilePathNotFoundException;
 import codedriver.framework.restful.annotation.*;
 import codedriver.framework.restful.constvalue.OperationTypeEnum;
 import codedriver.framework.restful.core.privateapi.PrivateApiComponentBase;
-import codedriver.module.inspect.dao.mapper.InspectConfigurationFileMapper;
+import codedriver.module.inspect.dao.mapper.InspectConfigFileMapper;
 import com.alibaba.fastjson.JSONObject;
 import com.alibaba.nacos.common.utils.Objects;
 import org.apache.commons.lang3.StringUtils;
@@ -37,17 +37,17 @@ import java.util.*;
 @Transactional
 @AuthAction(action = INSPECT_BASE.class)
 @OperationType(type = OperationTypeEnum.SEARCH)
-public class SaveInspectConfigurationFileRecordApi extends PrivateApiComponentBase {
+public class SaveInspectConfigFileAuditApi extends PrivateApiComponentBase {
 
     @Resource
-    private InspectConfigurationFileMapper inspectConfigurationFileMapper;
+    private InspectConfigFileMapper inspectConfigFileMapper;
 
     @Resource
     private FileMapper fileMapper;
 
     @Override
     public String getToken() {
-        return "inspect/configurationfile/record/save";
+        return "inspect/configfile/record/save";
     }
 
     @Override
@@ -82,20 +82,20 @@ public class SaveInspectConfigurationFileRecordApi extends PrivateApiComponentBa
         Long pathId = paramObj.getLong("pathId");
         String path = paramObj.getString("path");
         if (pathId != null) {
-            InspectResourceConfigurationFilePathVo inspectResourceConfigurationFilePathVo = inspectConfigurationFileMapper.getInspectResourceConfigurationFilePathById(pathId);
-            if (inspectResourceConfigurationFilePathVo == null) {
-                throw new InspectResourceConfigurationFilePathNotFoundException(ciEntityVo.getName(), pathId);
+            InspectConfigFilePathVo inspectConfigFilePathVo = inspectConfigFileMapper.getInspectConfigFilePathById(pathId);
+            if (inspectConfigFilePathVo == null) {
+                throw new InspectConfigFilePathNotFoundException(ciEntityVo.getName(), pathId);
             }
         } else if (StringUtils.isNotBlank(path)) {
-            List<InspectResourceConfigurationFilePathVo> pathList = inspectConfigurationFileMapper.getInspectResourceConfigurationFilePathListByResourceId(resourceId);
-            for (InspectResourceConfigurationFilePathVo pathVo : pathList) {
+            List<InspectConfigFilePathVo> pathList = inspectConfigFileMapper.getInspectConfigFilePathListByResourceId(resourceId);
+            for (InspectConfigFilePathVo pathVo : pathList) {
                 if (Objects.equals(pathVo.getPath(), path)) {
                     pathId = pathVo.getId();
                     break;
                 }
             }
             if (pathId == null) {
-                throw new InspectResourceConfigurationFilePathNotFoundException(ciEntityVo.getName(), path);
+                throw new InspectConfigFilePathNotFoundException(ciEntityVo.getName(), path);
             }
         } else {
             throw new ParamNotExistsException("路径id(pathId)", "路径(path)");
@@ -104,8 +104,8 @@ public class SaveInspectConfigurationFileRecordApi extends PrivateApiComponentBa
         if (inspectTime == null) {
             inspectTime = new Date();
         }
-        InspectResourceConfigurationFileRecordVo recordVo = new InspectResourceConfigurationFileRecordVo(inspectTime, pathId);
-        inspectConfigurationFileMapper.insertInspectResourceConfigurationFileRecord(recordVo);
+        InspectConfigFileAuditVo recordVo = new InspectConfigFileAuditVo(inspectTime, pathId);
+        inspectConfigFileMapper.insertInspectConfigFileAudit(recordVo);
 
         Long fileId = paramObj.getLong("fileId");
         if (fileId == null) {
@@ -119,10 +119,10 @@ public class SaveInspectConfigurationFileRecordApi extends PrivateApiComponentBa
         if (StringUtils.isBlank(md5)) {
             throw new ParamNotExistsException("md5");
         }
-        InspectResourceConfigurationFileVersionVo versionVo = new InspectResourceConfigurationFileVersionVo(md5, inspectTime, fileId, recordVo.getId(), pathId);
-        inspectConfigurationFileMapper.insertInspectResourceConfigurationFileVersion(versionVo);
-        InspectResourceConfigurationFilePathVo pathVo = new InspectResourceConfigurationFilePathVo(pathId, md5, inspectTime, fileId);
-        inspectConfigurationFileMapper.updateInspectResourceConfigurationFilePath(pathVo);
+        InspectConfigFileVersionVo versionVo = new InspectConfigFileVersionVo(md5, inspectTime, fileId, recordVo.getId(), pathId);
+        inspectConfigFileMapper.insertInspectConfigFileVersion(versionVo);
+        InspectConfigFilePathVo pathVo = new InspectConfigFilePathVo(pathId, md5, inspectTime, fileId);
+        inspectConfigFileMapper.updateInspectConfigFilePath(pathVo);
         return null;
     }
 }

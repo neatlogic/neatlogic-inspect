@@ -3,7 +3,7 @@
  * 本内容仅限于深圳市赞悦科技有限公司内部传阅，禁止外泄以及用于其他的商业项目。
  */
 
-package codedriver.module.inspect.api.configurationfile;
+package codedriver.module.inspect.api.configfile;
 
 import codedriver.framework.auth.core.AuthAction;
 import codedriver.framework.cmdb.crossover.ICiEntityCrossoverMapper;
@@ -12,13 +12,13 @@ import codedriver.framework.cmdb.exception.cientity.CiEntityNotFoundException;
 import codedriver.framework.common.constvalue.ApiParamType;
 import codedriver.framework.crossover.CrossoverServiceFactory;
 import codedriver.framework.inspect.auth.INSPECT_BASE;
-import codedriver.framework.inspect.dto.InspectResourceConfigurationFilePathVo;
-import codedriver.framework.inspect.exception.InspectResourceConfigurationFilePathNotFoundException;
+import codedriver.framework.inspect.dto.InspectConfigFilePathVo;
+import codedriver.framework.inspect.exception.InspectConfigFilePathNotFoundException;
 import codedriver.framework.restful.annotation.*;
 import codedriver.framework.restful.constvalue.OperationTypeEnum;
 import codedriver.framework.restful.core.privateapi.PrivateApiComponentBase;
-import codedriver.module.inspect.dao.mapper.InspectConfigurationFileMapper;
-import codedriver.module.inspect.service.InspectConfigurationFileService;
+import codedriver.module.inspect.dao.mapper.InspectConfigFileMapper;
+import codedriver.module.inspect.service.InspectConfigFileService;
 import com.alibaba.fastjson.JSONObject;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -31,17 +31,17 @@ import java.util.List;
 @Transactional
 @AuthAction(action = INSPECT_BASE.class)
 @OperationType(type = OperationTypeEnum.SEARCH)
-public class ClearInspectConfigurationFileResourceFileApi extends PrivateApiComponentBase {
+public class ClearInspectConfigFileResourceFileApi extends PrivateApiComponentBase {
 
     @Resource
-    private InspectConfigurationFileMapper inspectConfigurationFileMapper;
+    private InspectConfigFileMapper inspectConfigFileMapper;
 
     @Resource
-    private InspectConfigurationFileService inspectConfigurationFileService;
+    private InspectConfigFileService inspectConfigFileService;
 
     @Override
     public String getToken() {
-        return "inspect/configurationfile/resource/file/clear";
+        return "inspect/configfile/resource/file/clear";
     }
 
     @Override
@@ -72,16 +72,16 @@ public class ClearInspectConfigurationFileResourceFileApi extends PrivateApiComp
         resourceIdList.add(resourceId);
         Long pathId = paramObj.getLong("pathId");
         if (pathId != null) {
-            InspectResourceConfigurationFilePathVo inspectResourceConfigurationFilePathVo = inspectConfigurationFileMapper.getInspectResourceConfigurationFilePathById(pathId);
-            if (inspectResourceConfigurationFilePathVo == null) {
-                throw new InspectResourceConfigurationFilePathNotFoundException(ciEntityVo.getName(), pathId);
+            InspectConfigFilePathVo inspectConfigFilePathVo = inspectConfigFileMapper.getInspectConfigFilePathById(pathId);
+            if (inspectConfigFilePathVo == null) {
+                throw new InspectConfigFilePathNotFoundException(ciEntityVo.getName(), pathId);
             }
-            List<InspectResourceConfigurationFilePathVo> inspectResourceConfigurationFilePathList = new ArrayList<>();
-            inspectResourceConfigurationFilePathList.add(inspectResourceConfigurationFilePathVo);
-            inspectConfigurationFileService.clearFile(resourceIdList, inspectResourceConfigurationFilePathList);
+            List<InspectConfigFilePathVo> inspectResourceConfigFilePathList = new ArrayList<>();
+            inspectResourceConfigFilePathList.add(inspectConfigFilePathVo);
+            inspectConfigFileService.clearFile(resourceIdList, inspectResourceConfigFilePathList);
         } else {
-            List<InspectResourceConfigurationFilePathVo> inspectResourceConfigurationFilePathList = inspectConfigurationFileMapper.getInspectResourceConfigurationFilePathListByResourceId(resourceId);
-            inspectConfigurationFileService.clearFile(resourceIdList, inspectResourceConfigurationFilePathList);
+            List<InspectConfigFilePathVo> inspectResourceConfigFilePathList = inspectConfigFileMapper.getInspectConfigFilePathListByResourceId(resourceId);
+            inspectConfigFileService.clearFile(resourceIdList, inspectResourceConfigFilePathList);
         }
         return null;
     }

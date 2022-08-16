@@ -3,22 +3,22 @@
  * 本内容仅限于深圳市赞悦科技有限公司内部传阅，禁止外泄以及用于其他的商业项目。
  */
 
-package codedriver.module.inspect.api.configurationfile;
+package codedriver.module.inspect.api.configfile;
 
 import codedriver.framework.auth.core.AuthAction;
 import codedriver.framework.common.constvalue.ApiParamType;
 import codedriver.framework.exception.type.ParamNotExistsException;
 import codedriver.framework.inspect.auth.INSPECT_BASE;
-import codedriver.framework.inspect.dto.InspectResourceConfigurationFilePathVo;
-import codedriver.framework.inspect.dto.InspectResourceConfigurationFileVersionVo;
-import codedriver.framework.inspect.exception.InspectResourceConfigurationFilePathNotFoundException;
-import codedriver.framework.inspect.exception.InspectResourceConfigurationFileVersionNotFoundException;
+import codedriver.framework.inspect.dto.InspectConfigFilePathVo;
+import codedriver.framework.inspect.dto.InspectConfigFileVersionVo;
+import codedriver.framework.inspect.exception.InspectConfigFilePathNotFoundException;
+import codedriver.framework.inspect.exception.InspectConfigFileVersionNotFoundException;
 import codedriver.framework.lcs.BaseLineVo;
 import codedriver.framework.restful.annotation.*;
 import codedriver.framework.restful.constvalue.OperationTypeEnum;
 import codedriver.framework.restful.core.privateapi.PrivateApiComponentBase;
-import codedriver.module.inspect.dao.mapper.InspectConfigurationFileMapper;
-import codedriver.module.inspect.service.InspectConfigurationFileService;
+import codedriver.module.inspect.dao.mapper.InspectConfigFileMapper;
+import codedriver.module.inspect.service.InspectConfigFileService;
 import com.alibaba.fastjson.JSONObject;
 import org.springframework.stereotype.Service;
 
@@ -28,16 +28,16 @@ import java.util.List;
 @Service
 @AuthAction(action = INSPECT_BASE.class)
 @OperationType(type = OperationTypeEnum.SEARCH)
-public class GetInspectConfigurationFileVersionApi extends PrivateApiComponentBase  {
+public class GetInspectConfigFileVersionApi extends PrivateApiComponentBase  {
 
     @Resource
-    private InspectConfigurationFileMapper inspectConfigurationFileMapper;
+    private InspectConfigFileMapper inspectConfigFileMapper;
     @Resource
-    private InspectConfigurationFileService InspectConfigurationFileService;
+    private InspectConfigFileService InspectConfigFileService;
 
     @Override
     public String getToken() {
-        return "inspect/configurationfile/version/get";
+        return "inspect/configfile/version/get";
     }
 
     @Override
@@ -55,7 +55,7 @@ public class GetInspectConfigurationFileVersionApi extends PrivateApiComponentBa
             @Param(name = "versionId", type = ApiParamType.LONG, desc = "版本id")
     })
     @Output({
-            @Param(explode = InspectResourceConfigurationFileVersionVo.class, desc = "文件内容")
+            @Param(explode = InspectConfigFileVersionVo.class, desc = "文件内容")
     })
     @Description(desc = "查询巡检配置文件内容")
     @Override
@@ -63,13 +63,13 @@ public class GetInspectConfigurationFileVersionApi extends PrivateApiComponentBa
         Long pathId = paramObj.getLong("pathId");
         Long versionId = paramObj.getLong("versionId");
         if (pathId != null) {
-            InspectResourceConfigurationFilePathVo pathVo = inspectConfigurationFileMapper.getInspectResourceConfigurationFilePathById(pathId);
+            InspectConfigFilePathVo pathVo = inspectConfigFileMapper.getInspectConfigFilePathById(pathId);
             if (pathVo == null) {
-                throw new InspectResourceConfigurationFilePathNotFoundException(pathId);
+                throw new InspectConfigFilePathNotFoundException(pathId);
             }
             Long fileId = pathVo.getFileId();
-            InspectResourceConfigurationFileVersionVo versionVo = new InspectResourceConfigurationFileVersionVo();
-            List<BaseLineVo> lineList = InspectConfigurationFileService.getLineList(fileId);
+            InspectConfigFileVersionVo versionVo = new InspectConfigFileVersionVo();
+            List<BaseLineVo> lineList = InspectConfigFileService.getLineList(fileId);
             versionVo.setId(-1L);
             versionVo.setFileId(fileId);
             versionVo.setInspectTime(pathVo.getInspectTime());
@@ -78,11 +78,11 @@ public class GetInspectConfigurationFileVersionApi extends PrivateApiComponentBa
             versionVo.setLineList(lineList);
             return versionVo;
         } else if (versionId != null) {
-            InspectResourceConfigurationFileVersionVo versionVo = inspectConfigurationFileMapper.getInspectResourceConfigurationFileVersionById(versionId);
+            InspectConfigFileVersionVo versionVo = inspectConfigFileMapper.getInspectConfigFileVersionById(versionId);
             if (versionVo == null) {
-                throw new InspectResourceConfigurationFileVersionNotFoundException(versionId);
+                throw new InspectConfigFileVersionNotFoundException(versionId);
             }
-            List<BaseLineVo> lineList = InspectConfigurationFileService.getLineList(versionVo.getFileId());
+            List<BaseLineVo> lineList = InspectConfigFileService.getLineList(versionVo.getFileId());
             versionVo.setLineList(lineList);
             return versionVo;
         } else {

@@ -3,20 +3,20 @@
  * 本内容仅限于深圳市赞悦科技有限公司内部传阅，禁止外泄以及用于其他的商业项目。
  */
 
-package codedriver.module.inspect.api.configurationfile;
+package codedriver.module.inspect.api.configfile;
 
 import codedriver.framework.auth.core.AuthAction;
 import codedriver.framework.common.constvalue.ApiParamType;
 import codedriver.framework.common.dto.BasePageVo;
 import codedriver.framework.inspect.auth.INSPECT_BASE;
-import codedriver.framework.inspect.dto.InspectResourceConfigurationFilePathVo;
-import codedriver.framework.inspect.dto.InspectResourceConfigurationFileRecordVo;
-import codedriver.framework.inspect.exception.InspectResourceConfigurationFilePathNotFoundException;
+import codedriver.framework.inspect.dto.InspectConfigFilePathVo;
+import codedriver.framework.inspect.dto.InspectConfigFileAuditVo;
+import codedriver.framework.inspect.exception.InspectConfigFilePathNotFoundException;
 import codedriver.framework.restful.annotation.*;
 import codedriver.framework.restful.constvalue.OperationTypeEnum;
 import codedriver.framework.restful.core.privateapi.PrivateApiComponentBase;
 import codedriver.framework.util.TableResultUtil;
-import codedriver.module.inspect.dao.mapper.InspectConfigurationFileMapper;
+import codedriver.module.inspect.dao.mapper.InspectConfigFileMapper;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import org.apache.commons.collections4.CollectionUtils;
@@ -29,14 +29,14 @@ import java.util.List;
 @Service
 @AuthAction(action = INSPECT_BASE.class)
 @OperationType(type = OperationTypeEnum.SEARCH)
-public class ListInspectConfigurationFileRecordApi extends PrivateApiComponentBase {
+public class ListInspectConfigFileAuditApi extends PrivateApiComponentBase {
 
     @Resource
-    private InspectConfigurationFileMapper inspectConfigurationFileMapper;
+    private InspectConfigFileMapper inspectConfigFileMapper;
 
     @Override
     public String getToken() {
-        return "inspect/configurationfile/resource/record/list";
+        return "inspect/configfile/resource/audit/list";
     }
 
     @Override
@@ -58,40 +58,40 @@ public class ListInspectConfigurationFileRecordApi extends PrivateApiComponentBa
     })
     @Output({
             @Param(explode = BasePageVo.class),
-            @Param(name = "tbodyList", explode = InspectResourceConfigurationFilePathVo[].class, desc = "文件扫描历史列表")
+            @Param(name = "tbodyList", explode = InspectConfigFilePathVo[].class, desc = "文件扫描历史列表")
     })
     @Description(desc = "巡检配置文件资源文件扫描历史列表")
     @Override
     public Object myDoService(JSONObject paramObj) throws Exception {
-        InspectResourceConfigurationFileRecordVo searchVo = paramObj.toJavaObject(InspectResourceConfigurationFileRecordVo.class);
+        InspectConfigFileAuditVo searchVo = paramObj.toJavaObject(InspectConfigFileAuditVo.class);
         Long pathId = searchVo.getPathId();
-        InspectResourceConfigurationFilePathVo inspectResourceConfigurationFilePathVo = inspectConfigurationFileMapper.getInspectResourceConfigurationFilePathById(pathId);
-        if (inspectResourceConfigurationFilePathVo == null) {
-            throw new InspectResourceConfigurationFilePathNotFoundException(pathId);
+        InspectConfigFilePathVo inspectConfigFilePathVo = inspectConfigFileMapper.getInspectConfigFilePathById(pathId);
+        if (inspectConfigFilePathVo == null) {
+            throw new InspectConfigFilePathNotFoundException(pathId);
         }
-        List<InspectResourceConfigurationFileRecordVo> tbodyList = new ArrayList<>();
+        List<InspectConfigFileAuditVo> tbodyList = new ArrayList<>();
         JSONArray defaultValue = searchVo.getDefaultValue();
         if (CollectionUtils.isNotEmpty(defaultValue)) {
             List<Long> idList = defaultValue.toJavaList(Long.class);
-            tbodyList = inspectConfigurationFileMapper.getInspectResourceConfigurationFileRecordListByIdList(idList);
+            tbodyList = inspectConfigFileMapper.getInspectConfigFileAuditListByIdList(idList);
         } else {
-            int rowNum = inspectConfigurationFileMapper.getInspectResourceConfigurationFileRecordCountByPathId(pathId);
+            int rowNum = inspectConfigFileMapper.getInspectConfigFileAuditCountByPathId(pathId);
             if (rowNum > 0) {
                 searchVo.setRowNum(rowNum);
                 Boolean needPage = paramObj.getBoolean("needPage");
                 needPage = needPage == null ? true : needPage;
                 if (needPage) {
-                    List<Long> idList = inspectConfigurationFileMapper.getInspectResourceConfigurationFileRecordIdListByPathId(searchVo);
+                    List<Long> idList = inspectConfigFileMapper.getInspectConfigFileAuditIdListByPathId(searchVo);
                     if (CollectionUtils.isNotEmpty(idList)) {
-                        tbodyList = inspectConfigurationFileMapper.getInspectResourceConfigurationFileRecordListByIdList(idList);
+                        tbodyList = inspectConfigFileMapper.getInspectConfigFileAuditListByIdList(idList);
                     }
                 } else {
                     int pageCount = searchVo.getPageCount();
                     for (int currentPage = 1; currentPage <= pageCount; currentPage++) {
                         searchVo.setCurrentPage(currentPage);
-                        List<Long> idList = inspectConfigurationFileMapper.getInspectResourceConfigurationFileRecordIdListByPathId(searchVo);
-                        List<InspectResourceConfigurationFileRecordVo> inspectResourceConfigurationFileRecordList = inspectConfigurationFileMapper.getInspectResourceConfigurationFileRecordListByIdList(idList);
-                        tbodyList.addAll(inspectResourceConfigurationFileRecordList);
+                        List<Long> idList = inspectConfigFileMapper.getInspectConfigFileAuditIdListByPathId(searchVo);
+                        List<InspectConfigFileAuditVo> inspectResourceConfigFileRecordList = inspectConfigFileMapper.getInspectConfigFileAuditListByIdList(idList);
+                        tbodyList.addAll(inspectResourceConfigFileRecordList);
                     }
                 }
             }

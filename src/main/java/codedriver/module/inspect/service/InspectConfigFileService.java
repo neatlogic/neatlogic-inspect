@@ -5,18 +5,18 @@
 
 package codedriver.module.inspect.service;
 
-import codedriver.framework.inspect.dto.InspectResourceConfigurationFilePathVo;
+import codedriver.framework.inspect.dto.InspectConfigFilePathVo;
 import codedriver.framework.lcs.BaseLineVo;
 
 import java.util.List;
 
-public interface InspectConfigurationFileService {
+public interface InspectConfigFileService {
     /**
      * 批量清空配置文件
      * @param resourceIdList 资源id列表
-     * @param inspectResourceConfigurationFilePathList 路径列表
+     * @param inspectResourceConfigFilePathList 路径列表
      */
-    void clearFile(List<Long> resourceIdList, List<InspectResourceConfigurationFilePathVo> inspectResourceConfigurationFilePathList) throws Exception;
+    void clearFile(List<Long> resourceIdList, List<InspectConfigFilePathVo> inspectResourceConfigFilePathList) throws Exception;
 
     /**
      * 根据文件id获取文件内容

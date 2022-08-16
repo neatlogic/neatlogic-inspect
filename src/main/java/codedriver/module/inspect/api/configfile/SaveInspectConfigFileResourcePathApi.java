@@ -3,7 +3,7 @@
  * 本内容仅限于深圳市赞悦科技有限公司内部传阅，禁止外泄以及用于其他的商业项目。
  */
 
-package codedriver.module.inspect.api.configurationfile;
+package codedriver.module.inspect.api.configfile;
 
 import codedriver.framework.auth.core.AuthAction;
 import codedriver.framework.cmdb.crossover.ICiEntityCrossoverMapper;
@@ -12,11 +12,11 @@ import codedriver.framework.cmdb.exception.cientity.CiEntityNotFoundException;
 import codedriver.framework.common.constvalue.ApiParamType;
 import codedriver.framework.crossover.CrossoverServiceFactory;
 import codedriver.framework.inspect.auth.INSPECT_BASE;
-import codedriver.framework.inspect.dto.InspectResourceConfigurationFilePathVo;
+import codedriver.framework.inspect.dto.InspectConfigFilePathVo;
 import codedriver.framework.restful.annotation.*;
 import codedriver.framework.restful.constvalue.OperationTypeEnum;
 import codedriver.framework.restful.core.privateapi.PrivateApiComponentBase;
-import codedriver.module.inspect.dao.mapper.InspectConfigurationFileMapper;
+import codedriver.module.inspect.dao.mapper.InspectConfigFileMapper;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import org.apache.commons.collections4.CollectionUtils;
@@ -35,14 +35,14 @@ import java.util.stream.Collectors;
 @Transactional
 @AuthAction(action = INSPECT_BASE.class)
 @OperationType(type = OperationTypeEnum.SEARCH)
-public class SaveInspectConfigurationFileResourcePathApi extends PrivateApiComponentBase {
+public class SaveInspectConfigFileResourcePathApi extends PrivateApiComponentBase {
 
     @Resource
-    private InspectConfigurationFileMapper inspectConfigurationFileMapper;
+    private InspectConfigFileMapper inspectConfigFileMapper;
 
     @Override
     public String getToken() {
-        return "inspect/configurationfile/resource/path/save";
+        return "inspect/configfile/resource/path/save";
     }
 
     @Override
@@ -72,33 +72,33 @@ public class SaveInspectConfigurationFileResourcePathApi extends PrivateApiCompo
 
         Map<String, Long> idMap = new HashMap<>();
         List<String> oldPathList = new ArrayList<>();
-        List<InspectResourceConfigurationFilePathVo> inspectResourceConfigurationFilePathList = inspectConfigurationFileMapper.getInspectResourceConfigurationFilePathListByResourceId(resourceId);
-        if (CollectionUtils.isNotEmpty(inspectResourceConfigurationFilePathList)) {
-            oldPathList = inspectResourceConfigurationFilePathList.stream().map(InspectResourceConfigurationFilePathVo::getPath).collect(Collectors.toList());
-            idMap = inspectResourceConfigurationFilePathList.stream().collect(Collectors.toMap(e -> e.getPath(), e -> e.getId()));
+        List<InspectConfigFilePathVo> inspectResourceConfigFilePathList = inspectConfigFileMapper.getInspectConfigFilePathListByResourceId(resourceId);
+        if (CollectionUtils.isNotEmpty(inspectResourceConfigFilePathList)) {
+            oldPathList = inspectResourceConfigFilePathList.stream().map(InspectConfigFilePathVo::getPath).collect(Collectors.toList());
+            idMap = inspectResourceConfigFilePathList.stream().collect(Collectors.toMap(e -> e.getPath(), e -> e.getId()));
         }
         JSONArray pathArray = paramObj.getJSONArray("pathList");
         if (CollectionUtils.isEmpty(pathArray) && CollectionUtils.isEmpty(oldPathList)) {
             return null;
         } else if (CollectionUtils.isEmpty(pathArray) && CollectionUtils.isNotEmpty(oldPathList)) {
-            inspectConfigurationFileMapper.deleteResourceConfigFilePathByResourceId(resourceId);
+            inspectConfigFileMapper.deleteInspectConfigFilePathByResourceId(resourceId);
         }  else if (CollectionUtils.isNotEmpty(pathArray) && CollectionUtils.isEmpty(oldPathList)) {
             for (String path : pathArray.toJavaList(String.class)) {
-                InspectResourceConfigurationFilePathVo pathVo = new InspectResourceConfigurationFilePathVo(resourceId, path);
-                inspectConfigurationFileMapper.insertInspectResourceConfigurationFilePath(pathVo);
+                InspectConfigFilePathVo pathVo = new InspectConfigFilePathVo(resourceId, path);
+                inspectConfigFileMapper.insertInspectConfigFilePath(pathVo);
             }
         } else if (CollectionUtils.isNotEmpty(pathArray) && CollectionUtils.isNotEmpty(oldPathList)) {
             List<String> pathList = pathArray.toJavaList(String.class);
             List<String> needInsertPathList = ListUtils.removeAll(pathList, oldPathList);
             for (String path : needInsertPathList) {
-                InspectResourceConfigurationFilePathVo pathVo = new InspectResourceConfigurationFilePathVo(resourceId, path);
-                inspectConfigurationFileMapper.insertInspectResourceConfigurationFilePath(pathVo);
+                InspectConfigFilePathVo pathVo = new InspectConfigFilePathVo(resourceId, path);
+                inspectConfigFileMapper.insertInspectConfigFilePath(pathVo);
             }
             List<String> needDeletePathList = ListUtils.removeAll(oldPathList, pathList);
             for (String path : needDeletePathList) {
                 Long id = idMap.get(path);
                 if (id != null) {
-                    inspectConfigurationFileMapper.deleteResourceConfigFilePathById(id);
+                    inspectConfigFileMapper.deleteInspectConfigFilePathById(id);
                 }
             }
         }
