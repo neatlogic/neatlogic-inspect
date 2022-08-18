@@ -18,21 +18,21 @@ import codedriver.framework.common.dto.BasePageVo;
 import codedriver.framework.crossover.CrossoverServiceFactory;
 import codedriver.framework.inspect.auth.INSPECT_BASE;
 import codedriver.framework.inspect.dao.mapper.InspectMapper;
+import codedriver.framework.inspect.dto.InspectConfigFilePathVo;
 import codedriver.framework.inspect.dto.InspectResourceVo;
 import codedriver.framework.restful.annotation.*;
 import codedriver.framework.restful.constvalue.OperationTypeEnum;
 import codedriver.framework.restful.core.privateapi.PrivateApiComponentBase;
 import codedriver.framework.util.TableResultUtil;
+import codedriver.module.inspect.dao.mapper.InspectConfigFileMapper;
 import com.alibaba.fastjson.JSONObject;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @AuthAction(action = INSPECT_BASE.class)
@@ -41,6 +41,9 @@ public class ListInspectConfigFileResourceApi extends PrivateApiComponentBase {
 
     @Resource
     private InspectMapper inspectMapper;
+
+    @Resource
+    private InspectConfigFileMapper inspectConfigFileMapper;
 
     @Override
     public String getToken() {
@@ -116,6 +119,14 @@ public class ListInspectConfigFileResourceApi extends PrivateApiComponentBase {
                 List<Long> idList = inspectMapper.getInspectResourceIdList(searchVo);
                 if (CollectionUtils.isNotEmpty(idList)) {
                     inspectResourceList = inspectMapper.getInspectResourceListByIdList(idList, TenantContext.get().getDataDbName());
+                    List<InspectConfigFilePathVo> inspectConfigFilePathList = inspectConfigFileMapper.getInspectConfigFileLastChangeTimeListByResourceIdList(idList);
+                    Map<Long, InspectConfigFilePathVo> inspectConfigFilePathMap = inspectConfigFilePathList.stream().collect(Collectors.toMap(e -> e.getId(), e -> e));
+                    for (InspectResourceVo inspectResourceVo : inspectResourceList) {
+                        InspectConfigFilePathVo inspectConfigFilePathVo = inspectConfigFilePathMap.get(inspectResourceVo.getId());
+                        if (inspectConfigFilePathVo != null) {
+                            inspectResourceVo.setLastChangeTime(inspectConfigFilePathVo.getInspectTime());
+                        }
+                    }
                     //排序
                     List<InspectResourceVo> resultList = new ArrayList<>();
                     for (Long id : idList) {

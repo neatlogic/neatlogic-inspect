@@ -41,6 +41,19 @@
         </foreach>
     </select>
 
+    <select id="getInspectConfigFileLastChangeTimeListByResourceIdList" parameterType="java.lang.Long" resultType="codedriver.framework.inspect.dto.InspectConfigFilePathVo">
+        SELECT
+            `resource_id` AS resourceId,
+            MAX(`inspect_time`) AS inspectTime
+        FROM `inspect_config_file_path`
+        WHERE `inspect_time` IS NOT NULL
+          AND `resource_id` IN
+        <foreach collection="list" item="resourceId" open="(" separator="," close=")">
+            #{resourceId}
+        </foreach>
+        GROUP BY `resource_id`
+    </select>
+
     <select id="getInspectConfigFileVersionListByPathIdList" parameterType="java.lang.Long" resultType="codedriver.framework.inspect.dto.InspectConfigFileVersionVo">
         SELECT
             `id`,
