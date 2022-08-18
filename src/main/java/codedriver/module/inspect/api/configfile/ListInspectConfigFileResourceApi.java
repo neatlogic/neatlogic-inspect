@@ -25,12 +25,14 @@ import codedriver.framework.restful.core.privateapi.PrivateApiComponentBase;
 import codedriver.framework.util.TableResultUtil;
 import com.alibaba.fastjson.JSONObject;
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 
 @Service
 @AuthAction(action = INSPECT_BASE.class)
@@ -100,9 +102,31 @@ public class ListInspectConfigFileResourceApi extends PrivateApiComponentBase {
             int count = inspectMapper.getInspectResourceCount(searchVo);
             if (count > 0) {
                 searchVo.setRowNum(count);
+                if (StringUtils.isNotBlank(searchVo.getKeyword())) {
+                    int ipKeywordCount = inspectMapper.getInspectResourceCountByIpKeyword(searchVo);
+                    if (ipKeywordCount > 0) {
+                        searchVo.setIsIpFieldSort(1);
+                    } else {
+                        int nameKeywordCount = inspectMapper.getInspectResourceCountByNameKeyword(searchVo);
+                        if (nameKeywordCount > 0) {
+                            searchVo.setIsNameFieldSort(1);
+                        }
+                    }
+                }
                 List<Long> idList = inspectMapper.getInspectResourceIdList(searchVo);
                 if (CollectionUtils.isNotEmpty(idList)) {
                     inspectResourceList = inspectMapper.getInspectResourceListByIdList(idList, TenantContext.get().getDataDbName());
+                    //排序
+                    List<InspectResourceVo> resultList = new ArrayList<>();
+                    for (Long id : idList) {
+                        for (InspectResourceVo inspectResourceVo : inspectResourceList) {
+                            if (Objects.equals(id, inspectResourceVo.getId())) {
+                                resultList.add(inspectResourceVo);
+                                break;
+                            }
+                        }
+                    }
+                    inspectResourceList = resultList;
                 }
             }
         }

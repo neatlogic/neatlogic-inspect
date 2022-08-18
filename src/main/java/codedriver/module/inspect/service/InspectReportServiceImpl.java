@@ -115,8 +115,30 @@ public class InspectReportServiceImpl implements InspectReportService {
         int resourceCount = inspectMapper.getInspectAutoexecJobNodeResourceCount(searchVo, jobId, TenantContext.get().getDataDbName());
         if (resourceCount > 0) {
             searchVo.setRowNum(resourceCount);
+            if (StringUtils.isNotBlank(searchVo.getKeyword())) {
+                int ipKeywordCount = inspectMapper.getInspectAutoexecJobNodeResourceCountByIpKeyword(searchVo, jobId, TenantContext.get().getDataDbName());
+                if (ipKeywordCount > 0) {
+                    searchVo.setIsIpFieldSort(1);
+                } else {
+                    int nameKeywordCount = inspectMapper.getInspectAutoexecJobNodeResourceCountByNameKeyword(searchVo, jobId, TenantContext.get().getDataDbName());
+                    if (nameKeywordCount > 0) {
+                        searchVo.setIsNameFieldSort(1);
+                    }
+                }
+            }
             List<Long> resourceIdList = inspectMapper.getInspectAutoexecJobNodeResourceIdList(searchVo, jobId, TenantContext.get().getDataDbName());
             inspectResourceVoList = inspectMapper.getInspectResourceListByIdListAndJobId(resourceIdList, jobId, TenantContext.get().getDataDbName());
+            //排序
+            List<InspectResourceVo> resultList = new ArrayList<>();
+            for (Long id : resourceIdList) {
+                for (InspectResourceVo inspectResourceVo : inspectResourceVoList) {
+                    if (Objects.equals(id, inspectResourceVo.getId())) {
+                        resultList.add(inspectResourceVo);
+                        break;
+                    }
+                }
+            }
+            inspectResourceVoList = resultList;
         }
         if (inspectResourceVoList == null) {
             inspectResourceVoList = new ArrayList<>();
@@ -131,6 +153,17 @@ public class InspectReportServiceImpl implements InspectReportService {
             int resourceCount = inspectMapper.getInspectResourceCount(searchVo);
             if (resourceCount > 0) {
                 searchVo.setRowNum(resourceCount);
+                if (StringUtils.isNotBlank(searchVo.getKeyword())) {
+                    int ipKeywordCount = inspectMapper.getInspectResourceCountByIpKeyword(searchVo);
+                    if (ipKeywordCount > 0) {
+                        searchVo.setIsIpFieldSort(1);
+                    } else {
+                        int nameKeywordCount = inspectMapper.getInspectResourceCountByNameKeyword(searchVo);
+                        if (nameKeywordCount > 0) {
+                            searchVo.setIsNameFieldSort(1);
+                        }
+                    }
+                }
                 List<Long> resourceIdList = inspectMapper.getInspectResourceIdList(searchVo);
                 inspectResourceVoList = inspectMapper.getInspectResourceListByIdList(resourceIdList, TenantContext.get().getDataDbName());
                 Map<Long, InspectResourceVo> inspectResourceMap = inspectResourceVoList.stream().collect(Collectors.toMap(InspectResourceVo::getId, e -> e));
@@ -140,6 +173,15 @@ public class InspectReportServiceImpl implements InspectReportService {
                         inspectResourceMap.get(resourceScriptVo.getResourceId()).setScript(resourceScriptVo);
                     }
                 }
+                //排序
+                List<InspectResourceVo> resultList = new ArrayList<>();
+                for (Long id : resourceIdList) {
+                    InspectResourceVo inspectResourceVo = inspectResourceMap.get(id);
+                    if (inspectResourceVo != null) {
+                        resultList.add(inspectResourceVo);
+                    }
+                }
+                inspectResourceVoList = resultList;
             }
             if (inspectResourceVoList == null) {
                 inspectResourceVoList = new ArrayList<>();
