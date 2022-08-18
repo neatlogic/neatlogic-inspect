@@ -19,6 +19,8 @@ public interface InspectConfigFileMapper {
 
     List<InspectConfigFilePathVo> getInspectConfigFilePathListByResourceIdList(List<Long> resourceIdList);
 
+    List<InspectConfigFilePathVo> getInspectConfigFileLastChangeTimeListByResourceIdList(List<Long> resourceIdList);
+
     List<InspectConfigFileVersionVo> getInspectConfigFileVersionListByPathIdList(List<Long> pathIdList);
 
     int getInspectConfigFileAuditCountByPathId(Long pathId);
