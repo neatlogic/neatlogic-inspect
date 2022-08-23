@@ -27,7 +27,7 @@ public class InspectConfigFileHandler extends FileTypeHandlerBase {
 
     @Override
     public String getName() {
-        return "INSPECTRCONFIGFILE";
+        return "INSPECTCONFIGFILE";
     }
 
     @Override
