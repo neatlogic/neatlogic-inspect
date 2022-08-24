@@ -95,7 +95,6 @@ public class SaveInspectConfigFileAuditApi extends PrivateApiComponentBase {
                 }
             }
             if (pathId == null) {
-//                throw new InspectConfigFilePathNotFoundException(ciEntityVo.getName(), path);
                 InspectConfigFilePathVo pathVo = new InspectConfigFilePathVo(resourceId, path);
                 inspectConfigFileMapper.insertInspectConfigFilePath(pathVo);
                 pathId = pathVo.getId();
