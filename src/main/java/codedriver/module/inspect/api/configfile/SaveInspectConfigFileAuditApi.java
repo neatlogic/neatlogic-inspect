@@ -95,7 +95,10 @@ public class SaveInspectConfigFileAuditApi extends PrivateApiComponentBase {
                 }
             }
             if (pathId == null) {
-                throw new InspectConfigFilePathNotFoundException(ciEntityVo.getName(), path);
+//                throw new InspectConfigFilePathNotFoundException(ciEntityVo.getName(), path);
+                InspectConfigFilePathVo pathVo = new InspectConfigFilePathVo(resourceId, path);
+                inspectConfigFileMapper.insertInspectConfigFilePath(pathVo);
+                pathId = pathVo.getId();
             }
         } else {
             throw new ParamNotExistsException("路径id(pathId)", "路径(path)");
@@ -104,8 +107,8 @@ public class SaveInspectConfigFileAuditApi extends PrivateApiComponentBase {
         if (inspectTime == null) {
             inspectTime = new Date();
         }
-        InspectConfigFileAuditVo recordVo = new InspectConfigFileAuditVo(inspectTime, pathId);
-        inspectConfigFileMapper.insertInspectConfigFileAudit(recordVo);
+        InspectConfigFileAuditVo auditVo = new InspectConfigFileAuditVo(inspectTime, pathId);
+        inspectConfigFileMapper.insertInspectConfigFileAudit(auditVo);
 
         Long fileId = paramObj.getLong("fileId");
         if (fileId == null) {
@@ -119,7 +122,7 @@ public class SaveInspectConfigFileAuditApi extends PrivateApiComponentBase {
         if (StringUtils.isBlank(md5)) {
             throw new ParamNotExistsException("md5");
         }
-        InspectConfigFileVersionVo versionVo = new InspectConfigFileVersionVo(md5, inspectTime, fileId, recordVo.getId(), pathId);
+        InspectConfigFileVersionVo versionVo = new InspectConfigFileVersionVo(md5, inspectTime, fileId, auditVo.getId(), pathId);
         inspectConfigFileMapper.insertInspectConfigFileVersion(versionVo);
         InspectConfigFilePathVo pathVo = new InspectConfigFilePathVo(pathId, md5, inspectTime, fileId);
         inspectConfigFileMapper.updateInspectConfigFilePath(pathVo);
