@@ -64,7 +64,8 @@ public class SaveInspectConfigFileAuditApi extends PrivateApiComponentBase {
             @Param(name = "resourceId", type = ApiParamType.LONG, isRequired = true, desc = "资源id"),
             @Param(name = "pathId", type = ApiParamType.LONG, desc = "路径id"),
             @Param(name = "path", type = ApiParamType.STRING, desc = "路径"),
-            @Param(name = "inspectTime", type = ApiParamType.LONG, desc = "巡检时间"),
+            @Param(name = "inspectTime", type = ApiParamType.LONG, isRequired = true, desc = "巡检时间"),
+            @Param(name = "modifyTime", type = ApiParamType.LONG, desc = "文件修改时间"),
             @Param(name = "md5", type = ApiParamType.STRING, desc = "md5"),
             @Param(name = "fileId", type = ApiParamType.LONG, desc = "文件id"),
     })
@@ -103,9 +104,6 @@ public class SaveInspectConfigFileAuditApi extends PrivateApiComponentBase {
             throw new ParamNotExistsException("路径id(pathId)", "路径(path)");
         }
         Date inspectTime = paramObj.getDate("inspectTime");
-        if (inspectTime == null) {
-            inspectTime = new Date();
-        }
         InspectConfigFileAuditVo auditVo = new InspectConfigFileAuditVo(inspectTime, pathId);
         inspectConfigFileMapper.insertInspectConfigFileAudit(auditVo);
 
@@ -121,9 +119,13 @@ public class SaveInspectConfigFileAuditApi extends PrivateApiComponentBase {
         if (StringUtils.isBlank(md5)) {
             throw new ParamNotExistsException("md5");
         }
-        InspectConfigFileVersionVo versionVo = new InspectConfigFileVersionVo(md5, inspectTime, fileId, auditVo.getId(), pathId);
+        Date modifyTime = paramObj.getDate("modifyTime");
+        if (modifyTime == null) {
+            throw new ParamNotExistsException("modifyTime");
+        }
+        InspectConfigFileVersionVo versionVo = new InspectConfigFileVersionVo(md5, modifyTime, fileId, auditVo.getId(), pathId);
         inspectConfigFileMapper.insertInspectConfigFileVersion(versionVo);
-        InspectConfigFilePathVo pathVo = new InspectConfigFilePathVo(pathId, md5, inspectTime, fileId);
+        InspectConfigFilePathVo pathVo = new InspectConfigFilePathVo(pathId, md5, modifyTime, fileId);
         inspectConfigFileMapper.updateInspectConfigFilePath(pathVo);
         return null;
     }
