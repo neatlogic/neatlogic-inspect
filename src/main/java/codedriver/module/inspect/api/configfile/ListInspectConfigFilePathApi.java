@@ -47,7 +47,7 @@ public class ListInspectConfigFilePathApi extends PrivateApiComponentBase {
 
     @Input({
             @Param(name = "keyword", type = ApiParamType.STRING, desc = "模糊匹配文件名、资产IP、资产名称"),
-            @Param(name = "startTimeRange", type = ApiParamType.JSONARRAY, desc = "最近变更时间"),
+            @Param(name = "timeRange", type = ApiParamType.JSONARRAY, desc = "最近变更时间"),
             @Param(name = "currentPage", type = ApiParamType.INTEGER, desc = "当前页"),
             @Param(name = "pageSize", type = ApiParamType.INTEGER, desc = "每页数据条目"),
             @Param(name = "needPage", type = ApiParamType.BOOLEAN, desc = "是否需要分页，默认true")

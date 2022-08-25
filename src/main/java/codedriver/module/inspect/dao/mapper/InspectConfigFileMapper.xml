@@ -156,12 +156,12 @@
                 OR b.`ip` LIKE CONCAT('%', #{keyword}, '%')
                 )
             </if>
-            <if test="startTimeRange != null">
-                <if test="startTimeRange.size() > 0">
-                    AND a.`inspect_time` &gt;= STR_TO_DATE(#{startTimeRange[0]}, '%Y-%m-%d %H:%i:%s')
+            <if test="timeRange != null">
+                <if test="timeRange.size() > 0">
+                    AND a.`inspect_time` &gt;= STR_TO_DATE(#{timeRange[0]}, '%Y-%m-%d %H:%i:%s')
                 </if>
-                <if test="startTimeRange.size() > 1">
-                    AND a.`inspect_time` &lt;= STR_TO_DATE(#{startTimeRange[1]}, '%Y-%m-%d %H:%i:%s')
+                <if test="timeRange.size() > 1">
+                    AND a.`inspect_time` &lt;= STR_TO_DATE(#{timeRange[1]}, '%Y-%m-%d %H:%i:%s')
                 </if>
             </if>
         </where>
@@ -186,12 +186,12 @@
                      OR b.`ip` LIKE CONCAT('%', #{keyword}, '%')
                 )
             </if>
-            <if test="startTimeRange != null">
-                <if test="startTimeRange.size() > 0">
-                    AND a.`inspect_time` &gt;= STR_TO_DATE(#{startTimeRange[0]}, '%Y-%m-%d %H:%i:%s')
+            <if test="timeRange != null">
+                <if test="timeRange.size() > 0">
+                    AND a.`inspect_time` &gt;= STR_TO_DATE(#{timeRange[0]}, '%Y-%m-%d %H:%i:%s')
                 </if>
-                <if test="startTimeRange.size() > 1">
-                    AND a.`inspect_time` &lt;= STR_TO_DATE(#{startTimeRange[1]}, '%Y-%m-%d %H:%i:%s')
+                <if test="timeRange.size() > 1">
+                    AND a.`inspect_time` &lt;= STR_TO_DATE(#{timeRange[1]}, '%Y-%m-%d %H:%i:%s')
                 </if>
             </if>
         </where>
