@@ -5,6 +5,7 @@
 
 package codedriver.module.inspect.dao.mapper;
 
+import codedriver.framework.inspect.dto.InspectConfigFilePathSearchVo;
 import codedriver.framework.inspect.dto.InspectConfigFilePathVo;
 import codedriver.framework.inspect.dto.InspectConfigFileAuditVo;
 import codedriver.framework.inspect.dto.InspectConfigFileVersionVo;
@@ -37,6 +38,10 @@ public interface InspectConfigFileMapper {
 
     InspectConfigFileVersionVo getInspectConfigFileVersionById(Long id);
 
+    int getInspectConfigFilePathCount(InspectConfigFilePathSearchVo searchVo);
+
+    List<InspectConfigFilePathVo> getInspectConfigFilePathList(InspectConfigFilePathSearchVo searchVo);
+
     int insertInspectConfigFilePath(InspectConfigFilePathVo pathVo);
 
     int insertInspectConfigFileAudit(InspectConfigFileAuditVo auditVo);
@@ -53,5 +58,9 @@ public interface InspectConfigFileMapper {
 
     int deleteInspectConfigFileVersionByPathIdList(List<Long> pathIdList);
 
+    int deleteInspectConfigFileVersionByPathIdAndLEId(InspectConfigFileVersionVo searchVo);
+
     int deleteInspectConfigFileAuditByPathIdList(List<Long> pathIdList);
+
+    int deleteInspectConfigFileAuditByPathIdAndLEInspectTime(InspectConfigFileAuditVo auditVo);
 }

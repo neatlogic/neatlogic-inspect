@@ -26,12 +26,14 @@ import codedriver.framework.restful.core.privateapi.PrivateApiComponentBase;
 import codedriver.module.inspect.dao.mapper.InspectConfigFileMapper;
 import com.alibaba.fastjson.JSONObject;
 import com.alibaba.nacos.common.utils.Objects;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 
 @Service
 @Transactional
@@ -68,6 +70,8 @@ public class SaveInspectConfigFileAuditApi extends PrivateApiComponentBase {
             @Param(name = "modifyTime", type = ApiParamType.LONG, desc = "文件修改时间"),
             @Param(name = "md5", type = ApiParamType.STRING, desc = "md5"),
             @Param(name = "fileId", type = ApiParamType.LONG, desc = "文件id"),
+            @Param(name = "inspectLogTTL", type = ApiParamType.INTEGER, desc = "保留历史记录天数"),
+            @Param(name = "reserveVerCount", type = ApiParamType.INTEGER, desc = "保留版本个数")
     })
     @Output({})
     @Description(desc = "保存巡检配置文件扫描历史")
@@ -108,25 +112,51 @@ public class SaveInspectConfigFileAuditApi extends PrivateApiComponentBase {
         inspectConfigFileMapper.insertInspectConfigFileAudit(auditVo);
 
         Long fileId = paramObj.getLong("fileId");
-        if (fileId == null) {
-            return null;
+        if (fileId != null) {
+            FileVo fileVo = fileMapper.getFileById(fileId);
+            if (fileVo == null) {
+                throw new FileNotFoundException(fileId);
+            }
+            String md5 = paramObj.getString("md5");
+            if (StringUtils.isBlank(md5)) {
+                throw new ParamNotExistsException("md5");
+            }
+            Date modifyTime = paramObj.getDate("modifyTime");
+            if (modifyTime == null) {
+                throw new ParamNotExistsException("modifyTime");
+            }
+            InspectConfigFileVersionVo versionVo = new InspectConfigFileVersionVo(md5, modifyTime, fileId, auditVo.getId(), pathId);
+            inspectConfigFileMapper.insertInspectConfigFileVersion(versionVo);
+            InspectConfigFilePathVo pathVo = new InspectConfigFilePathVo(pathId, md5, modifyTime, fileId);
+            inspectConfigFileMapper.updateInspectConfigFilePath(pathVo);
         }
-        FileVo fileVo = fileMapper.getFileById(fileId);
-        if (fileVo == null) {
-            throw new FileNotFoundException(fileId);
+
+        //保留历史记录天数
+        Integer inspectLogTTL = paramObj.getInteger("inspectLogTTL");
+        if (inspectLogTTL != null) {
+            Date startInspectTime = new Date(System.currentTimeMillis() - TimeUnit.DAYS.toMillis(inspectLogTTL));
+            InspectConfigFileAuditVo deleteAuditVo = new InspectConfigFileAuditVo(startInspectTime, pathId);
+            inspectConfigFileMapper.deleteInspectConfigFileAuditByPathIdAndLEInspectTime(deleteAuditVo);
         }
-        String md5 = paramObj.getString("md5");
-        if (StringUtils.isBlank(md5)) {
-            throw new ParamNotExistsException("md5");
+        //保留版本个数
+        Integer reserveVerCount = paramObj.getInteger("reserveVerCount");
+        if (reserveVerCount != null) {
+            if (reserveVerCount == 0) {
+                List<Long> pathIdList = new ArrayList<>();
+                pathIdList.add(pathId);
+                inspectConfigFileMapper.deleteInspectConfigFileVersionByPathIdList(pathIdList);
+            } else {
+                InspectConfigFileVersionVo searchVo = new InspectConfigFileVersionVo();
+                searchVo.setPathId(pathId);
+                searchVo.setPageSize(1);
+                searchVo.setCurrentPage(reserveVerCount + 1);
+                List<Long> versionIdList = inspectConfigFileMapper.getInspectConfigFileVersionIdListByPathId(searchVo);
+                if (CollectionUtils.isNotEmpty(versionIdList)) {
+                    searchVo.setId(versionIdList.get(0));
+                    inspectConfigFileMapper.deleteInspectConfigFileVersionByPathIdAndLEId(searchVo);
+                }
+            }
         }
-        Date modifyTime = paramObj.getDate("modifyTime");
-        if (modifyTime == null) {
-            throw new ParamNotExistsException("modifyTime");
-        }
-        InspectConfigFileVersionVo versionVo = new InspectConfigFileVersionVo(md5, modifyTime, fileId, auditVo.getId(), pathId);
-        inspectConfigFileMapper.insertInspectConfigFileVersion(versionVo);
-        InspectConfigFilePathVo pathVo = new InspectConfigFilePathVo(pathId, md5, modifyTime, fileId);
-        inspectConfigFileMapper.updateInspectConfigFilePath(pathVo);
         return null;
     }
 }

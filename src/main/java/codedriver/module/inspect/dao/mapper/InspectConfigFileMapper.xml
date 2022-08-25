@@ -144,6 +144,61 @@
         WHERE `id` = #{value}
     </select>
 
+    <select id="getInspectConfigFilePathCount" parameterType="codedriver.framework.inspect.dto.InspectConfigFilePathSearchVo" resultType="int">
+        SELECT
+        COUNT(1)
+        FROM `inspect_config_file_path` a
+        LEFT JOIN ${schemaName}.`scence_ipobject_ip_port` b ON b.`id` = a.`resource_id`
+        <where>
+            <if test="keyword != null and keyword != ''">
+                AND (a.`path` LIKE CONCAT('%', #{keyword}, '%')
+                OR b.`name` LIKE CONCAT('%', #{keyword}, '%')
+                OR b.`ip` LIKE CONCAT('%', #{keyword}, '%')
+                )
+            </if>
+            <if test="startTimeRange != null">
+                <if test="startTimeRange.size() > 0">
+                    AND a.`inspect_time` &gt;= STR_TO_DATE(#{startTimeRange[0]}, '%Y-%m-%d %H:%i:%s')
+                </if>
+                <if test="startTimeRange.size() > 1">
+                    AND a.`inspect_time` &lt;= STR_TO_DATE(#{startTimeRange[1]}, '%Y-%m-%d %H:%i:%s')
+                </if>
+            </if>
+        </where>
+    </select>
+
+    <select id="getInspectConfigFilePathList" parameterType="codedriver.framework.inspect.dto.InspectConfigFilePathSearchVo" resultType="codedriver.framework.inspect.dto.InspectConfigFilePathVo">
+        SELECT
+        a.`id`,
+        a.`resource_id` AS resourceId,
+        a.`path`,
+        a.`inspect_time` AS inspectTime,
+        b.`name` AS resourceName,
+        b.`ip` AS resourceIP,
+        b.`port`  AS resourcePort,
+        b.`type_label`  AS resourceTypeLabel
+        FROM `inspect_config_file_path` a
+        JOIN ${schemaName}.`scence_ipobject_ip_port` b ON b.`id` = a.`resource_id`
+        <where>
+            <if test="keyword != null and keyword != ''">
+            AND (a.`path` LIKE CONCAT('%', #{keyword}, '%')
+                     OR b.`name` LIKE CONCAT('%', #{keyword}, '%')
+                     OR b.`ip` LIKE CONCAT('%', #{keyword}, '%')
+                )
+            </if>
+            <if test="startTimeRange != null">
+                <if test="startTimeRange.size() > 0">
+                    AND a.`inspect_time` &gt;= STR_TO_DATE(#{startTimeRange[0]}, '%Y-%m-%d %H:%i:%s')
+                </if>
+                <if test="startTimeRange.size() > 1">
+                    AND a.`inspect_time` &lt;= STR_TO_DATE(#{startTimeRange[1]}, '%Y-%m-%d %H:%i:%s')
+                </if>
+            </if>
+        </where>
+        ORDER BY a.`inspect_time` desc
+        LIMIT #{startNum}, #{pageSize}
+    </select>
+
     <insert id="insertInspectConfigFilePath" parameterType="codedriver.framework.inspect.dto.InspectConfigFilePathVo">
         INSERT INTO `inspect_config_file_path` (
             `id`,
@@ -231,12 +286,24 @@
         </foreach>
     </delete>
 
+    <delete id="deleteInspectConfigFileVersionByPathIdAndLEId" parameterType="codedriver.framework.inspect.dto.InspectConfigFileVersionVo">
+        DELETE FROM `inspect_config_file_version`
+        WHERE `path_id` = #{pathId}
+        AND `id` &lt;= #{id}
+    </delete>
+
     <delete id="deleteInspectConfigFileAuditByPathIdList" parameterType="java.lang.Long">
         DELETE FROM `inspect_config_file_audit`
         WHERE `path_id` IN
         <foreach collection="list" item="pathId" open="(" separator="," close=")">
             #{pathId}
         </foreach>
+    </delete>
+
+    <delete id="deleteInspectConfigFileAuditByPathIdAndLEInspectTime" parameterType="codedriver.framework.inspect.dto.InspectConfigFileAuditVo">
+        DELETE FROM `inspect_config_file_audit`
+        WHERE `path_id` = #{pathId}
+        AND `inspect_time` &lt;= #{inspectTime}
     </delete>
 </mapper>
 
