@@ -21,6 +21,8 @@ import org.springframework.stereotype.Service;
 import javax.annotation.Resource;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 @AuthAction(action = INSPECT_BASE.class)
@@ -63,6 +65,15 @@ public class ListInspectConfigFilePathApi extends PrivateApiComponentBase {
         if (rowNum > 0) {
             searchVo.setRowNum(rowNum);
             List<InspectConfigFilePathVo> inspectResourceConfigFilePathList = inspectConfigFileMapper.getInspectConfigFilePathList(searchVo);
+            List<Long> idList = inspectResourceConfigFilePathList.stream().map(InspectConfigFilePathVo::getId).collect(Collectors.toList());
+            List<InspectConfigFilePathVo> inspectResourceConfigFileVersionCountList = inspectConfigFileMapper.getInspectConfigFileVersionCountByPathIdList(idList);
+            Map<Long, Integer> versionCountMap = inspectResourceConfigFileVersionCountList.stream().collect(Collectors.toMap(InspectConfigFilePathVo::getId, InspectConfigFilePathVo::getVersionCount));
+            for (InspectConfigFilePathVo pathVo : inspectResourceConfigFilePathList) {
+                Integer versionCount = versionCountMap.get(pathVo.getId());
+                if (versionCount != null) {
+                    pathVo.setVersionCount(versionCount);
+                }
+            }
             return TableResultUtil.getResult(inspectResourceConfigFilePathList, searchVo);
         }
         return TableResultUtil.getResult(new ArrayList<>(), searchVo);

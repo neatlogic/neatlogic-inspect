@@ -5,14 +5,20 @@
 
 package codedriver.module.inspect.dao.mapper;
 
-import codedriver.framework.inspect.dto.InspectConfigFilePathSearchVo;
-import codedriver.framework.inspect.dto.InspectConfigFilePathVo;
-import codedriver.framework.inspect.dto.InspectConfigFileAuditVo;
-import codedriver.framework.inspect.dto.InspectConfigFileVersionVo;
+import codedriver.framework.cmdb.dto.resourcecenter.ResourceSearchVo;
+import codedriver.framework.inspect.dto.*;
+import org.apache.ibatis.annotations.Param;
 
+import java.util.Date;
 import java.util.List;
 
 public interface InspectConfigFileMapper {
+
+    int getInspectResourceCount(ResourceSearchVo searchVo);
+
+    List<Long> getInspectResourceIdList(ResourceSearchVo searchVo);
+
+    List<InspectResourceVo> getInspectResourceListByIdList(@Param("idList") List<Long> idList, @Param("schemaName") String schemaName);
 
     InspectConfigFilePathVo getInspectConfigFilePathById(Long id);
 
@@ -32,6 +38,8 @@ public interface InspectConfigFileMapper {
 
     int getInspectConfigFileVersionCountByPathId(Long pathId);
 
+    List<InspectConfigFilePathVo> getInspectConfigFileVersionCountByPathIdList(List<Long> pathIdList);
+
     List<Long> getInspectConfigFileVersionIdListByPathId(InspectConfigFileVersionVo searchVo);
 
     List<InspectConfigFileVersionVo> getInspectConfigFileVersionListByIdList(List<Long> idList);
@@ -46,7 +54,9 @@ public interface InspectConfigFileMapper {
 
     int insertInspectConfigFileAudit(InspectConfigFileAuditVo auditVo);
 
-    void insertInspectConfigFileVersion(InspectConfigFileVersionVo versionVo);
+    int insertInspectConfigFileVersion(InspectConfigFileVersionVo versionVo);
+
+    int insertInspectConfigFileLastChangeTime(@Param("resourceId") Long resourceId, @Param("lastChangeTime") Date lastChangeTime);
 
     int updateInspectConfigFilePath(InspectConfigFilePathVo pathVo);
 
