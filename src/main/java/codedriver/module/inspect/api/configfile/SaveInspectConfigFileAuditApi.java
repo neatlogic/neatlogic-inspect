@@ -129,6 +129,7 @@ public class SaveInspectConfigFileAuditApi extends PrivateApiComponentBase {
             inspectConfigFileMapper.insertInspectConfigFileVersion(versionVo);
             InspectConfigFilePathVo pathVo = new InspectConfigFilePathVo(pathId, md5, modifyTime, fileId);
             inspectConfigFileMapper.updateInspectConfigFilePath(pathVo);
+            inspectConfigFileMapper.insertInspectConfigFileLastChangeTime(resourceId, modifyTime);
         }
 
         //保留历史记录天数
