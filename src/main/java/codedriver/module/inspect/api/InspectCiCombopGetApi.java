@@ -67,7 +67,7 @@ public class InspectCiCombopGetApi extends PrivateApiComponentBase {
         Long resourceId = paramObj.getLong("resourceId");
         if(resourceId != null){
             IResourceCrossoverMapper resourceCrossoverMapper = CrossoverServiceFactory.getApi(IResourceCrossoverMapper.class);
-            List<ResourceVo> resourceVoList = resourceCrossoverMapper.getResourceByIdList(Collections.singletonList(resourceId), TenantContext.get().getDataDbName());
+            List<ResourceVo> resourceVoList = resourceCrossoverMapper.getResourceByIdList(Collections.singletonList(resourceId));
             if(CollectionUtils.isEmpty(resourceVoList)){
                 throw new ResourceNotFoundException(resourceId);
             }

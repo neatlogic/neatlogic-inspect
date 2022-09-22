@@ -101,7 +101,7 @@ public class InspectReportExportApi extends PrivateBinaryStreamApiComponentBase 
         Long jobId = paramObj.getLong("jobId");
         String type = paramObj.getString("type");
         IResourceCrossoverMapper resourceCrossoverMapper = CrossoverServiceFactory.getApi(IResourceCrossoverMapper.class);
-        ResourceVo resource = resourceCrossoverMapper.getResourceById(resourceId, TenantContext.get().getDataDbName());
+        ResourceVo resource = resourceCrossoverMapper.getResourceById(resourceId);
         String fileName = resourceId.toString();
         if (resource != null && resource.getName() != null) {
             fileName = resource.getName();
