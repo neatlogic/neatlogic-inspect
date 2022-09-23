@@ -55,9 +55,6 @@ public class InspectReportServiceImpl implements InspectReportService {
     @Resource
     InspectMapper inspectMapper;
 
-    @Resource
-    AutoexecJobMapper autoexecJobMapper;
-
     @Override
     public Document getInspectReport(Long resourceId, String id, Long jobId) {
         MongoCollection<Document> collection;
