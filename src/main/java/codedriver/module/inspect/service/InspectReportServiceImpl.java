@@ -7,18 +7,17 @@ package codedriver.module.inspect.service;
 
 import codedriver.framework.asynchronization.threadlocal.TenantContext;
 import codedriver.framework.autoexec.dao.mapper.AutoexecJobMapper;
-import codedriver.framework.autoexec.dto.job.AutoexecJobPhaseNodeVo;
 import codedriver.framework.cmdb.crossover.IResourceCenterResourceCrossoverService;
-import codedriver.framework.cmdb.dto.resourcecenter.*;
-import codedriver.framework.cmdb.dto.resourcecenter.config.ResourceInfo;
+import codedriver.framework.cmdb.dto.resourcecenter.BgVo;
+import codedriver.framework.cmdb.dto.resourcecenter.IpVo;
+import codedriver.framework.cmdb.dto.resourcecenter.OwnerVo;
+import codedriver.framework.cmdb.dto.resourcecenter.ResourceSearchVo;
 import codedriver.framework.cmdb.dto.sync.CollectionVo;
-import codedriver.framework.cmdb.dto.tag.TagVo;
-import codedriver.framework.cmdb.utils.ResourceSearchGenerateSqlUtil;
 import codedriver.framework.common.constvalue.InspectStatus;
 import codedriver.framework.crossover.CrossoverServiceFactory;
 import codedriver.framework.inspect.dao.mapper.InspectMapper;
-import codedriver.framework.inspect.dto.InspectResourceVo;
 import codedriver.framework.inspect.dto.InspectResourceScriptVo;
+import codedriver.framework.inspect.dto.InspectResourceVo;
 import codedriver.framework.util.TimeUtil;
 import codedriver.framework.util.excel.ExcelBuilder;
 import codedriver.framework.util.excel.SheetBuilder;
@@ -28,14 +27,6 @@ import com.alibaba.fastjson.JSONObject;
 import com.alibaba.fastjson.JSONPath;
 import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoCollection;
-import net.sf.jsqlparser.expression.*;
-import net.sf.jsqlparser.expression.operators.conditional.AndExpression;
-import net.sf.jsqlparser.expression.operators.relational.EqualsTo;
-import net.sf.jsqlparser.expression.operators.relational.ExpressionList;
-import net.sf.jsqlparser.expression.operators.relational.InExpression;
-import net.sf.jsqlparser.schema.Column;
-import net.sf.jsqlparser.schema.Table;
-import net.sf.jsqlparser.statement.select.*;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -44,6 +35,8 @@ import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.streaming.SXSSFWorkbook;
 import org.bson.Document;
 import org.bson.types.ObjectId;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
@@ -51,7 +44,6 @@ import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
 import java.util.*;
-import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
 
 @Service
@@ -207,8 +199,8 @@ public class InspectReportServiceImpl implements InspectReportService {
                 //初始化fieldMap
                 if (!nameList.contains(inspectResult.getString("name"))) {
                     nameList.add(inspectResult.getString("name"));
-                    JSONArray fields = reportJson.getJSONArray("fields");
-                    if (CollectionUtils.isNotEmpty(fields)) {
+                    JSONArray fields;
+                    if (MapUtils.isNotEmpty(reportJson) && CollectionUtils.isNotEmpty(fields = reportJson.getJSONArray("fields"))) {
                         for (int k = 0; k < fields.size(); k++) {
                             JSONObject field = fields.getJSONObject(k);
                             fieldPathTextMap.put(field.getString("name"), field.getString("desc"));
@@ -224,14 +216,17 @@ public class InspectReportServiceImpl implements InspectReportService {
                     if (CollectionUtils.isNotEmpty(alerts)) {
                         for (int j = 0; j < alerts.size(); j++) {
                             JSONObject alert = alerts.getJSONObject(j);
-                            JSONObject threholdJson = thresholds.getJSONObject(alert.getString("ruleName"));
                             Map<String, Object> dataMap = new HashMap<>();
-                            dataMap.put("alertLevel", threholdJson.getString("level"));
-                            dataMap.put("alertTips", threholdJson.getString("name"));
-                            dataMap.put("alertRule", threholdJson.getString("rule"));
+                            JSONObject threholdJson;
+                            if (MapUtils.isNotEmpty(thresholds) && MapUtils.isNotEmpty(threholdJson = thresholds.getJSONObject(alert.getString("ruleName")))) {
+                                dataMap.put("alertLevel", threholdJson.getString("level"));
+                                dataMap.put("alertTips", threholdJson.getString("name"));
+                                dataMap.put("alertRule", threholdJson.getString("rule"));
+                                //补充告警对象
+                                dataMap.put("alertObject", getInspectAlertObject(reportJson, alert, threholdJson, fieldPathTextMap));
+                            }
                             dataMap.put("alertValue", alert.getString("fieldValue"));
-                            //补充告警对象
-                            dataMap.put("alertObject", getInspectAlertObject(reportJson, alert, threholdJson, fieldPathTextMap));
+
                             resourceAlertArray.add(dataMap);
                         }
                     }
@@ -403,8 +398,8 @@ public class InspectReportServiceImpl implements InspectReportService {
                         //初始化fieldMap
                         if (!nameList.contains(inspectResult.getString("name"))) {
                             nameList.add(inspectResult.getString("name"));
-                            JSONArray fields = reportJson.getJSONArray("fields");
-                            if (CollectionUtils.isNotEmpty(fields)) {
+                            JSONArray fields;
+                            if (MapUtils.isNotEmpty(reportJson) && CollectionUtils.isNotEmpty(fields = reportJson.getJSONArray("fields"))) {
                                 for (int k = 0; k < fields.size(); k++) {
                                     JSONObject field = fields.getJSONObject(k);
                                     fieldPathTextMap.put(field.getString("name"), field.getString("desc"));
@@ -420,15 +415,17 @@ public class InspectReportServiceImpl implements InspectReportService {
                             if (CollectionUtils.isNotEmpty(alerts)) {
                                 for (int j = 0; j < alerts.size(); j++) {
                                     JSONObject alert = alerts.getJSONObject(j);
-                                    JSONObject threholdJson = thresholds.getJSONObject(alert.getString("ruleName"));
                                     Map<String, Object> dataMap = new HashMap<>();
                                     putCommonDataMap(dataMap, inspectResourceVo);
-                                    dataMap.put("alertLevel", threholdJson.getString("level"));
-                                    dataMap.put("alertTips", threholdJson.getString("name"));
-                                    dataMap.put("alertRule", threholdJson.getString("rule"));
+                                    JSONObject threholdJson;
+                                    if (MapUtils.isNotEmpty(thresholds) && MapUtils.isNotEmpty(threholdJson = thresholds.getJSONObject(alert.getString("ruleName")))) {
+                                        dataMap.put("alertLevel", threholdJson.getString("level"));
+                                        dataMap.put("alertTips", threholdJson.getString("name"));
+                                        dataMap.put("alertRule", threholdJson.getString("rule"));
+                                        //补充告警对象
+                                        dataMap.put("alertObject", getInspectAlertObject(reportJson, alert, threholdJson, fieldPathTextMap));
+                                    }
                                     dataMap.put("alertValue", alert.getString("fieldValue"));
-                                    //补充告警对象
-                                    dataMap.put("alertObject", getInspectAlertObject(reportJson, alert, threholdJson, fieldPathTextMap));
                                     sheetBuilder.addData(dataMap);
                                 }
                             } else {
