@@ -86,7 +86,7 @@ public class ListInspectConfigFileResourceApi extends PrivateApiComponentBase {
         ResourceSearchVo searchVo = JSONObject.toJavaObject(paramObj, ResourceSearchVo.class);
         if (CollectionUtils.isNotEmpty(searchVo.getIdList())) {
             List<Long> idList = searchVo.getIdList();
-            inspectResourceList = inspectConfigFileMapper.getInspectResourceListByIdList(idList, TenantContext.get().getDataDbName());
+            inspectResourceList = inspectConfigFileMapper.getInspectResourceListByIdList(idList);
             List<AutoexecJobPhaseNodeVo> autoexecJobPhaseNodeList = autoexecJobMapper.getAutoexecJobNodeListByResourceIdList(idList);
             Map<Long, AutoexecJobPhaseNodeVo> autoexecJobPhaseNodeMap = autoexecJobPhaseNodeList.stream().collect(Collectors.toMap(e -> e.getResourceId(), e -> e));
             for (InspectResourceVo inspectResourceVo : inspectResourceList) {
@@ -114,7 +114,7 @@ public class ListInspectConfigFileResourceApi extends PrivateApiComponentBase {
                     Map<Long, List<TagVo>> tagMap = resourceCenterResourceCrossoverService.getResourceTagByResourceIdList(idList);
                     List<AutoexecJobPhaseNodeVo> autoexecJobPhaseNodeList = autoexecJobMapper.getAutoexecJobNodeListByResourceIdList(idList);
                     Map<Long, AutoexecJobPhaseNodeVo> autoexecJobPhaseNodeMap = autoexecJobPhaseNodeList.stream().collect(Collectors.toMap(e -> e.getResourceId(), e -> e));
-                    inspectResourceList = inspectConfigFileMapper.getInspectResourceListByIdList(idList, TenantContext.get().getDataDbName());
+                    inspectResourceList = inspectConfigFileMapper.getInspectResourceListByIdList(idList);
                     List<InspectConfigFilePathVo> inspectConfigFilePathList = inspectConfigFileMapper.getInspectConfigFileLastChangeTimeListByResourceIdList(idList);
                     Map<Long, InspectConfigFilePathVo> inspectConfigFilePathMap = inspectConfigFilePathList.stream().collect(Collectors.toMap(e -> e.getResourceId(), e -> e));
                     for (InspectResourceVo inspectResourceVo : inspectResourceList) {
