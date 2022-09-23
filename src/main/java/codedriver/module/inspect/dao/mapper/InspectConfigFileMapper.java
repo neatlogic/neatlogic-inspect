@@ -18,7 +18,7 @@ public interface InspectConfigFileMapper {
 
     List<Long> getInspectResourceIdList(ResourceSearchVo searchVo);
 
-    List<InspectResourceVo> getInspectResourceListByIdList(@Param("idList") List<Long> idList, @Param("schemaName") String schemaName);
+    List<InspectResourceVo> getInspectResourceListByIdList(List<Long> idList);
 
     InspectConfigFilePathVo getInspectConfigFilePathById(Long id);
 

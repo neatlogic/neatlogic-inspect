@@ -48,9 +48,8 @@ public class GetInspectAccessEndPointScriptPublicApi extends PublicApiComponentB
     public Object myDoService(JSONObject paramObj) throws Exception {
         JSONObject returnObject = new JSONObject();
         Long resourceId = paramObj.getLong("resourceId");
-        String schemaName = TenantContext.get().getDataDbName();
         IResourceCrossoverMapper resourceCrossoverMapper = CrossoverServiceFactory.getApi(IResourceCrossoverMapper.class);
-        if (resourceCrossoverMapper.checkResourceIsExists(resourceId, schemaName) == 0) {
+        if (resourceCrossoverMapper.checkResourceIsExists(resourceId) == 0) {
             throw new ResourceNotFoundException(resourceId);
         }
         InspectResourceScriptVo resourceScriptVo = inspectMapper.getResourceScriptByResourceId(resourceId);
