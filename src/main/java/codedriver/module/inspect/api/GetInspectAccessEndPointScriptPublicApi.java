@@ -65,7 +65,6 @@ public class GetInspectAccessEndPointScriptPublicApi extends PublicApiComponentB
             } else if (StringUtils.equals(type, "script")) {
                 returnObject.put("config", config.getJSONObject("config"));
             }
-
         }
         returnObject.put("scriptId", resourceScriptVo.getScriptId());
         returnObject.put("resourceId", resourceScriptVo.getResourceId());
