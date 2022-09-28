@@ -9,7 +9,6 @@ import codedriver.framework.inspect.dto.InspectResourceScriptVo;
 import codedriver.framework.restful.annotation.*;
 import codedriver.framework.restful.constvalue.OperationTypeEnum;
 import codedriver.framework.restful.core.publicapi.PublicApiComponentBase;
-import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
@@ -62,10 +61,7 @@ public class GetInspectAccessEndPointScriptPublicApi extends PublicApiComponentB
         if (Objects.nonNull(config)) {
             String type = config.getString("type");
             if (StringUtils.equals(type, "urlConfig")) {
-                String configString = config.getString("config");
-                if (StringUtils.isNotBlank(configString)) {
-                    returnObject.put("config", JSONArray.parseArray(configString));
-                }
+                returnObject.put("config", config.getJSONArray("config"));
             } else if (StringUtils.equals(type, "script")) {
                 returnObject.put("config", config.getJSONObject("config"));
             }

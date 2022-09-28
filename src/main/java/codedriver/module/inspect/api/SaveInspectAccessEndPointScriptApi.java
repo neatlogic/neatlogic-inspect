@@ -17,7 +17,6 @@ import codedriver.framework.restful.annotation.OperationType;
 import codedriver.framework.restful.annotation.Param;
 import codedriver.framework.restful.constvalue.OperationTypeEnum;
 import codedriver.framework.restful.core.privateapi.PrivateApiComponentBase;
-import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -58,7 +57,7 @@ public class SaveInspectAccessEndPointScriptApi extends PrivateApiComponentBase 
 
     @Input({
             @Param(name = "resourceId", type = ApiParamType.LONG, isRequired = true, desc = "资源id"),
-            @Param(name = "config", type = ApiParamType.NOAUTH, desc = "拓展配置")
+            @Param(name = "config", type = ApiParamType.JSONOBJECT, desc = "拓展配置")
     })
     @Description(desc = "保存资源脚本")
     @Override
@@ -79,14 +78,11 @@ public class SaveInspectAccessEndPointScriptApi extends PrivateApiComponentBase 
                 throw new AutoexecScriptNotFoundException(scriptId);
             }
         } else if (StringUtils.equals(paramConfig.getString("type"), "urlConfig")) {
-            String configString = paramConfig.getString("config");
-            if (StringUtils.isNotBlank(configString)) {
-                try {
-                    JSONArray.parseArray(configString);
-                } catch (Exception e) {
-                    logger.error("保存配置URL拨测的拓展配置格式不对：" + e.getMessage(), e);
-                    throw new InspectUrlConfigIllegalException();
-                }
+            try {
+                paramConfig.getJSONArray("config");
+            } catch (Exception e) {
+                logger.error("保存配置URL拨测的拓展配置格式不对：" + e.getMessage(), e);
+                throw new InspectUrlConfigIllegalException();
             }
         }
         inspectMapper.insertResourceScript(resourceId, scriptId, String.valueOf(paramConfig));
