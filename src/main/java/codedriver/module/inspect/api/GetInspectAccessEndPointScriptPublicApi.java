@@ -1,6 +1,5 @@
 package codedriver.module.inspect.api;
 
-import codedriver.framework.asynchronization.threadlocal.TenantContext;
 import codedriver.framework.cmdb.crossover.IResourceCrossoverMapper;
 import codedriver.framework.cmdb.exception.resourcecenter.ResourceNotFoundException;
 import codedriver.framework.common.constvalue.ApiParamType;
@@ -10,10 +9,13 @@ import codedriver.framework.inspect.dto.InspectResourceScriptVo;
 import codedriver.framework.restful.annotation.*;
 import codedriver.framework.restful.constvalue.OperationTypeEnum;
 import codedriver.framework.restful.core.publicapi.PublicApiComponentBase;
+import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
+import java.util.Objects;
 
 @Service
 @OperationType(type = OperationTypeEnum.SEARCH)
@@ -56,7 +58,19 @@ public class GetInspectAccessEndPointScriptPublicApi extends PublicApiComponentB
         if (resourceScriptVo == null) {
             return new JSONObject();
         }
-        returnObject.put("config", resourceScriptVo.getConfig());
+        JSONObject config = resourceScriptVo.getConfig();
+        if (Objects.nonNull(config)) {
+            String type = config.getString("type");
+            if (StringUtils.equals(type, "urlConfig")) {
+                String configString = config.getString("config");
+                if (StringUtils.isNotBlank(configString)) {
+                    returnObject.put("config", JSONArray.parseArray(configString));
+                }
+            } else if (StringUtils.equals(type, "script")) {
+                returnObject.put("config", config.getJSONObject("config"));
+            }
+
+        }
         returnObject.put("scriptId", resourceScriptVo.getScriptId());
         returnObject.put("resourceId", resourceScriptVo.getResourceId());
         return returnObject;
