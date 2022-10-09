@@ -7,7 +7,7 @@ import codedriver.framework.cmdb.crossover.ICiCrossoverMapper;
 import codedriver.framework.cmdb.exception.ci.CiNotFoundException;
 import codedriver.framework.common.constvalue.ApiParamType;
 import codedriver.framework.crossover.CrossoverServiceFactory;
-import codedriver.framework.inspect.auth.INSPECT_MODIFY;
+import codedriver.framework.inspect.auth.INSPECT_SCHEDULE_EXECUTE;
 import codedriver.framework.inspect.dao.mapper.InspectScheduleMapper;
 import codedriver.framework.inspect.dto.InspectScheduleVo;
 import codedriver.framework.inspect.exception.InspectScheduleNotFoundException;
@@ -32,7 +32,7 @@ import org.springframework.stereotype.Service;
 import javax.annotation.Resource;
 
 @Service
-@AuthAction(action = INSPECT_MODIFY.class)
+@AuthAction(action = INSPECT_SCHEDULE_EXECUTE.class)
 @OperationType(type = OperationTypeEnum.OPERATE)
 public class InspectScheduleSaveApi extends PrivateApiComponentBase {
 
