@@ -30,7 +30,7 @@ import org.springframework.stereotype.Service;
 public class SearchInspectAppModuleApi extends PrivateApiComponentBase {
     @Override
     public String getName() {
-        return "查询资源中应用模块列表";
+        return "查询应用巡检中应用模块列表";
     }
 
     @Override
@@ -52,9 +52,9 @@ public class SearchInspectAppModuleApi extends PrivateApiComponentBase {
     })
     @Output({
             @Param(explode = BasePageVo.class),
-            @Param(name = "tbodyList", explode = ResourceVo[].class, desc = "应用模块列表")
+            @Param(name = "tbodyList", explode = ResourceVo[].class, desc = "应用巡检中应用模块列表")
     })
-    @Description(desc = "查询资源中应用模块列表")
+    @Description(desc = "查询应用巡检中应用模块列表")
     @Override
     public Object myDoService(JSONObject paramObj) throws Exception {
         ResourceSearchVo searchVo = paramObj.toJavaObject(ResourceSearchVo.class);
