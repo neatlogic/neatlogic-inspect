@@ -1,10 +1,9 @@
-package codedriver.module.inspect.api;
+package codedriver.module.inspect.api.newproblem;
 
 import codedriver.framework.auth.core.AuthAction;
 import codedriver.framework.common.constvalue.ApiParamType;
 import codedriver.framework.inspect.auth.INSPECT_BASE;
 import codedriver.framework.inspect.dto.InspectNewProblemCustomViewVo;
-import codedriver.framework.inspect.exception.InspectNewProblemCustomViewNameRepeatException;
 import codedriver.framework.inspect.exception.InspectNewProblemCustomViewNotFoundException;
 import codedriver.framework.restful.annotation.Description;
 import codedriver.framework.restful.annotation.Input;
