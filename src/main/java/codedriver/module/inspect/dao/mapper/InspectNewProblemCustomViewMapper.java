@@ -6,6 +6,7 @@
 package codedriver.module.inspect.dao.mapper;
 
 import codedriver.framework.inspect.dto.InspectNewProblemCustomViewVo;
+import org.apache.ibatis.annotations.Param;
 
 import java.util.List;
 
@@ -17,11 +18,17 @@ public interface InspectNewProblemCustomViewMapper {
 
     List<InspectNewProblemCustomViewVo> getInspectNewProblemCustomViewListByUserUuid(String userUuid);
 
-    int updateInspectNewProblemCustomView(InspectNewProblemCustomViewVo vo);
+    Integer getMaxSortByUserUuid(String userUuid);
 
     int updateInspectNewProblemCustomViewName(InspectNewProblemCustomViewVo vo);
 
     int updateInspectNewProblemCustomViewCondition(InspectNewProblemCustomViewVo vo);
+
+    int updateInspectNewProblemCustomViewSort(InspectNewProblemCustomViewVo vo);
+
+    int updateSortDecrement(@Param("userUuid") String userUuid, @Param("fromSort") Integer fromSort, @Param("toSort") Integer toSort);
+
+    int updateSortIncrement(@Param("userUuid") String userUuid, @Param("fromSort") Integer fromSort, @Param("toSort") Integer toSort);
 
     int insertInspectNewProblemCustomView(InspectNewProblemCustomViewVo vo);
 

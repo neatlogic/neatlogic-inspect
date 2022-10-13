@@ -56,7 +56,8 @@ public class SaveInspectNewProblemCustomViewApi extends PrivateApiComponentBase 
         if (inspectNewProblemCustomViewMapper.checkInspectNewProblemCustomViewIsExists(viewVo) > 0) {
             throw new InspectNewProblemCustomViewNameRepeatException(viewVo.getName());
         }
-        // todo 排序
+        Integer sort = inspectNewProblemCustomViewMapper.getMaxSortByUserUuid(UserContext.get().getUserUuid());
+        viewVo.setSort(sort != null ? sort + 1 : 1);
         inspectNewProblemCustomViewMapper.insertInspectNewProblemCustomView(viewVo);
         return null;
     }
@@ -64,6 +65,7 @@ public class SaveInspectNewProblemCustomViewApi extends PrivateApiComponentBase 
     public IValid name() {
         return value -> {
             InspectNewProblemCustomViewVo vo = JSON.toJavaObject(value, InspectNewProblemCustomViewVo.class);
+            vo.setUserUuid(UserContext.get().getUserUuid());
             if (inspectNewProblemCustomViewMapper.checkInspectNewProblemCustomViewIsExists(vo) > 0) {
                 return new FieldValidResultVo(new InspectNewProblemCustomViewNameRepeatException(vo.getName()));
             }

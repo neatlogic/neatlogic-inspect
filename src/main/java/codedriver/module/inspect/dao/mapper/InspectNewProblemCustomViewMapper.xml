@@ -11,7 +11,8 @@
         select `id`,
                `name`,
                `user_uuid` as userUuid,
-               `condition_config` as conditionConfigStr
+               `condition_config` as conditionConfigStr,
+               `sort`
         from inspect_new_problem_customview
         where `id` = #{value}
     </select>
@@ -21,23 +22,16 @@
         select `id`,
                `name`,
                `user_uuid` as userUuid,
-               `condition_config` as conditionConfigStr
+               `condition_config` as conditionConfigStr,
+               `sort`
         from inspect_new_problem_customview
         where `user_uuid` = #{value}
         order by
     </select>
 
-    <update id="updateInspectNewProblemCustomView" parameterType="codedriver.framework.inspect.dto.InspectNewProblemCustomViewVo">
-        update inspect_new_problem_customview set
-        <if test="name != null and name != ''">
-            `name` = #{name},
-        </if>
-        <if test="conditionConfigStr != null and conditionConfigStr != ''">
-            `condition_config` = #{conditionConfigStr},
-        </if>
-        `user_uuid` = #{userUuid}
-        where `id` = #{id}
-    </update>
+    <select id="getMaxSortByUserUuid" parameterType="java.lang.String" resultType="java.lang.Integer">
+        select max(`sort`) from inspect_new_problem_customview where `user_uuid` = #{value}
+    </select>
 
     <update id="updateInspectNewProblemCustomViewName" parameterType="codedriver.framework.inspect.dto.InspectNewProblemCustomViewVo">
         update inspect_new_problem_customview set
@@ -51,17 +45,43 @@
         where `id` = #{id}
     </update>
 
+    <update id="updateInspectNewProblemCustomViewSort" parameterType="codedriver.framework.inspect.dto.InspectNewProblemCustomViewVo">
+        update inspect_new_problem_customview set
+        `sort` = #{sort}
+        where `id` = #{id}
+    </update>
+
+    <update id="updateSortDecrement">
+        update `inspect_new_problem_customview` set `sort` = `sort` - 1
+        where `user_uuid` = #{userUuid}
+        and `sort` &gt;= #{fromSort}
+        <if test="toSort != null">
+            and `sort` &lt;= #{toSort}
+        </if>
+    </update>
+
+    <update id="updateSortIncrement">
+        update `inspect_new_problem_customview` set `sort` = `sort` + 1
+        where `user_uuid` = #{userUuid}
+        and `sort` &gt;= #{fromSort}
+        <if test="toSort != null">
+            and `sort` &lt;= #{toSort}
+        </if>
+    </update>
+
     <insert id="insertInspectNewProblemCustomView" parameterType="codedriver.framework.inspect.dto.InspectNewProblemCustomViewVo">
         insert into inspect_new_problem_customview (
             `id`,
             `name`,
             `user_uuid`,
-            `condition_config`
+            `condition_config`,
+            `sort`
         ) values (
               #{id},
               #{name},
               #{userUuid},
-              #{conditionConfigStr}
+              #{conditionConfigStr},
+              #{sort}
         )
     </insert>
 
