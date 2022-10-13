@@ -7,8 +7,8 @@ package codedriver.module.inspect.api.newproblem;
 
 import codedriver.framework.asynchronization.threadlocal.UserContext;
 import codedriver.framework.auth.core.AuthAction;
-import codedriver.framework.autoexec.auth.AUTOEXEC_MODIFY;
 import codedriver.framework.common.constvalue.ApiParamType;
+import codedriver.framework.inspect.auth.INSPECT_BASE;
 import codedriver.framework.inspect.dto.InspectNewProblemCustomViewVo;
 import codedriver.framework.inspect.exception.InspectNewProblemCustomViewNotFoundException;
 import codedriver.framework.restful.annotation.*;
@@ -23,7 +23,7 @@ import javax.annotation.Resource;
 
 @Service
 @Transactional
-@AuthAction(action = AUTOEXEC_MODIFY.class)
+@AuthAction(action = INSPECT_BASE.class)
 @OperationType(type = OperationTypeEnum.UPDATE)
 public class MoveInspectNewProblemCustomViewApi extends PrivateApiComponentBase {
 
