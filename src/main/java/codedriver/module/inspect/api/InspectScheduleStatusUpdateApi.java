@@ -4,7 +4,7 @@ import codedriver.framework.asynchronization.threadlocal.TenantContext;
 import codedriver.framework.asynchronization.threadlocal.UserContext;
 import codedriver.framework.auth.core.AuthAction;
 import codedriver.framework.common.constvalue.ApiParamType;
-import codedriver.framework.inspect.auth.INSPECT_MODIFY;
+import codedriver.framework.inspect.auth.INSPECT_SCHEDULE_EXECUTE;
 import codedriver.framework.inspect.dao.mapper.InspectScheduleMapper;
 import codedriver.framework.inspect.dto.InspectScheduleVo;
 import codedriver.framework.inspect.exception.InspectScheduleNotFoundException;
@@ -25,7 +25,7 @@ import org.springframework.stereotype.Service;
 import javax.annotation.Resource;
 
 @Service
-@AuthAction(action = INSPECT_MODIFY.class)
+@AuthAction(action = INSPECT_SCHEDULE_EXECUTE.class)
 @OperationType(type = OperationTypeEnum.UPDATE)
 public class InspectScheduleStatusUpdateApi extends PrivateApiComponentBase {
 
