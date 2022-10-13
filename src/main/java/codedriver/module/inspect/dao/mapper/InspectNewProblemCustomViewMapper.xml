@@ -26,7 +26,7 @@
                `sort`
         from inspect_new_problem_customview
         where `user_uuid` = #{value}
-        order by
+        order by `sort`
     </select>
 
     <select id="getMaxSortByUserUuid" parameterType="java.lang.String" resultType="java.lang.Integer">
