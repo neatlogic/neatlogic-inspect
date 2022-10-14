@@ -11,6 +11,7 @@ import codedriver.framework.autoexec.dto.script.AutoexecScriptVo;
 import codedriver.framework.common.constvalue.ApiParamType;
 import codedriver.framework.common.dto.BasePageVo;
 import codedriver.framework.inspect.auth.INSPECT_BASE;
+import codedriver.framework.inspect.constvalue.AutoexecType;
 import codedriver.framework.restful.annotation.*;
 import codedriver.framework.restful.constvalue.OperationTypeEnum;
 import codedriver.framework.restful.core.privateapi.PrivateApiComponentBase;
@@ -71,7 +72,7 @@ public class SearchInspectAccessEndPointScriptApi extends PrivateApiComponentBas
     @Override
     public Object myDoService(JSONObject paramObj) throws Exception {
         AutoexecScriptVo scriptVo = JSON.toJavaObject(paramObj, AutoexecScriptVo.class);
-        Long inspectTypeId = autoexecTypeMapper.getTypeIdByName("INSPECT");
+        Long inspectTypeId = autoexecTypeMapper.getTypeIdByName(AutoexecType.INSPECT.getValue());
         if (Objects.nonNull(inspectTypeId)) {
             scriptVo.setTypeIdList(Collections.singletonList(inspectTypeId));
         }
