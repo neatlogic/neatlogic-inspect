@@ -6,7 +6,6 @@ package codedriver.module.inspect.api.report;
 
 import codedriver.framework.auth.core.AuthAction;
 import codedriver.framework.autoexec.dao.mapper.AutoexecScriptMapper;
-import codedriver.framework.autoexec.dao.mapper.AutoexecTypeMapper;
 import codedriver.framework.autoexec.dto.script.AutoexecScriptVo;
 import codedriver.framework.common.constvalue.ApiParamType;
 import codedriver.framework.common.dto.BasePageVo;
@@ -24,7 +23,6 @@ import javax.annotation.Resource;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Objects;
 
 /**
  * @author longrf
@@ -38,9 +36,6 @@ public class SearchInspectAccessEndPointScriptApi extends PrivateApiComponentBas
 
     @Resource
     private AutoexecScriptMapper autoexecScriptMapper;
-
-    @Resource
-    private AutoexecTypeMapper autoexecTypeMapper;
 
     @Override
     public String getName() {
@@ -72,10 +67,7 @@ public class SearchInspectAccessEndPointScriptApi extends PrivateApiComponentBas
     @Override
     public Object myDoService(JSONObject paramObj) throws Exception {
         AutoexecScriptVo scriptVo = JSON.toJavaObject(paramObj, AutoexecScriptVo.class);
-        Long inspectTypeId = autoexecTypeMapper.getTypeIdByName(AutoexecType.INSPECT.getValue());
-        if (Objects.nonNull(inspectTypeId)) {
-            scriptVo.setTypeIdList(Collections.singletonList(inspectTypeId));
-        }
+        scriptVo.setTypeIdList(Collections.singletonList(AutoexecType.INSPECT.getId()));
         int rowNum = autoexecScriptMapper.searchScriptCount(scriptVo);
         List<AutoexecScriptVo> returnList = new ArrayList<>();
         if (rowNum > 0) {
