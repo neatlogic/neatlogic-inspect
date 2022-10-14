@@ -1,9 +1,12 @@
-package codedriver.module.inspect.api;
+package codedriver.module.inspect.api.report;
 
 import codedriver.framework.asynchronization.threadlocal.TenantContext;
 import codedriver.framework.asynchronization.threadlocal.UserContext;
 import codedriver.framework.auth.core.AuthAction;
+import codedriver.framework.cmdb.crossover.ICiCrossoverMapper;
+import codedriver.framework.cmdb.exception.ci.CiNotFoundException;
 import codedriver.framework.common.constvalue.ApiParamType;
+import codedriver.framework.crossover.CrossoverServiceFactory;
 import codedriver.framework.inspect.auth.INSPECT_SCHEDULE_EXECUTE;
 import codedriver.framework.inspect.dao.mapper.InspectScheduleMapper;
 import codedriver.framework.inspect.dto.InspectScheduleVo;
@@ -18,16 +21,20 @@ import codedriver.framework.scheduler.core.IJob;
 import codedriver.framework.scheduler.core.SchedulerManager;
 import codedriver.framework.scheduler.dto.JobObject;
 import codedriver.framework.scheduler.exception.ScheduleHandlerNotFoundException;
+import codedriver.framework.scheduler.exception.ScheduleIllegalParameterException;
+import codedriver.framework.util.SnowflakeUtil;
 import codedriver.module.inspect.schedule.plugin.InspectScheduleJob;
+import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
+import org.quartz.CronExpression;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
 
 @Service
 @AuthAction(action = INSPECT_SCHEDULE_EXECUTE.class)
-@OperationType(type = OperationTypeEnum.UPDATE)
-public class InspectScheduleStatusUpdateApi extends PrivateApiComponentBase {
+@OperationType(type = OperationTypeEnum.OPERATE)
+public class InspectScheduleSaveApi extends PrivateApiComponentBase {
 
     @Resource
     private InspectScheduleMapper inspectScheduleMapper;
@@ -37,12 +44,12 @@ public class InspectScheduleStatusUpdateApi extends PrivateApiComponentBase {
 
     @Override
     public String getName() {
-        return "启用/禁用巡检定时任务";
+        return "保存巡检定时任务";
     }
 
     @Override
     public String getToken() {
-        return "inspect/schedule/status/update";
+        return "inspect/schedule/save";
     }
 
     @Override
@@ -51,20 +58,42 @@ public class InspectScheduleStatusUpdateApi extends PrivateApiComponentBase {
     }
 
     @Input({
-            @Param(name = "id", type = ApiParamType.LONG, desc = "任务id", isRequired = true),
+            @Param(name = "id", type = ApiParamType.LONG, desc = "任务id"),
+            @Param(name = "ciId", type = ApiParamType.LONG, desc = "模型ID", isRequired = true),
             @Param(name = "isActive", type = ApiParamType.ENUM, rule = "0,1", desc = "是否启用", isRequired = true),
+            @Param(name = "cron", type = ApiParamType.STRING, desc = "cron", isRequired = true),
+            @Param(name = "beginTime", type = ApiParamType.LONG, desc = "计划开始时间"),
+            @Param(name = "endTime", type = ApiParamType.LONG, desc = "计划结束时间"),
     })
-    @Description(desc = "启用/禁用巡检定时任务")
+    @Description(desc = "保存巡检定时任务")
     @Override
     public Object myDoService(JSONObject paramObj) throws Exception {
-        Long id = paramObj.getLong("id");
-        InspectScheduleVo scheduleVo = inspectScheduleMapper.getInspectScheduleById(id);
-        if (scheduleVo == null) {
-            throw new InspectScheduleNotFoundException(id);
+        InspectScheduleVo scheduleVo = JSON.toJavaObject(paramObj, InspectScheduleVo.class);
+        if (!CronExpression.isValidExpression(scheduleVo.getCron())) {
+            throw new ScheduleIllegalParameterException(scheduleVo.getCron());
         }
-        scheduleVo.setIsActive(paramObj.getInteger("isActive"));
-        scheduleVo.setLcu(UserContext.get().getUserUuid());
-        inspectScheduleMapper.updateInspectScheduleStatus(scheduleVo);
+        if (scheduleVo.getId() != null) {
+            InspectScheduleVo vo = inspectScheduleMapper.getInspectScheduleById(scheduleVo.getId());
+            if (vo == null) {
+                throw new InspectScheduleNotFoundException(scheduleVo.getId());
+            }
+            vo.setIsActive(scheduleVo.getIsActive());
+            vo.setCron(scheduleVo.getCron());
+            vo.setBeginTime(scheduleVo.getBeginTime());
+            vo.setEndTime(scheduleVo.getEndTime());
+            vo.setLcu(UserContext.get().getUserUuid());
+            inspectScheduleMapper.updateInspectSchedule(vo);
+            scheduleVo = vo;
+        } else {
+            ICiCrossoverMapper ciCrossoverMapper = CrossoverServiceFactory.getApi(ICiCrossoverMapper.class);
+            if (ciCrossoverMapper.getCiById(scheduleVo.getCiId()) == null) {
+                throw new CiNotFoundException(scheduleVo.getCiId());
+            }
+            scheduleVo.setId(SnowflakeUtil.uniqueLong());
+            scheduleVo.setFcu(UserContext.get().getUserUuid());
+            scheduleVo.setLcu(UserContext.get().getUserUuid());
+            inspectScheduleMapper.insertInspectSchedule(scheduleVo);
+        }
         IJob jobHandler = SchedulerManager.getHandler(InspectScheduleJob.class.getName());
         if (jobHandler == null) {
             throw new ScheduleHandlerNotFoundException(InspectScheduleJob.class.getName());

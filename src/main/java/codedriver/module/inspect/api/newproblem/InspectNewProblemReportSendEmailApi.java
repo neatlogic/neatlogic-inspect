@@ -1,4 +1,4 @@
-package codedriver.module.inspect.api;
+package codedriver.module.inspect.api.newproblem;
 
 import codedriver.framework.asynchronization.thread.CodeDriverThread;
 import codedriver.framework.asynchronization.threadpool.CachedThreadPool;
