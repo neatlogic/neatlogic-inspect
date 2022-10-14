@@ -1,4 +1,4 @@
-package codedriver.module.inspect.api;
+package codedriver.module.inspect.api.definition;
 
 import codedriver.framework.asynchronization.threadlocal.UserContext;
 import codedriver.framework.auth.core.AuthAction;

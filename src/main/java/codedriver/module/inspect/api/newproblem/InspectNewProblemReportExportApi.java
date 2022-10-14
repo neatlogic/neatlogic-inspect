@@ -1,4 +1,4 @@
-package codedriver.module.inspect.api;
+package codedriver.module.inspect.api.newproblem;
 
 import codedriver.framework.auth.core.AuthAction;
 import codedriver.framework.cmdb.crossover.ICiCrossoverMapper;

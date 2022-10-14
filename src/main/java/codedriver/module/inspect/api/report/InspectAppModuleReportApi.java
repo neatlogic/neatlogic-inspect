@@ -1,4 +1,4 @@
-package codedriver.module.inspect.api;
+package codedriver.module.inspect.api.report;
 
 import codedriver.framework.auth.core.AuthAction;
 import codedriver.framework.autoexec.dao.mapper.AutoexecJobMapper;
