@@ -59,7 +59,7 @@ public class SaveInspectNewProblemCustomViewApi extends PrivateApiComponentBase 
         Integer sort = inspectNewProblemCustomViewMapper.getMaxSortByUserUuid(UserContext.get().getUserUuid());
         viewVo.setSort(sort != null ? sort + 1 : 1);
         inspectNewProblemCustomViewMapper.insertInspectNewProblemCustomView(viewVo);
-        return null;
+        return viewVo.getId();
     }
 
     public IValid name() {
