@@ -15,7 +15,7 @@ import codedriver.framework.cmdb.dto.resourcecenter.ResourceSearchVo;
 import codedriver.framework.cmdb.exception.ci.CiNotFoundException;
 import codedriver.framework.common.constvalue.ApiParamType;
 import codedriver.framework.crossover.CrossoverServiceFactory;
-import codedriver.framework.inspect.auth.INSPECT_BASE;
+import codedriver.framework.inspect.auth.INSPECT_CONFIG_FILE_MODIFY;
 import codedriver.framework.inspect.dao.mapper.InspectMapper;
 import codedriver.framework.inspect.dto.InspectConfigFilePathVo;
 import codedriver.framework.restful.annotation.*;
@@ -35,7 +35,7 @@ import java.util.stream.Collectors;
 
 @Service
 @Transactional
-@AuthAction(action = INSPECT_BASE.class)
+@AuthAction(action = INSPECT_CONFIG_FILE_MODIFY.class)
 @OperationType(type = OperationTypeEnum.SEARCH)
 public class BatchAddInspectConfigFileResourcePathApi extends PrivateApiComponentBase {
 
