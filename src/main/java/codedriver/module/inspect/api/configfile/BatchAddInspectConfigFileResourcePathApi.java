@@ -119,8 +119,9 @@ public class BatchAddInspectConfigFileResourcePathApi extends PrivateApiComponen
 
     /**
      * 批量添加路径
+     *
      * @param resourceIdList 资源id列表
-     * @param pathArray 路径列表
+     * @param pathArray      路径列表
      */
     private void addPath(List<Long> resourceIdList, JSONArray pathArray) {
         Map<Long, List<InspectConfigFilePathVo>> inspectResourceConfigFilePathMap = new HashMap<>();

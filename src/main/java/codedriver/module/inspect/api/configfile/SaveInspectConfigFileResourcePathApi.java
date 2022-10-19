@@ -82,7 +82,7 @@ public class SaveInspectConfigFileResourcePathApi extends PrivateApiComponentBas
             return null;
         } else if (CollectionUtils.isEmpty(pathArray) && CollectionUtils.isNotEmpty(oldPathList)) {
             inspectConfigFileMapper.deleteInspectConfigFilePathByResourceId(resourceId);
-        }  else if (CollectionUtils.isNotEmpty(pathArray) && CollectionUtils.isEmpty(oldPathList)) {
+        } else if (CollectionUtils.isNotEmpty(pathArray) && CollectionUtils.isEmpty(oldPathList)) {
             for (String path : pathArray.toJavaList(String.class)) {
                 InspectConfigFilePathVo pathVo = new InspectConfigFilePathVo(resourceId, path);
                 inspectConfigFileMapper.insertInspectConfigFilePath(pathVo);
