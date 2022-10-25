@@ -7,7 +7,7 @@ package codedriver.module.inspect.api.definition;
 import codedriver.framework.auth.core.AuthAction;
 import codedriver.framework.common.constvalue.ApiParamType;
 import codedriver.framework.common.constvalue.InspectStatus;
-import codedriver.framework.inspect.auth.INSPECT_BASE;
+import codedriver.framework.inspect.auth.INSPECT_MODIFY;
 import codedriver.framework.restful.annotation.Description;
 import codedriver.framework.restful.annotation.Input;
 import codedriver.framework.restful.annotation.OperationType;
@@ -44,7 +44,7 @@ import java.util.Map;
  * @date 2022/10/24 10:36
  */
 @Service
-@AuthAction(action = INSPECT_BASE.class)
+@AuthAction(action = INSPECT_MODIFY.class)
 @OperationType(type = OperationTypeEnum.SEARCH)
 public class ExportInspectCollectionApi extends PrivateBinaryStreamApiComponentBase {
 
