@@ -20,7 +20,7 @@ public interface InspectCollectService {
 
 
     /**
-     * 获取对应的集合（名称、指标、规则）
+     * 获取所有集合（名称、指标、规则）
      *
      * @return 集合（名称、指标、规则）
      */
