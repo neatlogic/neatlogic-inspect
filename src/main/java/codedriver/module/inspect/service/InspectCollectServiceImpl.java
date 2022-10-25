@@ -113,7 +113,7 @@ public class InspectCollectServiceImpl implements InspectCollectService {
                 fieldsSelectMap.put(dbObject.getString("name"), dbObject.getInteger("selected"));
             }
 
-            //根据指标过滤数据结构返回给前端
+            //根据指标过滤数据结构
             for (Object object : dictionaryArray) {
                 JSONObject dbObject = (JSONObject) JSON.toJSON(object);
                 if (Objects.equals(fieldsSelectMap.get(dbObject.get("name")), 1)) {
