@@ -64,7 +64,7 @@ public class InspectCollectServiceImpl implements InspectCollectService {
                 JSONObject dbObject = (JSONObject) JSON.toJSON(object);
                 fieldsSelectMap.put(dbObject.getString("name"), dbObject.getInteger("selected"));
             } catch (Exception ex) {
-                logger.error("获取巡检“" + name + "”定义时，第" + i + 1 + "个字典不是JSONObject，转换失败" + object.toString() + ex.getMessage(), ex);
+                logger.error("获取巡检“" + name + "”定义时，第" + (i + 1) + "个字典不是JSONObject，转换失败" + object.toString() + ex.getMessage(), ex);
             }
         }
 
@@ -77,7 +77,7 @@ public class InspectCollectServiceImpl implements InspectCollectService {
                     returnFieldsArray.add(object);
                 }
             } catch (Exception ex) {
-                logger.error("获取巡检“" + name + "”定义时，第" + i + 1 + "个字典不是JSONObject，转换失败:" + object.toString() + ex.getMessage(), ex);
+                logger.error("获取巡检“" + name + "”定义时，第" + (i + 1) + "个字典不是JSONObject，转换失败:" + object.toString() + ex.getMessage(), ex);
             }
         }
 
@@ -129,7 +129,7 @@ public class InspectCollectServiceImpl implements InspectCollectService {
                     JSONObject dbObject = (JSONObject) JSON.toJSON(object);
                     fieldsSelectMap.put(dbObject.getString("name"), dbObject.getInteger("selected"));
                 } catch (Exception ex) {
-                    logger.error("获取巡检“" + dictionaryJson.getString("name") + "”定义时，第" + i + 1 + "个字典不是JSONObject，转换失败:" + object.toString() + ex.getMessage(), ex);
+                    logger.error("获取巡检“" + dictionaryJson.getString("name") + "”定义时，第" + (i + 1) + "个字典不是JSONObject，转换失败:" + object.toString() + ex.getMessage(), ex);
 
                 }
             }
@@ -144,7 +144,7 @@ public class InspectCollectServiceImpl implements InspectCollectService {
                         returnFieldsArray.add(object);
                     }
                 } catch (Exception ex) {
-                    logger.error("获取巡检“" + dictionaryJson.getString("name") + "”定义时，第" + i + 1 + "个字典不是JSONObject，转换失败:" + object.toString() + ex.getMessage(), ex);
+                    logger.error("获取巡检“" + dictionaryJson.getString("name") + "”定义时，第" + (i + 1) + "个字典不是JSONObject，转换失败:" + object.toString() + ex.getMessage(), ex);
                 }
             }
 

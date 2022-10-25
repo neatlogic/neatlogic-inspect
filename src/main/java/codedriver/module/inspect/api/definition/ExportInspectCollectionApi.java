@@ -92,7 +92,7 @@ public class ExportInspectCollectionApi extends PrivateBinaryStreamApiComponentB
                     JSONObject collectionObj = (JSONObject) object;
                     exportCollection(builder, collectionObj);
                 } catch (Exception ex) {
-                    logger.error(object.toString() + "导出巡检指标和规则时，第" + i + 1 + "个字典不是JSONObject，转换失败:" + object.toString() + ex.getMessage(), ex);
+                    logger.error(object.toString() + "导出巡检指标和规则时，第" + (i + 1) + "个字典不是JSONObject，转换失败:" + object.toString() + ex.getMessage(), ex);
                 }
             }
         }
@@ -149,7 +149,7 @@ public class ExportInspectCollectionApi extends PrivateBinaryStreamApiComponentB
                     dataMap.put("规则", jsonObject.getString("rule"));
                     sheetBuilder.addData(dataMap);
                 } catch (Exception ex) {
-                    logger.error("导出巡检指标和规则时，第" + i + 1 + "个字典不是JSONObject，转换失败:" + object.toString() + ex.getMessage(), ex);
+                    logger.error("导出巡检指标和规则时，第" + (i + 1) + "个字典不是JSONObject，转换失败:" + object.toString() + ex.getMessage(), ex);
                 }
             }
         } else {
