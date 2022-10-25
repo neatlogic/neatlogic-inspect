@@ -9,6 +9,8 @@ import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.mongodb.client.FindIterable;
 import org.bson.Document;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
@@ -24,6 +26,8 @@ import java.util.*;
 
 @Service
 public class InspectCollectServiceImpl implements InspectCollectService {
+
+    private static final Logger logger = LoggerFactory.getLogger(InspectCollectServiceImpl.class);
 
     @Resource
     private MongoTemplate mongoTemplate;
@@ -54,16 +58,26 @@ public class InspectCollectServiceImpl implements InspectCollectService {
 
         //指标过滤Map
         Map<String, Integer> fieldsSelectMap = new HashMap<>();
-        for (Object object : fieldsSelectedArray) {
-            JSONObject dbObject = (JSONObject) JSON.toJSON(object);
-            fieldsSelectMap.put(dbObject.getString("name"), dbObject.getInteger("selected"));
+        for (int i = 0; i < fieldsSelectedArray.size(); i++) {
+            Object object = fieldsSelectedArray.get(i);
+            try {
+                JSONObject dbObject = (JSONObject) JSON.toJSON(object);
+                fieldsSelectMap.put(dbObject.getString("name"), dbObject.getInteger("selected"));
+            } catch (Exception ex) {
+                logger.error("获取巡检“" + name + "”定义时，第" + i + 1 + "个字典不是JSONObject，转换失败" + object.toString() + ex.getMessage(), ex);
+            }
         }
 
         //根据指标过滤数据结构返回给前端
-        for (Object object : dictionaryArray) {
-            JSONObject dbObject = (JSONObject) JSON.toJSON(object);
-            if (Objects.equals(fieldsSelectMap.get(dbObject.get("name")), 1)) {
-                returnFieldsArray.add(object);
+        for (int i = 0; i < dictionaryArray.size(); i++) {
+            Object object = dictionaryArray.get(i);
+            try {
+                JSONObject dbObject = (JSONObject) JSON.toJSON(object);
+                if (Objects.equals(fieldsSelectMap.get(dbObject.get("name")), 1)) {
+                    returnFieldsArray.add(object);
+                }
+            } catch (Exception ex) {
+                logger.error("获取巡检“" + name + "”定义时，第" + i + 1 + "个字典不是JSONObject，转换失败:" + object.toString() + ex.getMessage(), ex);
             }
         }
 
@@ -108,16 +122,29 @@ public class InspectCollectServiceImpl implements InspectCollectService {
             if (inspectDefJson == null) {
                 continue;
             }
-            for (Object object : inspectDefJson.getJSONArray("fields")) {
-                JSONObject dbObject = (JSONObject) JSON.toJSON(object);
-                fieldsSelectMap.put(dbObject.getString("name"), dbObject.getInteger("selected"));
+
+            for (int i = 0; i < inspectDefJson.getJSONArray("fields").size(); i++) {
+                Object object = inspectDefJson.getJSONArray("fields").get(i);
+                try {
+                    JSONObject dbObject = (JSONObject) JSON.toJSON(object);
+                    fieldsSelectMap.put(dbObject.getString("name"), dbObject.getInteger("selected"));
+                } catch (Exception ex) {
+                    logger.error("获取巡检“" + dictionaryJson.getString("name") + "”定义时，第" + i + 1 + "个字典不是JSONObject，转换失败:" + object.toString() + ex.getMessage(), ex);
+
+                }
             }
 
             //根据指标过滤数据结构
-            for (Object object : dictionaryArray) {
-                JSONObject dbObject = (JSONObject) JSON.toJSON(object);
-                if (Objects.equals(fieldsSelectMap.get(dbObject.get("name")), 1)) {
-                    returnFieldsArray.add(object);
+
+            for (int i = 0; i < dictionaryArray.size(); i++) {
+                Object object = dictionaryArray.get(i);
+                try {
+                    JSONObject dbObject = (JSONObject) JSON.toJSON(object);
+                    if (Objects.equals(fieldsSelectMap.get(dbObject.get("name")), 1)) {
+                        returnFieldsArray.add(object);
+                    }
+                } catch (Exception ex) {
+                    logger.error("获取巡检“" + dictionaryJson.getString("name") + "”定义时，第" + i + 1 + "个字典不是JSONObject，转换失败:" + object.toString() + ex.getMessage(), ex);
                 }
             }
 

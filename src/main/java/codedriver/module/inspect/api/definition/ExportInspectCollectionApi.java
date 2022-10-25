@@ -20,7 +20,6 @@ import codedriver.framework.util.excel.SheetBuilder;
 import codedriver.module.inspect.service.InspectCollectService;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
-import jdk.internal.joptsimple.internal.Strings;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.poi.hssf.util.HSSFColor;
 import org.apache.poi.ss.usermodel.Workbook;
@@ -56,7 +55,7 @@ public class ExportInspectCollectionApi extends PrivateBinaryStreamApiComponentB
 
     @Override
     public String getName() {
-        return "导出指标和规则";
+        return "导出巡检指标和规则";
     }
 
     @Override
@@ -73,22 +72,28 @@ public class ExportInspectCollectionApi extends PrivateBinaryStreamApiComponentB
             @Param(name = "name", type = ApiParamType.STRING, desc = "唯一标识"),
             @Param(name = "isAll", type = ApiParamType.INTEGER, isRequired = true, desc = "是否全量（1：全量，0：单个）")
     })
-    @Description(desc = "导出指标和规则")
+    @Description(desc = "导出巡检指标和规则")
     @Override
     public Object myDoService(JSONObject paramObj, HttpServletRequest request, HttpServletResponse response) throws Exception {
 
-        String fileName = Strings.EMPTY;
+        String fileName = "";
         ExcelBuilder builder = new ExcelBuilder(SXSSFWorkbook.class);
 
         if (paramObj.getInteger("isAll") == 0) {
             JSONObject collectionObj = inspectCollectService.getCollectionByName(paramObj.getString("name"));
             fileName = exportCollection(builder, collectionObj);
         } else {
-            fileName=FileUtil.getEncodedFileName("巡检指标及告警规则.xlsx");
+            fileName = FileUtil.getEncodedFileName("巡检指标及告警规则.xlsx");
             JSONArray allCollection = inspectCollectService.getAllCollection();
-            for (Object object : allCollection) {
-                JSONObject collectionObj = (JSONObject) object;
-                exportCollection(builder, collectionObj);
+
+            for (int i = 0; i < allCollection.size(); i++) {
+                Object object = allCollection.get(i);
+                try {
+                    JSONObject collectionObj = (JSONObject) object;
+                    exportCollection(builder, collectionObj);
+                } catch (Exception ex) {
+                    logger.error(object.toString() + "导出巡检指标和规则时，第" + i + 1 + "个字典不是JSONObject，转换失败:" + object.toString() + ex.getMessage(), ex);
+                }
             }
         }
 
@@ -130,22 +135,28 @@ public class ExportInspectCollectionApi extends PrivateBinaryStreamApiComponentB
         //规则
         JSONArray thresholds = collectionObj.getJSONArray("thresholds");
         if (CollectionUtils.isNotEmpty(thresholds)) {
-            for (Object object : thresholds) {
+
+            for (int i = 0; i < thresholds.size(); i++) {
+                Object object = thresholds.get(i);
                 if (object == null) {
                     continue;
                 }
                 Map<String, Object> dataMap = new HashMap<>();
-                JSONObject jsonObject = (JSONObject) object;
-                dataMap.put("规则名称", jsonObject.getString("name"));
-                dataMap.put("级别", InspectStatus.getText(jsonObject.getString("level")));
-                dataMap.put("规则", jsonObject.getString("rule"));
-                sheetBuilder.addData(dataMap);
+                try {
+                    JSONObject jsonObject = (JSONObject) object;
+                    dataMap.put("规则名称", jsonObject.getString("name"));
+                    dataMap.put("级别", InspectStatus.getText(jsonObject.getString("level")));
+                    dataMap.put("规则", jsonObject.getString("rule"));
+                    sheetBuilder.addData(dataMap);
+                } catch (Exception ex) {
+                    logger.error("导出巡检指标和规则时，第" + i + 1 + "个字典不是JSONObject，转换失败:" + object.toString() + ex.getMessage(), ex);
+                }
             }
         } else {
             Map<String, Object> dataMap = new HashMap<>();
             dataMap.put("规则名称", "无");
             dataMap.put("级别", "无");
-            dataMap.put("规则","无");
+            dataMap.put("规则", "无");
             sheetBuilder.addData(dataMap);
         }
 
