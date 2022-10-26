@@ -18,8 +18,8 @@ import codedriver.framework.restful.annotation.Param;
 import codedriver.framework.restful.constvalue.OperationTypeEnum;
 import codedriver.framework.restful.core.privateapi.PrivateApiComponentBase;
 import com.alibaba.fastjson.JSONObject;
-import com.alibaba.nacos.common.utils.CollectionUtils;
-import com.alibaba.nacos.common.utils.StringUtils;
+import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;

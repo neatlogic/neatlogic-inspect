@@ -28,7 +28,7 @@ import codedriver.framework.scheduler.core.JobBase;
 import codedriver.framework.scheduler.dto.JobObject;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
-import com.alibaba.nacos.common.utils.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.quartz.DisallowConcurrentExecution;
 import org.quartz.JobExecutionContext;
 import org.springframework.stereotype.Component;
