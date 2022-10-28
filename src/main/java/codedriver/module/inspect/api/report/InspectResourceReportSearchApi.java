@@ -24,7 +24,6 @@ import com.alibaba.fastjson.JSONObject;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
-import java.util.List;
 
 @Service
 @AuthAction(action = INSPECT_BASE.class)
