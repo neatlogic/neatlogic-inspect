@@ -24,6 +24,7 @@ import com.alibaba.fastjson.JSONObject;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
+import java.util.List;
 
 @Service
 @AuthAction(action = INSPECT_BASE.class)
@@ -57,6 +58,8 @@ public class InspectResourceReportSearchApi extends PrivateApiComponentBase {
             @Param(name = "defaultValue", type = ApiParamType.JSONARRAY, desc = "用于回显的资源ID列表"),
             @Param(name = "inspectStatusList", type = ApiParamType.JSONARRAY, desc = "巡检状态列表"),
             @Param(name = "inspectJobPhaseNodeStatusList", type = ApiParamType.JSONARRAY, desc = "巡检作业状态列表"),
+            @Param(name = "searchField", type = ApiParamType.STRING, desc = "批量搜索字段"),
+            @Param(name = "searchValue", type = ApiParamType.STRING, desc = "批量搜索值"),
             @Param(name = "currentPage", type = ApiParamType.INTEGER, desc = "当前页"),
             @Param(name = "pageSize", type = ApiParamType.INTEGER, desc = "每页数据条目"),
             @Param(name = "needPage", type = ApiParamType.BOOLEAN, desc = "是否需要分页，默认true")
