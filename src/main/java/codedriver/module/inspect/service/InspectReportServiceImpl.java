@@ -5,8 +5,6 @@
 
 package codedriver.module.inspect.service;
 
-import codedriver.framework.asynchronization.threadlocal.TenantContext;
-import codedriver.framework.autoexec.dao.mapper.AutoexecJobMapper;
 import codedriver.framework.cmdb.crossover.IResourceCenterResourceCrossoverService;
 import codedriver.framework.cmdb.dto.resourcecenter.BgVo;
 import codedriver.framework.cmdb.dto.resourcecenter.IpVo;
@@ -35,8 +33,6 @@ import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.streaming.SXSSFWorkbook;
 import org.bson.Document;
 import org.bson.types.ObjectId;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
@@ -183,14 +179,20 @@ public class InspectReportServiceImpl implements InspectReportService {
 
     @Override
     public JSONObject getInspectDetailByResourceIdList(List<Long> resourceIdList) {
+        return getInspectDetailByResourceIdListAndDate(resourceIdList, null);
+    }
+
+    @Override
+    public JSONObject getInspectDetailByResourceIdListAndDate(List<Long> resourceIdList, Date date) {
         JSONObject resourceAlert = new JSONObject();
         if (CollectionUtils.isNotEmpty(resourceIdList)) {
             MongoCollection<Document> collection = mongoTemplate.getCollection("INSPECT_REPORTS");
             List<String> nameList = new ArrayList<>();
             Map<String, String> fieldPathTextMap = new HashMap<>();
-            for (Long resourceId : resourceIdList) {
+            JSONArray mongoInspectAlertDetailArray = getInspectDetailByResourceIdListAndDateFromDb(resourceIdList, collection, date);
+            for (int i = 0; i < mongoInspectAlertDetailArray.size(); i++) {
                 JSONArray resourceAlertArray = new JSONArray();
-                JSONObject mongoInspectAlertDetail = getBatchInspectDetailByResourceId(resourceId, collection);
+                JSONObject mongoInspectAlertDetail = mongoInspectAlertDetailArray.getJSONObject(i);
                 JSONObject inspectResult = mongoInspectAlertDetail.getJSONObject("inspectResult");
                 JSONObject reportJson = mongoInspectAlertDetail.getJSONObject("reportJson");
                 //初始化fieldMap
@@ -221,6 +223,9 @@ public class InspectReportServiceImpl implements InspectReportService {
                                 dataMap.put("alertRule", threholdJson.getString("rule"));
                                 //补充告警对象
                                 dataMap.put("alertObject", getInspectAlertObject(reportJson, alert, threholdJson, fieldPathTextMap));
+                                if (reportJson.containsKey("_report_time") && reportJson.get("_report_time") != null) {
+                                    dataMap.put("reportTime", reportJson.getJSONObject("_report_time").getDate("$date"));
+                                }
                             }
                             dataMap.put("alertValue", alert.getString("fieldValue"));
 
@@ -228,43 +233,60 @@ public class InspectReportServiceImpl implements InspectReportService {
                         }
                     }
                 }
-                resourceAlert.put(resourceId.toString(), resourceAlertArray);
+                resourceAlert.put(mongoInspectAlertDetail.getString("id"), resourceAlertArray);
             }
         }
         return resourceAlert;
     }
 
     @Override
-    public JSONObject getInspectDetailByResourceId(Long resourceId) {
+    public JSONArray getInspectDetailByResourceIdListFromDb(List<Long> resourceIdList) {
         MongoCollection<Document> collection = mongoTemplate.getCollection("INSPECT_REPORTS");
-        return getBatchInspectDetailByResourceId(resourceId, collection);
+        return getInspectDetailByResourceIdListFromDb(resourceIdList, collection);
     }
 
     @Override
-    public JSONObject getBatchInspectDetailByResourceId(Long resourceId, MongoCollection<Document> collection) {
-        JSONObject inspectReport = new JSONObject();
-        if (resourceId != null) {
+    public JSONArray getInspectDetailByResourceIdListFromDb(List<Long> resourceIdList, MongoCollection<Document> collection) {
+        return this.getInspectDetailByResourceIdListAndDateFromDb(resourceIdList, collection, null);
+    }
+
+    @Override
+    public JSONArray getInspectDetailByResourceIdListAndDateFromDb(List<Long> resourceIdList, MongoCollection<Document> collection, Date date) {
+        JSONArray inspectReportArray = new JSONArray();
+        if (CollectionUtils.isNotEmpty(resourceIdList)) {
             Document doc = new Document();
-            inspectReport.put("id", resourceId);
-            inspectReport.put("inspectResult", new JSONObject());
-            doc.put("RESOURCE_ID", resourceId);
+            if (date != null) {
+                Calendar startTimeCalendar = Calendar.getInstance();
+                startTimeCalendar.setTime(date);
+                Date startDate = startTimeCalendar.getTime();
+                startTimeCalendar.add(Calendar.DAY_OF_MONTH, 1);
+                Date endDate = startTimeCalendar.getTime();
+                doc.put("_report_time", new Document("$gte", startDate).append("$lt", endDate));
+            }
+            doc.put("RESOURCE_ID", new Document("$in", resourceIdList));
             FindIterable<Document> findIterable = collection.find(doc);
-            Document reportDoc = findIterable.first();
-            if (MapUtils.isNotEmpty(reportDoc)) {
-                JSONObject reportJson = JSONObject.parseObject(reportDoc.toJson());
-                JSONObject inspectResult = reportJson.getJSONObject("_inspect_result");
-                if (MapUtils.isNotEmpty(inspectResult)) {
-                    String name = inspectResult.getString("name");
-                    CollectionVo collectionVo = mongoTemplate.findOne(new Query(Criteria.where("name").is(name)), CollectionVo.class, "_dictionary");
-                    if (collectionVo != null) {
-                        reportJson.put("fields", collectionVo.getFields());
+            for (Document document : findIterable) {
+                JSONObject inspectReport = new JSONObject();
+                inspectReport.put("id", document.getLong("RESOURCE_ID"));
+                inspectReport.put("inspectResult", new JSONObject());
+                if (MapUtils.isNotEmpty(inspectReport)) {
+                    JSONObject reportJson = JSONObject.parseObject(document.toJson());
+                    JSONObject inspectResult = reportJson.getJSONObject("_inspect_result");
+                    if (MapUtils.isNotEmpty(inspectResult)) {
+                        String name = inspectResult.getString("name");
+                        CollectionVo collectionVo = mongoTemplate.findOne(new Query(Criteria.where("name").is(name)), CollectionVo.class, "_dictionary");
+                        if (collectionVo != null) {
+                            reportJson.put("fields", collectionVo.getFields());
+                        }
+                        inspectReport.put("inspectResult", inspectResult);
+                        inspectReport.put("reportJson", reportJson);
+                        inspectReportArray.add(inspectReport);
                     }
-                    inspectReport.put("inspectResult", inspectResult);
-                    inspectReport.put("reportJson", reportJson);
                 }
             }
+
         }
-        return inspectReport;
+        return inspectReportArray;
     }
 
     @Override
@@ -370,7 +392,6 @@ public class InspectReportServiceImpl implements InspectReportService {
                 columnList.add("alertValue");
                 headerList.add("告警规则");
                 columnList.add("alertRule");
-                collection = mongoTemplate.getCollection("INSPECT_REPORTS");
             }
 
             SheetBuilder sheetBuilder = builder.withBorderColor(HSSFColor.HSSFColorPredefined.GREY_40_PERCENT)
@@ -387,9 +408,14 @@ public class InspectReportServiceImpl implements InspectReportService {
                 searchVo.setCurrentPage(i);
                 List<Long> resourceIdList = inspectMapper.getInspectResourceIdList(searchVo);
                 List<InspectResourceVo> inspectResourceVos = inspectMapper.getInspectResourceListByIdList(resourceIdList);
+                JSONArray mongoInspectAlertDetailArray = getInspectDetailByResourceIdListFromDb(inspectResourceVos.stream().map(InspectResourceVo::getId).collect(Collectors.toList()));
+                Map<Long, JSONObject> mongoInspectAlertDetailMap = mongoInspectAlertDetailArray.stream().collect(Collectors.toMap(o -> ((JSONObject) o).getLong("id"), o -> ((JSONObject) o)));
                 for (InspectResourceVo inspectResourceVo : inspectResourceVos) {
                     if (isNeedAlertDetail == 1) {
-                        JSONObject mongoInspectAlertDetail = getBatchInspectDetailByResourceId(inspectResourceVo.getId(), collection);
+                        JSONObject mongoInspectAlertDetail = mongoInspectAlertDetailMap.get(inspectResourceVo.getId());
+                        if(MapUtils.isEmpty(mongoInspectAlertDetail)){
+                            continue;
+                        }
                         JSONObject inspectResult = mongoInspectAlertDetail.getJSONObject("inspectResult");
                         JSONObject reportJson = mongoInspectAlertDetail.getJSONObject("reportJson");
                         //初始化fieldMap

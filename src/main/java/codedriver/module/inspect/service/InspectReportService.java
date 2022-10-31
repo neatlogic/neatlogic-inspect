@@ -1,20 +1,16 @@
 package codedriver.module.inspect.service;
 
 import codedriver.framework.cmdb.dto.resourcecenter.ResourceSearchVo;
-import codedriver.framework.cmdb.dto.resourcecenter.ResourceVo;
-import codedriver.framework.cmdb.dto.resourcecenter.config.ResourceInfo;
-import codedriver.framework.cmdb.utils.ResourceSearchGenerateSqlUtil;
 import codedriver.framework.inspect.dto.InspectResourceVo;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.mongodb.client.MongoCollection;
-import net.sf.jsqlparser.statement.select.PlainSelect;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.bson.Document;
 
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
-import java.util.function.BiConsumer;
 
 public interface InspectReportService {
 
@@ -57,21 +53,41 @@ public interface InspectReportService {
     JSONObject getInspectDetailByResourceIdList(List<Long> resourceIdList);
 
     /**
-     * 根据resourceId 获取 对应巡检报告
+     * 根据resourceIdList 获取 对应日期的巡检报告
      *
-     * @param resourceId 资产id
+     * @param resourceIdList 资产id列表
+     * @param date 日期
      * @return 对应巡检报告
      */
-    JSONObject getInspectDetailByResourceId(Long resourceId);
+    JSONObject getInspectDetailByResourceIdListAndDate(List<Long> resourceIdList, Date date);
+
+    /**
+     * 根据resourceId 获取 对应巡检报告
+     *
+     * @param resourceIdList 资产id
+     * @return 对应巡检报告
+     */
+    JSONArray getInspectDetailByResourceIdListFromDb(List<Long> resourceIdList);
 
     /**
      * 循环根据resourceId 获取 对应巡检报告
      *
-     * @param resourceId 资产id
+     * @param resourceIdList 资产id
      * @param collection mongoCollection
      * @return 对应巡检报告
      */
-    JSONObject getBatchInspectDetailByResourceId(Long resourceId, MongoCollection<Document> collection);
+    JSONArray getInspectDetailByResourceIdListFromDb(List<Long> resourceIdList, MongoCollection<Document> collection);
+
+    /**
+     * 循环根据resourceId 获取 对日期的应巡检报告
+     *
+     * @param resourceId 资产id
+     * @param collection mongoCollection
+     * @param date       日期
+     * @return 对应巡检报告
+     */
+    JSONArray getInspectDetailByResourceIdListAndDateFromDb(List<Long> resourceId, MongoCollection<Document> collection, Date date);
+
 
     /**
      * 从mongodb分析出告警对象，并翻译
