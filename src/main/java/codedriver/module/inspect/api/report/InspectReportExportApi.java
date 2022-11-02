@@ -376,7 +376,7 @@ public class InspectReportExportApi extends PrivateBinaryStreamApiComponentBase 
             for (String head : headSet) {
                 Object obj = object.get(head);
                 if (obj != null) {
-                    if (obj instanceof List) {
+                    if (obj instanceof List && ((List) obj).get(0) instanceof Map) {
                         List _array = (List) obj;
                         if (CollectionUtils.isNotEmpty(_array)) {
                             JSONObject _table = new JSONObject();
@@ -390,6 +390,11 @@ public class InspectReportExportApi extends PrivateBinaryStreamApiComponentBase 
                         String alertLevel = alertMap.get(alertKey + "[" + i + "]" + "." + head);
                         if (obj instanceof Date) {
                             obj = TimeUtil.convertDateToString((Date) obj, TimeUtil.YYYY_MM_DD_HH_MM_SS);
+                        } else if (obj instanceof List) {
+                            List list = (List) obj;
+                            if (CollectionUtils.isNotEmpty(list)) {
+                                obj = String.join(",", list);
+                            }
                         }
                         String value = !Objects.equals(obj.toString(), StringUtils.EMPTY) ? obj.toString() : "暂无数据";
                         if (alertLevel != null) {
