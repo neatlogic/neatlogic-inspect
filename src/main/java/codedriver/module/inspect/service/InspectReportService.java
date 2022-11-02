@@ -56,10 +56,11 @@ public interface InspectReportService {
      * 根据resourceIdList 获取 对应日期的巡检报告
      *
      * @param resourceIdList 资产id列表
-     * @param date 日期
+     * @param startDate      开始日期
+     * @param endDate        结束日期
      * @return 对应巡检报告
      */
-    JSONObject getInspectDetailByResourceIdListAndDate(List<Long> resourceIdList, Date date);
+    JSONObject getInspectDetailByResourceIdListAndDate(List<Long> resourceIdList, Date startDate, Date endDate);
 
     /**
      * 根据resourceId 获取 对应巡检报告
@@ -73,7 +74,7 @@ public interface InspectReportService {
      * 循环根据resourceId 获取 对应巡检报告
      *
      * @param resourceIdList 资产id
-     * @param collection mongoCollection
+     * @param collection     mongoCollection
      * @return 对应巡检报告
      */
     JSONArray getInspectDetailByResourceIdListFromDb(List<Long> resourceIdList, MongoCollection<Document> collection);
@@ -83,10 +84,11 @@ public interface InspectReportService {
      *
      * @param resourceId 资产id
      * @param collection mongoCollection
-     * @param date       日期
+     * @param startDate  开始日期
+     * @param endDate    结束日期
      * @return 对应巡检报告
      */
-    JSONArray getInspectDetailByResourceIdListAndDateFromDb(List<Long> resourceId, MongoCollection<Document> collection, Date date);
+    JSONArray getInspectDetailByResourceIdListAndDateFromDb(List<Long> resourceId, MongoCollection<Document> collection, Date startDate, Date endDate);
 
 
     /**
@@ -117,4 +119,21 @@ public interface InspectReportService {
      * @return
      */
     Workbook getInspectNewProblemReportWorkbook(ResourceSearchVo searchVo, Integer isNeedAlertDetail);
+
+
+    /**
+     * 更新巡检告警表数据
+     * 获取前一天的数据
+     */
+    void updateInspectAlertEveryDayData();
+
+
+    /**
+     * 更新巡检告警表数据
+     * 如果startDate和endDate都为null，则默认获取前一天的数据
+     *
+     * @param startDate 开始时间
+     * @param endDate   结束时间
+     */
+    void updateInspectAlertEveryDayData(Date startDate, Date endDate);
 }

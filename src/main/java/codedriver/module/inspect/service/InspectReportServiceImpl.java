@@ -5,15 +5,19 @@
 
 package codedriver.module.inspect.service;
 
+import codedriver.framework.cmdb.crossover.ICiCrossoverMapper;
 import codedriver.framework.cmdb.crossover.IResourceCenterResourceCrossoverService;
+import codedriver.framework.cmdb.dto.ci.CiVo;
 import codedriver.framework.cmdb.dto.resourcecenter.BgVo;
 import codedriver.framework.cmdb.dto.resourcecenter.IpVo;
 import codedriver.framework.cmdb.dto.resourcecenter.OwnerVo;
 import codedriver.framework.cmdb.dto.resourcecenter.ResourceSearchVo;
 import codedriver.framework.cmdb.dto.sync.CollectionVo;
+import codedriver.framework.cmdb.exception.ci.CiNotFoundException;
 import codedriver.framework.common.constvalue.InspectStatus;
 import codedriver.framework.crossover.CrossoverServiceFactory;
 import codedriver.framework.inspect.dao.mapper.InspectMapper;
+import codedriver.framework.inspect.dto.InspectAlertEverydayVo;
 import codedriver.framework.inspect.dto.InspectResourceScriptVo;
 import codedriver.framework.inspect.dto.InspectResourceVo;
 import codedriver.framework.util.TimeUtil;
@@ -33,6 +37,8 @@ import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.streaming.SXSSFWorkbook;
 import org.bson.Document;
 import org.bson.types.ObjectId;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
@@ -44,6 +50,7 @@ import java.util.stream.Collectors;
 
 @Service
 public class InspectReportServiceImpl implements InspectReportService {
+    private final Logger logger = LoggerFactory.getLogger(InspectReportServiceImpl.class);
 
     @Resource
     MongoTemplate mongoTemplate;
@@ -179,17 +186,17 @@ public class InspectReportServiceImpl implements InspectReportService {
 
     @Override
     public JSONObject getInspectDetailByResourceIdList(List<Long> resourceIdList) {
-        return getInspectDetailByResourceIdListAndDate(resourceIdList, null);
+        return getInspectDetailByResourceIdListAndDate(resourceIdList, null, null);
     }
 
     @Override
-    public JSONObject getInspectDetailByResourceIdListAndDate(List<Long> resourceIdList, Date date) {
+    public JSONObject getInspectDetailByResourceIdListAndDate(List<Long> resourceIdList, Date startDate, Date endDate) {
         JSONObject resourceAlert = new JSONObject();
         if (CollectionUtils.isNotEmpty(resourceIdList)) {
             MongoCollection<Document> collection = mongoTemplate.getCollection("INSPECT_REPORTS");
             List<String> nameList = new ArrayList<>();
             Map<String, String> fieldPathTextMap = new HashMap<>();
-            JSONArray mongoInspectAlertDetailArray = getInspectDetailByResourceIdListAndDateFromDb(resourceIdList, collection, date);
+            JSONArray mongoInspectAlertDetailArray = getInspectDetailByResourceIdListAndDateFromDb(resourceIdList, collection, startDate, endDate);
             for (int i = 0; i < mongoInspectAlertDetailArray.size(); i++) {
                 JSONArray resourceAlertArray = new JSONArray();
                 JSONObject mongoInspectAlertDetail = mongoInspectAlertDetailArray.getJSONObject(i);
@@ -247,21 +254,23 @@ public class InspectReportServiceImpl implements InspectReportService {
 
     @Override
     public JSONArray getInspectDetailByResourceIdListFromDb(List<Long> resourceIdList, MongoCollection<Document> collection) {
-        return this.getInspectDetailByResourceIdListAndDateFromDb(resourceIdList, collection, null);
+        return this.getInspectDetailByResourceIdListAndDateFromDb(resourceIdList, collection, null, null);
     }
 
     @Override
-    public JSONArray getInspectDetailByResourceIdListAndDateFromDb(List<Long> resourceIdList, MongoCollection<Document> collection, Date date) {
+    public JSONArray getInspectDetailByResourceIdListAndDateFromDb(List<Long> resourceIdList, MongoCollection<Document> collection, Date startDate, Date endDate) {
         JSONArray inspectReportArray = new JSONArray();
         if (CollectionUtils.isNotEmpty(resourceIdList)) {
             Document doc = new Document();
-            if (date != null) {
-                Calendar startTimeCalendar = Calendar.getInstance();
-                startTimeCalendar.setTime(date);
-                Date startDate = startTimeCalendar.getTime();
-                startTimeCalendar.add(Calendar.DAY_OF_MONTH, 1);
-                Date endDate = startTimeCalendar.getTime();
-                doc.put("_report_time", new Document("$gte", startDate).append("$lt", endDate));
+            if (startDate != null || endDate != null) {
+                Document timeDoc = new Document();
+                if (startDate != null) {
+                    timeDoc.append("$gte", startDate);
+                }
+                if (endDate != null) {
+                    timeDoc.append("$lt", endDate);
+                }
+                doc.put("_report_time", timeDoc);
             }
             doc.put("RESOURCE_ID", new Document("$in", resourceIdList));
             FindIterable<Document> findIterable = collection.find(doc);
@@ -413,7 +422,7 @@ public class InspectReportServiceImpl implements InspectReportService {
                 for (InspectResourceVo inspectResourceVo : inspectResourceVos) {
                     if (isNeedAlertDetail == 1) {
                         JSONObject mongoInspectAlertDetail = mongoInspectAlertDetailMap.get(inspectResourceVo.getId());
-                        if(MapUtils.isEmpty(mongoInspectAlertDetail)){
+                        if (MapUtils.isEmpty(mongoInspectAlertDetail)) {
                             continue;
                         }
                         JSONObject inspectResult = mongoInspectAlertDetail.getJSONObject("inspectResult");
@@ -493,5 +502,59 @@ public class InspectReportServiceImpl implements InspectReportService {
         dataMap.put("networkArea", inspectResourceVo.getNetworkArea());
         dataMap.put("tagList", inspectResourceVo.getTagList());
         dataMap.put("maintenanceWindow", inspectResourceVo.getMaintenanceWindow());
+    }
+
+    @Override
+    public void updateInspectAlertEveryDayData() {
+        updateInspectAlertEveryDayData(null, null);
+    }
+
+    @Override
+    public void updateInspectAlertEveryDayData(Date startDate, Date endDate) {
+        ResourceSearchVo searchVo = new ResourceSearchVo();
+        ICiCrossoverMapper ciCrossoverMapper = CrossoverServiceFactory.getApi(ICiCrossoverMapper.class);
+        CiVo ciVo = ciCrossoverMapper.getCiByName("IPObject");
+        if (ciVo == null) {
+            throw new CiNotFoundException("IPObject");
+        }
+        searchVo.setLft(ciVo.getLft());
+        searchVo.setRht(ciVo.getRht());
+        //如果startDate和endDate都为null，则默认获取前一天的数据
+        if (startDate == null && endDate == null) {
+            Calendar calendar = Calendar.getInstance();
+            calendar.setTime(new Date());
+            calendar.set(calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH), calendar.get(Calendar.DATE), 0, 0, 0);
+            endDate = calendar.getTime();
+            calendar.add(Calendar.DAY_OF_MONTH, -1);//获取前一天数据
+            startDate = calendar.getTime();
+        }
+        int resourceCount = inspectMapper.getInspectResourceCount(searchVo);
+        if (resourceCount > 0) {
+            searchVo.setRowNum(resourceCount);
+            searchVo.setPageSize(20);
+            for (int i = 1; i <= searchVo.getPageCount(); i++) {
+                searchVo.setCurrentPage(i);
+                searchVo.setStartNum(searchVo.getStartNum());
+                List<Long> resourceIdList = inspectMapper.getInspectResourceIdList(searchVo);
+                List<InspectResourceVo> inspectResourceVoList = inspectMapper.getInspectResourceListByIdList(resourceIdList);
+                if (CollectionUtils.isNotEmpty(inspectResourceVoList)) {
+                    JSONObject inspectDetail = getInspectDetailByResourceIdListAndDate(inspectResourceVoList.stream().map(InspectResourceVo::getId).collect(Collectors.toList()), startDate, endDate);
+                    if (MapUtils.isNotEmpty(inspectDetail)) {
+                        for (String key : inspectDetail.keySet()) {
+                            Long resourceId = Long.valueOf(key);
+                            JSONArray reportAlertArray = inspectDetail.getJSONArray(key);
+                            for (int j = 0; j < reportAlertArray.size(); j++) {
+                                InspectAlertEverydayVo inspectAlertEverydayVo = new InspectAlertEverydayVo(reportAlertArray.getJSONObject(j), resourceId);
+                                try {
+                                    inspectMapper.insertInspectAlertEveryday(inspectAlertEverydayVo);
+                                } catch (Exception ex) {
+                                    logger.error("resourceId :" + resourceId + " :" + ex.getMessage(), ex);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
 }
