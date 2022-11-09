@@ -4,13 +4,17 @@ import codedriver.framework.asynchronization.thread.CodeDriverThread;
 import codedriver.framework.asynchronization.threadpool.CachedThreadPool;
 import codedriver.framework.auth.core.AuthAction;
 import codedriver.framework.cmdb.crossover.ICiCrossoverMapper;
+import codedriver.framework.cmdb.crossover.IResourceCrossoverMapper;
 import codedriver.framework.cmdb.dto.ci.CiVo;
 import codedriver.framework.cmdb.dto.resourcecenter.ResourceSearchVo;
+import codedriver.framework.cmdb.dto.resourcecenter.ResourceVo;
 import codedriver.framework.cmdb.exception.ci.CiNotFoundException;
+import codedriver.framework.cmdb.exception.resourcecenter.AppSystemNotFoundException;
 import codedriver.framework.common.constvalue.ApiParamType;
 import codedriver.framework.common.constvalue.GroupSearch;
 import codedriver.framework.crossover.CrossoverServiceFactory;
 import codedriver.framework.dao.mapper.UserMapper;
+import codedriver.framework.exception.type.ParamNotExistsException;
 import codedriver.framework.inspect.auth.INSPECT_BASE;
 import codedriver.framework.restful.annotation.*;
 import codedriver.framework.restful.constvalue.OperationTypeEnum;
@@ -73,7 +77,8 @@ public class InspectNewProblemReportSendEmailApi extends PrivateApiComponentBase
             @Param(name = "receiverList", type = ApiParamType.JSONARRAY, isRequired = true, desc = "收件人"),
             @Param(name = "title", type = ApiParamType.STRING, xss = true, isRequired = true, desc = "邮件标题"),
             @Param(name = "keyword", type = ApiParamType.STRING, xss = true, desc = "模糊搜索"),
-            @Param(name = "typeId", type = ApiParamType.LONG, isRequired = true, desc = "类型id"),
+            @Param(name = "typeId", type = ApiParamType.LONG, desc = "类型id"),
+            @Param(name = "appSystemId", type = ApiParamType.LONG, desc = "应用ID"),
             @Param(name = "protocolIdList", type = ApiParamType.JSONARRAY, desc = "协议id列表"),
             @Param(name = "stateIdList", type = ApiParamType.JSONARRAY, desc = "状态id列表"),
             @Param(name = "envIdList", type = ApiParamType.JSONARRAY, desc = "环境id列表"),
@@ -96,18 +101,32 @@ public class InspectNewProblemReportSendEmailApi extends PrivateApiComponentBase
         if (isNeedAlertDetail == null) {
             isNeedAlertDetail = 0;
         }
+        Workbook workbook = null;
+        Long appSystemId = searchVo.getAppSystemId();
         Long typeId = searchVo.getTypeId();
-        ICiCrossoverMapper ciCrossoverMapper = CrossoverServiceFactory.getApi(ICiCrossoverMapper.class);
-        CiVo ciVo = ciCrossoverMapper.getCiById(typeId);
-        if (ciVo == null) {
-            throw new CiNotFoundException(typeId);
+        if (typeId != null) {
+            ICiCrossoverMapper ciCrossoverMapper = CrossoverServiceFactory.getApi(ICiCrossoverMapper.class);
+            CiVo ciVo = ciCrossoverMapper.getCiById(typeId);
+            if (ciVo == null) {
+                throw new CiNotFoundException(typeId);
+            }
+            searchVo.setLft(ciVo.getLft());
+            searchVo.setRht(ciVo.getRht());
+            searchVo.setPageSize(100);
+            searchVo.setCurrentPage(1);
+            workbook = inspectReportService.getInspectNewProblemReportWorkbook(searchVo, isNeedAlertDetail);
+        } else if (appSystemId != null) {
+            IResourceCrossoverMapper resourceCrossoverMapper = CrossoverServiceFactory.getApi(IResourceCrossoverMapper.class);
+            ResourceVo appSystem = resourceCrossoverMapper.getAppSystemById(appSystemId);
+            if (appSystem == null) {
+                throw new AppSystemNotFoundException(appSystemId);
+            }
+            workbook = inspectReportService.getInspectNewProblemReportWorkbookByAppSystemId(appSystemId, isNeedAlertDetail);
+        } else {
+            throw new ParamNotExistsException("类型ID（typeId）", "应用ID（appSystemId）");
         }
-        searchVo.setLft(ciVo.getLft());
-        searchVo.setRht(ciVo.getRht());
-        searchVo.setPageSize(100);
-        searchVo.setCurrentPage(1);
-        Workbook workbook = inspectReportService.getInspectNewProblemReportWorkbook(searchVo, isNeedAlertDetail);
         if (workbook != null) {
+            Workbook book = workbook;
             List<String> receiverList = paramObj.getJSONArray("receiverList").toJavaList(String.class);
             Set<String> userUuidList = new HashSet<>();
             Set<String> teamUuidList = new HashSet<>();
@@ -154,7 +173,7 @@ public class InspectNewProblemReportSendEmailApi extends PrivateApiComponentBase
                 protected void execute() {
                     try (ByteArrayOutputStream os = new ByteArrayOutputStream()) {
                         if (finalEmailList.size() > 0) {
-                            workbook.write(os);
+                            book.write(os);
                             InputStream is = new ByteArrayInputStream(os.toByteArray());
                             Map<String, InputStream> attachmentMap = new HashMap<>();
                             attachmentMap.put(title + ".xlsx", is);

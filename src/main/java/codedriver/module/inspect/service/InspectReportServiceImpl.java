@@ -7,6 +7,7 @@ package codedriver.module.inspect.service;
 
 import codedriver.framework.cmdb.crossover.ICiCrossoverMapper;
 import codedriver.framework.cmdb.crossover.IResourceCenterResourceCrossoverService;
+import codedriver.framework.cmdb.crossover.IResourceCrossoverMapper;
 import codedriver.framework.cmdb.dto.ci.CiVo;
 import codedriver.framework.cmdb.dto.resourcecenter.BgVo;
 import codedriver.framework.cmdb.dto.resourcecenter.IpVo;
@@ -348,6 +349,51 @@ public class InspectReportServiceImpl implements InspectReportService {
         }
     }
 
+    private void buildHeaderListAndColumnList(List<String> headerList, List<String> columnList, Integer isNeedAlertDetail) {
+        headerList.add("资产id");
+        columnList.add("resourceId");
+        headerList.add("IP地址");
+        columnList.add("ip:port");
+        headerList.add("类型");
+        columnList.add("typeLabel");
+        headerList.add("名称");
+        columnList.add("name");
+        headerList.add("描述");
+        columnList.add("description");
+        headerList.add("监控状态");
+        columnList.add("monitorStatus");
+        headerList.add("巡检状态");
+        columnList.add("inspectStatus");
+        headerList.add("巡检作业状态");
+        columnList.add("inspectJobNodeStatus");
+        headerList.add("IP列表");
+        columnList.add("allIpList");
+        headerList.add("所属部门");
+        columnList.add("bgList");
+        headerList.add("所有者");
+        columnList.add("ownerList");
+        headerList.add("资产状态");
+        columnList.add("stateName");
+        headerList.add("网络区域");
+        columnList.add("networkArea");
+        headerList.add("标签");
+        columnList.add("tagList");
+        headerList.add("维护窗口");
+        columnList.add("maintenanceWindow");
+        if (isNeedAlertDetail == 1) {
+            headerList.add("告警对象");
+            columnList.add("alertObject");
+            headerList.add("告警级别");
+            columnList.add("alertLevel");
+            headerList.add("告警提示");
+            columnList.add("alertTips");
+            headerList.add("告警值");
+            columnList.add("alertValue");
+            headerList.add("告警规则");
+            columnList.add("alertRule");
+        }
+    }
+
     @Override
     public Workbook getInspectNewProblemReportWorkbook(ResourceSearchVo searchVo, Integer isNeedAlertDetail) {
         IResourceCenterResourceCrossoverService resourceCenterResourceCrossoverService = CrossoverServiceFactory.getApi(IResourceCenterResourceCrossoverService.class);
@@ -356,53 +402,11 @@ public class InspectReportServiceImpl implements InspectReportService {
         int resourceCount = inspectMapper.getInspectResourceCount(searchVo);
         searchVo.setRowNum(resourceCount);
         if (resourceCount > 0) {
-            MongoCollection<Document> collection = null;
-            ExcelBuilder builder = new ExcelBuilder(SXSSFWorkbook.class);
             List<String> headerList = new ArrayList<>();
             List<String> columnList = new ArrayList<>();
-            headerList.add("资产id");
-            columnList.add("resourceId");
-            headerList.add("IP地址");
-            columnList.add("ip:port");
-            headerList.add("类型");
-            columnList.add("typeLabel");
-            headerList.add("名称");
-            columnList.add("name");
-            headerList.add("描述");
-            columnList.add("description");
-            headerList.add("监控状态");
-            columnList.add("monitorStatus");
-            headerList.add("巡检状态");
-            columnList.add("inspectStatus");
-            headerList.add("巡检作业状态");
-            columnList.add("inspectJobNodeStatus");
-            headerList.add("IP列表");
-            columnList.add("allIpList");
-            headerList.add("所属部门");
-            columnList.add("bgList");
-            headerList.add("所有者");
-            columnList.add("ownerList");
-            headerList.add("资产状态");
-            columnList.add("stateName");
-            headerList.add("网络区域");
-            columnList.add("networkArea");
-            headerList.add("标签");
-            columnList.add("tagList");
-            headerList.add("维护窗口");
-            columnList.add("maintenanceWindow");
-            if (isNeedAlertDetail == 1) {
-                headerList.add("告警对象");
-                columnList.add("alertObject");
-                headerList.add("告警级别");
-                columnList.add("alertLevel");
-                headerList.add("告警提示");
-                columnList.add("alertTips");
-                headerList.add("告警值");
-                columnList.add("alertValue");
-                headerList.add("告警规则");
-                columnList.add("alertRule");
-            }
+            buildHeaderListAndColumnList(headerList, columnList, isNeedAlertDetail);
 
+            ExcelBuilder builder = new ExcelBuilder(SXSSFWorkbook.class);
             SheetBuilder sheetBuilder = builder.withBorderColor(HSSFColor.HSSFColorPredefined.GREY_40_PERCENT)
                     .withHeadFontColor(HSSFColor.HSSFColorPredefined.WHITE)
                     .withHeadBgColor(HSSFColor.HSSFColorPredefined.DARK_BLUE)
@@ -417,54 +421,123 @@ public class InspectReportServiceImpl implements InspectReportService {
                 searchVo.setCurrentPage(i);
                 List<Long> resourceIdList = inspectMapper.getInspectResourceIdList(searchVo);
                 List<InspectResourceVo> inspectResourceVos = inspectMapper.getInspectResourceListByIdList(resourceIdList);
-                JSONArray mongoInspectAlertDetailArray = getInspectDetailByResourceIdListFromDb(inspectResourceVos.stream().map(InspectResourceVo::getId).collect(Collectors.toList()));
-                Map<Long, JSONObject> mongoInspectAlertDetailMap = mongoInspectAlertDetailArray.stream().collect(Collectors.toMap(o -> ((JSONObject) o).getLong("id"), o -> ((JSONObject) o)));
-                for (InspectResourceVo inspectResourceVo : inspectResourceVos) {
-                    if (isNeedAlertDetail == 1) {
-                        JSONObject mongoInspectAlertDetail = mongoInspectAlertDetailMap.get(inspectResourceVo.getId());
-                        if (MapUtils.isEmpty(mongoInspectAlertDetail)) {
-                            continue;
-                        }
-                        JSONObject inspectResult = mongoInspectAlertDetail.getJSONObject("inspectResult");
-                        JSONObject reportJson = mongoInspectAlertDetail.getJSONObject("reportJson");
-                        //初始化fieldMap
-                        if (!nameList.contains(inspectResult.getString("name"))) {
-                            nameList.add(inspectResult.getString("name"));
-                            JSONArray fields;
-                            if (MapUtils.isNotEmpty(reportJson) && CollectionUtils.isNotEmpty(fields = reportJson.getJSONArray("fields"))) {
-                                for (int k = 0; k < fields.size(); k++) {
-                                    JSONObject field = fields.getJSONObject(k);
-                                    fieldPathTextMap.put(field.getString("name"), field.getString("desc"));
-                                    if (Objects.equals("JsonArray", field.getString("type"))) {
-                                        getFieldPathTextMap(fieldPathTextMap, field.getString("name"), field.getJSONArray("subset"));
-                                    }
-                                }
+                putCommonDataMap(resourceIdList, inspectResourceVos, isNeedAlertDetail, nameList, fieldPathTextMap, sheetBuilder);
+            }
+            return workbook;
+        }
+        return null;
+    }
+
+    @Override
+    public Workbook getInspectNewProblemReportWorkbookByAppSystemId(Long appSystemId, Integer isNeedAlertDetail) {
+        List<Long> ipObjectResourceTypeIdList = new ArrayList<>();
+        List<Long> osResourceTypeIdList = new ArrayList<>();
+        IResourceCrossoverMapper resourceCrossoverMapper = CrossoverServiceFactory.getApi(IResourceCrossoverMapper.class);
+        ResourceSearchVo searchVo = new ResourceSearchVo();
+        searchVo.setAppSystemId(appSystemId);
+        Set<Long> resourceTypeIdSet = resourceCrossoverMapper.getIpObjectResourceTypeIdListByAppSystemIdAndEnvId(searchVo);
+        ipObjectResourceTypeIdList.addAll(resourceTypeIdSet);
+        ipObjectResourceTypeIdList.sort(Long::compare);
+        if (CollectionUtils.isNotEmpty(resourceTypeIdSet)) {
+            resourceTypeIdSet = resourceCrossoverMapper.getOsResourceTypeIdListByAppSystemIdAndEnvId(searchVo);
+            osResourceTypeIdList.addAll(resourceTypeIdSet);
+            osResourceTypeIdList.sort(Long::compare);
+        }
+
+        List<String> headerList = new ArrayList<>();
+        List<String> columnList = new ArrayList<>();
+        buildHeaderListAndColumnList(headerList, columnList, isNeedAlertDetail);
+
+        ExcelBuilder builder = new ExcelBuilder(SXSSFWorkbook.class);
+        SheetBuilder sheetBuilder = builder.withBorderColor(HSSFColor.HSSFColorPredefined.GREY_40_PERCENT)
+                .withHeadFontColor(HSSFColor.HSSFColorPredefined.WHITE)
+                .withHeadBgColor(HSSFColor.HSSFColorPredefined.DARK_BLUE)
+                .withColumnWidth(30)
+                .addSheet("数据")
+                .withHeaderList(headerList)
+                .withColumnList(columnList);
+        Workbook workbook = builder.build();
+        List<String> nameList = new ArrayList<>();
+        Map<String, String> fieldPathTextMap = new HashMap<>();
+        List<String> inspectStatusList = new ArrayList<>();
+        inspectStatusList.add(InspectStatus.WARN.getValue());
+        inspectStatusList.add(InspectStatus.CRITICAL.getValue());
+        inspectStatusList.add(InspectStatus.FATAL.getValue());
+        searchVo.setInspectStatusList(inspectStatusList);
+        for (Long resourceTypeId : ipObjectResourceTypeIdList) {
+            searchVo.setTypeId(resourceTypeId);
+            int rowNum = resourceCrossoverMapper.getIpObjectResourceCountByAppSystemIdAndAppModuleIdAndEnvIdAndTypeId(searchVo);
+            if (rowNum > 0) {
+                searchVo.setRowNum(rowNum);
+                searchVo.setPageSize(100);
+                for (int currentPage = 1; currentPage <= searchVo.getPageCount(); currentPage++) {
+                    searchVo.setCurrentPage(currentPage);
+                    List<Long> idList = resourceCrossoverMapper.getIpObjectResourceIdListByAppSystemIdAndAppModuleIdAndEnvIdAndTypeId(searchVo);
+                    if (CollectionUtils.isNotEmpty(idList)) {
+                        List<InspectResourceVo> inspectResourceVos = inspectMapper.getInspectResourceListByIdList(idList);
+                        putCommonDataMap(idList, inspectResourceVos, isNeedAlertDetail, nameList, fieldPathTextMap, sheetBuilder);
+                    }
+                }
+            }
+        }
+        for (Long resourceTypeId : osResourceTypeIdList) {
+            searchVo.setTypeId(resourceTypeId);
+            int rowNum = resourceCrossoverMapper.getOsResourceCountByAppSystemIdAndAppModuleIdAndEnvIdAndTypeId(searchVo);
+            if (rowNum > 0) {
+                searchVo.setRowNum(rowNum);
+                List<Long> idList = resourceCrossoverMapper.getOsResourceIdListByAppSystemIdAndAppModuleIdAndEnvIdAndTypeId(searchVo);
+                if (CollectionUtils.isNotEmpty(idList)) {
+                    List<InspectResourceVo> inspectResourceVos = inspectMapper.getInspectResourceListByIdList(idList);
+                    putCommonDataMap(idList, inspectResourceVos, isNeedAlertDetail, nameList, fieldPathTextMap, sheetBuilder);
+                }
+            }
+        }
+        return workbook;
+    }
+
+    private void putCommonDataMap(List<Long> resourceIdList, List<InspectResourceVo> inspectResourceVos, Integer isNeedAlertDetail, List<String> nameList, Map<String, String> fieldPathTextMap, SheetBuilder sheetBuilder) {
+        JSONArray mongoInspectAlertDetailArray = getInspectDetailByResourceIdListFromDb(resourceIdList);
+        Map<Long, JSONObject> mongoInspectAlertDetailMap = mongoInspectAlertDetailArray.stream().collect(Collectors.toMap(o -> ((JSONObject) o).getLong("id"), o -> ((JSONObject) o)));
+        for (InspectResourceVo inspectResourceVo : inspectResourceVos) {
+            if (isNeedAlertDetail == 1) {
+                JSONObject mongoInspectAlertDetail = mongoInspectAlertDetailMap.get(inspectResourceVo.getId());
+                if (MapUtils.isEmpty(mongoInspectAlertDetail)) {
+                    continue;
+                }
+                JSONObject inspectResult = mongoInspectAlertDetail.getJSONObject("inspectResult");
+                JSONObject reportJson = mongoInspectAlertDetail.getJSONObject("reportJson");
+                //初始化fieldMap
+                if (!nameList.contains(inspectResult.getString("name"))) {
+                    nameList.add(inspectResult.getString("name"));
+                    JSONArray fields;
+                    if (MapUtils.isNotEmpty(reportJson) && CollectionUtils.isNotEmpty(fields = reportJson.getJSONArray("fields"))) {
+                        for (int k = 0; k < fields.size(); k++) {
+                            JSONObject field = fields.getJSONObject(k);
+                            fieldPathTextMap.put(field.getString("name"), field.getString("desc"));
+                            if (Objects.equals("JsonArray", field.getString("type"))) {
+                                getFieldPathTextMap(fieldPathTextMap, field.getString("name"), field.getJSONArray("subset"));
                             }
                         }
-                        if (MapUtils.isNotEmpty(inspectResult)) {
-                            JSONObject thresholds = inspectResult.getJSONObject("thresholds");
-                            JSONArray alerts = inspectResult.getJSONArray("alerts");
-                            if (CollectionUtils.isNotEmpty(alerts)) {
-                                for (int j = 0; j < alerts.size(); j++) {
-                                    JSONObject alert = alerts.getJSONObject(j);
-                                    Map<String, Object> dataMap = new HashMap<>();
-                                    putCommonDataMap(dataMap, inspectResourceVo);
-                                    JSONObject threholdJson;
-                                    if (MapUtils.isNotEmpty(thresholds) && MapUtils.isNotEmpty(threholdJson = thresholds.getJSONObject(alert.getString("ruleName")))) {
-                                        dataMap.put("alertLevel", threholdJson.getString("level"));
-                                        dataMap.put("alertTips", threholdJson.getString("name"));
-                                        dataMap.put("alertRule", threholdJson.getString("rule"));
-                                        //补充告警对象
-                                        dataMap.put("alertObject", getInspectAlertObject(reportJson, alert, threholdJson, fieldPathTextMap));
-                                    }
-                                    dataMap.put("alertValue", alert.getString("fieldValue"));
-                                    sheetBuilder.addData(dataMap);
-                                }
-                            } else {
-                                Map<String, Object> dataMap = new HashMap<>();
-                                putCommonDataMap(dataMap, inspectResourceVo);
-                                sheetBuilder.addData(dataMap);
+                    }
+                }
+                if (MapUtils.isNotEmpty(inspectResult)) {
+                    JSONObject thresholds = inspectResult.getJSONObject("thresholds");
+                    JSONArray alerts = inspectResult.getJSONArray("alerts");
+                    if (CollectionUtils.isNotEmpty(alerts)) {
+                        for (int j = 0; j < alerts.size(); j++) {
+                            JSONObject alert = alerts.getJSONObject(j);
+                            Map<String, Object> dataMap = new HashMap<>();
+                            putCommonDataMap(dataMap, inspectResourceVo);
+                            JSONObject threholdJson;
+                            if (MapUtils.isNotEmpty(thresholds) && MapUtils.isNotEmpty(threholdJson = thresholds.getJSONObject(alert.getString("ruleName")))) {
+                                dataMap.put("alertLevel", threholdJson.getString("level"));
+                                dataMap.put("alertTips", threholdJson.getString("name"));
+                                dataMap.put("alertRule", threholdJson.getString("rule"));
+                                //补充告警对象
+                                dataMap.put("alertObject", getInspectAlertObject(reportJson, alert, threholdJson, fieldPathTextMap));
                             }
+                            dataMap.put("alertValue", alert.getString("fieldValue"));
+                            sheetBuilder.addData(dataMap);
                         }
                     } else {
                         Map<String, Object> dataMap = new HashMap<>();
@@ -472,10 +545,12 @@ public class InspectReportServiceImpl implements InspectReportService {
                         sheetBuilder.addData(dataMap);
                     }
                 }
+            } else {
+                Map<String, Object> dataMap = new HashMap<>();
+                putCommonDataMap(dataMap, inspectResourceVo);
+                sheetBuilder.addData(dataMap);
             }
-            return workbook;
         }
-        return null;
     }
 
     /**

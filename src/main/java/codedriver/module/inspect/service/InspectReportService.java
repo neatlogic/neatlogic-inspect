@@ -120,6 +120,13 @@ public interface InspectReportService {
      */
     Workbook getInspectNewProblemReportWorkbook(ResourceSearchVo searchVo, Integer isNeedAlertDetail);
 
+    /**
+     * 根据应用系统ID获取巡检最新报告列表Workbook
+     * @param appSystemId 应用系统ID
+     * @param isNeedAlertDetail 1:会导出具体告警信息；0：不会导出具体告警信息
+     * @return
+     */
+    Workbook getInspectNewProblemReportWorkbookByAppSystemId(Long appSystemId, Integer isNeedAlertDetail);
 
     /**
      * 更新巡检告警表数据
