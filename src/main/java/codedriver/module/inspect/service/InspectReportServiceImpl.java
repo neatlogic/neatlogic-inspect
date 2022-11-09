@@ -464,12 +464,12 @@ public class InspectReportServiceImpl implements InspectReportService {
         inspectStatusList.add(InspectStatus.CRITICAL.getValue());
         inspectStatusList.add(InspectStatus.FATAL.getValue());
         searchVo.setInspectStatusList(inspectStatusList);
+        searchVo.setPageSize(100);
         for (Long resourceTypeId : ipObjectResourceTypeIdList) {
             searchVo.setTypeId(resourceTypeId);
             int rowNum = resourceCrossoverMapper.getIpObjectResourceCountByAppSystemIdAndAppModuleIdAndEnvIdAndTypeId(searchVo);
             if (rowNum > 0) {
                 searchVo.setRowNum(rowNum);
-                searchVo.setPageSize(100);
                 for (int currentPage = 1; currentPage <= searchVo.getPageCount(); currentPage++) {
                     searchVo.setCurrentPage(currentPage);
                     List<Long> idList = resourceCrossoverMapper.getIpObjectResourceIdListByAppSystemIdAndAppModuleIdAndEnvIdAndTypeId(searchVo);
@@ -485,10 +485,13 @@ public class InspectReportServiceImpl implements InspectReportService {
             int rowNum = resourceCrossoverMapper.getOsResourceCountByAppSystemIdAndAppModuleIdAndEnvIdAndTypeId(searchVo);
             if (rowNum > 0) {
                 searchVo.setRowNum(rowNum);
-                List<Long> idList = resourceCrossoverMapper.getOsResourceIdListByAppSystemIdAndAppModuleIdAndEnvIdAndTypeId(searchVo);
-                if (CollectionUtils.isNotEmpty(idList)) {
-                    List<InspectResourceVo> inspectResourceVos = inspectMapper.getInspectResourceListByIdList(idList);
-                    putCommonDataMap(idList, inspectResourceVos, isNeedAlertDetail, nameList, fieldPathTextMap, sheetBuilder);
+                for (int currentPage = 1; currentPage <= searchVo.getPageCount(); currentPage++) {
+                    searchVo.setCurrentPage(currentPage);
+                    List<Long> idList = resourceCrossoverMapper.getOsResourceIdListByAppSystemIdAndAppModuleIdAndEnvIdAndTypeId(searchVo);
+                    if (CollectionUtils.isNotEmpty(idList)) {
+                        List<InspectResourceVo> inspectResourceVos = inspectMapper.getInspectResourceListByIdList(idList);
+                        putCommonDataMap(idList, inspectResourceVos, isNeedAlertDetail, nameList, fieldPathTextMap, sheetBuilder);
+                    }
                 }
             }
         }
