@@ -2,11 +2,15 @@ package codedriver.module.inspect.api.newproblem;
 
 import codedriver.framework.auth.core.AuthAction;
 import codedriver.framework.cmdb.crossover.ICiCrossoverMapper;
+import codedriver.framework.cmdb.crossover.IResourceCrossoverMapper;
 import codedriver.framework.cmdb.dto.ci.CiVo;
 import codedriver.framework.cmdb.dto.resourcecenter.ResourceSearchVo;
+import codedriver.framework.cmdb.dto.resourcecenter.ResourceVo;
 import codedriver.framework.cmdb.exception.ci.CiNotFoundException;
+import codedriver.framework.cmdb.exception.resourcecenter.AppSystemNotFoundException;
 import codedriver.framework.common.constvalue.ApiParamType;
 import codedriver.framework.crossover.CrossoverServiceFactory;
+import codedriver.framework.exception.type.ParamNotExistsException;
 import codedriver.framework.inspect.auth.INSPECT_BASE;
 import codedriver.framework.restful.annotation.*;
 import codedriver.framework.restful.constvalue.OperationTypeEnum;
@@ -57,7 +61,8 @@ public class InspectNewProblemReportExportApi extends PrivateBinaryStreamApiComp
 
     @Input({
             @Param(name = "keyword", type = ApiParamType.STRING, xss = true, desc = "模糊搜索"),
-            @Param(name = "typeId", type = ApiParamType.LONG, isRequired = true, desc = "类型id"),
+            @Param(name = "typeId", type = ApiParamType.LONG, desc = "类型ID"),
+            @Param(name = "appSystemId", type = ApiParamType.LONG, desc = "应用ID"),
             @Param(name = "protocolIdList", type = ApiParamType.JSONARRAY, desc = "协议id列表"),
             @Param(name = "stateIdList", type = ApiParamType.JSONARRAY, desc = "状态id列表"),
             @Param(name = "envIdList", type = ApiParamType.JSONARRAY, desc = "环境id列表"),
@@ -80,19 +85,34 @@ public class InspectNewProblemReportExportApi extends PrivateBinaryStreamApiComp
         if (isNeedAlertDetail == null) {
             isNeedAlertDetail = 0;
         }
+        String fileNameEncode = "";
+        Workbook workbook = null;
+        Long appSystemId = searchVo.getAppSystemId();
         Long typeId = searchVo.getTypeId();
-        ICiCrossoverMapper ciCrossoverMapper = CrossoverServiceFactory.getApi(ICiCrossoverMapper.class);
-        CiVo ciVo = ciCrossoverMapper.getCiById(typeId);
-        if (ciVo == null) {
-            throw new CiNotFoundException(typeId);
+        if (typeId != null) {
+            ICiCrossoverMapper ciCrossoverMapper = CrossoverServiceFactory.getApi(ICiCrossoverMapper.class);
+            CiVo ciVo = ciCrossoverMapper.getCiById(typeId);
+            if (ciVo == null) {
+                throw new CiNotFoundException(typeId);
+            }
+            searchVo.setLft(ciVo.getLft());
+            searchVo.setRht(ciVo.getRht());
+            searchVo.setPageSize(100);
+            searchVo.setCurrentPage(1);
+            workbook = inspectReportService.getInspectNewProblemReportWorkbook(searchVo, isNeedAlertDetail);
+            fileNameEncode = ciVo.getId() + "_" + ciVo.getLabel() + ".xlsx";
+        } else if (appSystemId != null) {
+            IResourceCrossoverMapper resourceCrossoverMapper = CrossoverServiceFactory.getApi(IResourceCrossoverMapper.class);
+            ResourceVo appSystem = resourceCrossoverMapper.getAppSystemById(appSystemId);
+            if (appSystem == null) {
+                throw new AppSystemNotFoundException(appSystemId);
+            }
+            workbook = inspectReportService.getInspectNewProblemReportWorkbookByAppSystemId(appSystemId, isNeedAlertDetail);
+            fileNameEncode = appSystemId + "_" +appSystem.getName() + ".xlsx";
+        } else {
+            throw new ParamNotExistsException("类型ID（typeId）", "应用ID（appSystemId）");
         }
-        searchVo.setLft(ciVo.getLft());
-        searchVo.setRht(ciVo.getRht());
-        searchVo.setPageSize(100);
-        searchVo.setCurrentPage(1);
-        Workbook workbook = inspectReportService.getInspectNewProblemReportWorkbook(searchVo, isNeedAlertDetail);
         if (workbook != null) {
-            String fileNameEncode = ciVo.getId() + "_" + ciVo.getLabel() + ".xlsx";
             boolean flag = request.getHeader("User-Agent").indexOf("Gecko") > 0;
             if (request.getHeader("User-Agent").toLowerCase().indexOf("msie") > 0 || flag) {
                 fileNameEncode = URLEncoder.encode(fileNameEncode, "UTF-8");// IE浏览器
