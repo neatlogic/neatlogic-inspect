@@ -8,10 +8,8 @@ package codedriver.module.inspect.api.schedule;
 import codedriver.framework.asynchronization.threadlocal.TenantContext;
 import codedriver.framework.asynchronization.threadlocal.UserContext;
 import codedriver.framework.auth.core.AuthAction;
-import codedriver.framework.cmdb.crossover.ICiCrossoverMapper;
 import codedriver.framework.cmdb.crossover.IResourceCrossoverMapper;
 import codedriver.framework.cmdb.dto.resourcecenter.ResourceVo;
-import codedriver.framework.cmdb.exception.ci.CiNotFoundException;
 import codedriver.framework.cmdb.exception.resourcecenter.AppSystemNotFoundException;
 import codedriver.framework.common.constvalue.ApiParamType;
 import codedriver.framework.crossover.CrossoverServiceFactory;
@@ -110,7 +108,6 @@ public class SaveInspectAppSystemScheduleApi extends PrivateApiComponentBase {
                 .setType("private")
                 .build();
         if (scheduleVo.getIsActive() == 1) {
-            System.out.println("loadJob");
             schedulerManager.loadJob(jobObject);
         } else {
             schedulerManager.unloadJob(jobObject);

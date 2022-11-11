@@ -22,7 +22,6 @@ import codedriver.framework.cmdb.dto.ci.CiVo;
 import codedriver.framework.cmdb.dto.resourcecenter.ResourceSearchVo;
 import codedriver.framework.cmdb.dto.resourcecenter.ResourceVo;
 import codedriver.framework.common.constvalue.SystemUser;
-import codedriver.framework.common.dto.BasePageVo;
 import codedriver.framework.crossover.CrossoverServiceFactory;
 import codedriver.framework.dao.mapper.UserMapper;
 import codedriver.framework.dto.UserVo;
@@ -31,11 +30,8 @@ import codedriver.framework.inspect.constvalue.JobSource;
 import codedriver.framework.inspect.dao.mapper.InspectMapper;
 import codedriver.framework.inspect.dao.mapper.InspectScheduleMapper;
 import codedriver.framework.inspect.dto.InspectAppSystemScheduleVo;
-import codedriver.framework.inspect.dto.InspectResourceVo;
-import codedriver.framework.inspect.dto.InspectScheduleVo;
 import codedriver.framework.scheduler.core.JobBase;
 import codedriver.framework.scheduler.dto.JobObject;
-import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -48,7 +44,6 @@ import org.springframework.stereotype.Component;
 import javax.annotation.Resource;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 import java.util.Set;
 
 /**
@@ -115,7 +110,6 @@ public class InspectAppSystemScheduleJob extends JobBase {
                         .Builder(vo.getId().toString(), this.getGroupName(), this.getClassName(), TenantContext.get().getTenantUuid());
                 JobObject jobObject = jobObjectBuilder.build();
                 this.reloadJob(jobObject);
-                System.out.println("loadJob:" + vo.getId().toString());
             }
         }
     }
@@ -128,7 +122,6 @@ public class InspectAppSystemScheduleJob extends JobBase {
         if (scheduleVo == null) {
             return;
         }
-        System.out.println("executeInternal:" + idStr);
         String userUuid = scheduleVo.getFcu();
         List<Long> ipObjectResourceTypeIdList = new ArrayList<>();
         List<Long> osResourceTypeIdList = new ArrayList<>();
@@ -143,9 +136,7 @@ public class InspectAppSystemScheduleJob extends JobBase {
             osResourceTypeIdList.addAll(resourceTypeIdSet);
             osResourceTypeIdList.sort(Long::compare);
         }
-        System.out.println("ipObjectResourceTypeIdList=" + ipObjectResourceTypeIdList);
         for (Long typeId : ipObjectResourceTypeIdList) {
-            System.out.println("typeId=" + typeId);
             Long combopId = inspectMapper.getCombopIdByCiId(typeId);
             if (combopId == null) {
                 continue;
@@ -165,7 +156,6 @@ public class InspectAppSystemScheduleJob extends JobBase {
                     searchVo.setCurrentPage(currentPage);
                     List<Long> idList = resourceCrossoverMapper.getIpObjectResourceIdListByAppSystemIdAndAppModuleIdAndEnvIdAndTypeId(searchVo);
                     if (CollectionUtils.isNotEmpty(idList)) {
-                        System.out.println("idList=" + idList);
                         List<ResourceVo> resourceList = resourceCrossoverMapper.getResourceByIdList(idList);
                         for (ResourceVo resourceVo : resourceList) {
                             selectNodeList.add(new AutoexecNodeVo(resourceVo));
@@ -176,13 +166,10 @@ public class InspectAppSystemScheduleJob extends JobBase {
                     createAndFireJob(combopId, id, name, userUuid, selectNodeList);
                 } catch (Exception e) {
                     logger.error(e.getMessage(), e);
-                    System.out.println(e.getMessage());
                 }
             }
         }
-        System.out.println("osResourceTypeIdList=" + osResourceTypeIdList);
         for (Long typeId : osResourceTypeIdList) {
-            System.out.println("typeId=" + typeId);
             Long combopId = inspectMapper.getCombopIdByCiId(typeId);
             if (combopId == null) {
                 continue;
@@ -202,19 +189,16 @@ public class InspectAppSystemScheduleJob extends JobBase {
                     searchVo.setCurrentPage(currentPage);
                     List<Long> idList = resourceCrossoverMapper.getOsResourceIdListByAppSystemIdAndAppModuleIdAndEnvIdAndTypeId(searchVo);
                     if (CollectionUtils.isNotEmpty(idList)) {
-                        System.out.println("idList=" + idList);
                         List<ResourceVo> resourceList = resourceCrossoverMapper.getResourceByIdList(idList);
                         for (ResourceVo resourceVo : resourceList) {
                             selectNodeList.add(new AutoexecNodeVo(resourceVo));
                         }
                     }
                 }
-//                createAndFireJob(combopId, id, name, userUuid, selectNodeList);
                 try {
                     createAndFireJob(combopId, id, name, userUuid, selectNodeList);
                 } catch (Exception e) {
                     logger.error(e.getMessage(), e);
-                    System.out.println(e.getMessage());
                 }
             }
         }
@@ -222,7 +206,6 @@ public class InspectAppSystemScheduleJob extends JobBase {
     }
 
     private void createAndFireJob(Long combopId, Long invokeId, String name, String userUuid, List<AutoexecNodeVo> selectNodeList) throws Exception {
-        System.out.println("createAndFireJob=" + combopId);
         JSONObject paramObj = new JSONObject();
         paramObj.put("combopId", combopId);
         paramObj.put("source", JobSource.INSPECT.getValue());
@@ -244,7 +227,6 @@ public class InspectAppSystemScheduleJob extends JobBase {
         autoexecJobActionCrossoverService.validateAndCreateJobFromCombop(jobVo);
         jobVo.setAction(JobAction.FIRE.getValue());
         IAutoexecJobActionHandler fireAction = AutoexecJobActionHandlerFactory.getAction(JobAction.FIRE.getValue());
-        JSONObject resultObj = fireAction.doService(jobVo);
-        System.out.println("jobId=" + resultObj.get("jobId"));
+        fireAction.doService(jobVo);
     }
 }

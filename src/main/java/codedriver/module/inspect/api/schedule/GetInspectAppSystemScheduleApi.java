@@ -1,11 +1,7 @@
 package codedriver.module.inspect.api.schedule;
 
 import codedriver.framework.auth.core.AuthAction;
-import codedriver.framework.cmdb.crossover.ICiCrossoverMapper;
-import codedriver.framework.cmdb.dto.ci.CiVo;
-import codedriver.framework.cmdb.exception.ci.CiNotFoundException;
 import codedriver.framework.common.constvalue.ApiParamType;
-import codedriver.framework.crossover.CrossoverServiceFactory;
 import codedriver.framework.inspect.auth.INSPECT_BASE;
 import codedriver.framework.inspect.dao.mapper.InspectScheduleMapper;
 import codedriver.framework.inspect.dto.InspectAppSystemScheduleVo;
@@ -56,13 +52,6 @@ public class GetInspectAppSystemScheduleApi extends PrivateApiComponentBase {
         if (vo == null) {
             throw new InspectScheduleNotFoundException(id);
         }
-//        ICiCrossoverMapper ciCrossoverMapper = CrossoverServiceFactory.getApi(ICiCrossoverMapper.class);
-//        CiVo ci = ciCrossoverMapper.getCiById(vo.getCiId());
-//        if (ci == null) {
-//            throw new CiNotFoundException(vo.getCiId());
-//        }
-//        vo.setCiLabel(ci.getLabel());
-//        vo.setCiName(ci.getName());
         return vo;
     }
 }
