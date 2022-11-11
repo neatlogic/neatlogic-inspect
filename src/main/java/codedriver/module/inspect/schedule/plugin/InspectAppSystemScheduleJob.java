@@ -41,6 +41,8 @@ import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.quartz.DisallowConcurrentExecution;
 import org.quartz.JobExecutionContext;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
@@ -56,6 +58,8 @@ import java.util.Set;
 @Component
 @DisallowConcurrentExecution
 public class InspectAppSystemScheduleJob extends JobBase {
+
+    private Logger logger = LoggerFactory.getLogger(InspectAppSystemScheduleJob.class);
 
     @Resource
     InspectScheduleMapper inspectScheduleMapper;
@@ -111,6 +115,7 @@ public class InspectAppSystemScheduleJob extends JobBase {
                         .Builder(vo.getId().toString(), this.getGroupName(), this.getClassName(), TenantContext.get().getTenantUuid());
                 JobObject jobObject = jobObjectBuilder.build();
                 this.reloadJob(jobObject);
+                System.out.println("loadJob:" + vo.getId().toString());
             }
         }
     }
@@ -123,6 +128,7 @@ public class InspectAppSystemScheduleJob extends JobBase {
         if (scheduleVo == null) {
             return;
         }
+        System.out.println("executeInternal:" + idStr);
         String userUuid = scheduleVo.getFcu();
         List<Long> ipObjectResourceTypeIdList = new ArrayList<>();
         List<Long> osResourceTypeIdList = new ArrayList<>();
@@ -137,7 +143,9 @@ public class InspectAppSystemScheduleJob extends JobBase {
             osResourceTypeIdList.addAll(resourceTypeIdSet);
             osResourceTypeIdList.sort(Long::compare);
         }
+        System.out.println("ipObjectResourceTypeIdList=" + ipObjectResourceTypeIdList);
         for (Long typeId : ipObjectResourceTypeIdList) {
+            System.out.println("typeId=" + typeId);
             Long combopId = inspectMapper.getCombopIdByCiId(typeId);
             if (combopId == null) {
                 continue;
@@ -157,16 +165,24 @@ public class InspectAppSystemScheduleJob extends JobBase {
                     searchVo.setCurrentPage(currentPage);
                     List<Long> idList = resourceCrossoverMapper.getIpObjectResourceIdListByAppSystemIdAndAppModuleIdAndEnvIdAndTypeId(searchVo);
                     if (CollectionUtils.isNotEmpty(idList)) {
+                        System.out.println("idList=" + idList);
                         List<ResourceVo> resourceList = resourceCrossoverMapper.getResourceByIdList(idList);
                         for (ResourceVo resourceVo : resourceList) {
                             selectNodeList.add(new AutoexecNodeVo(resourceVo));
                         }
                     }
                 }
+                try {
+                    createAndFireJob(combopId, id, name, userUuid, selectNodeList);
+                } catch (Exception e) {
+                    logger.error(e.getMessage(), e);
+                    System.out.println(e.getMessage());
+                }
             }
-            createAndFireJob(combopId, id, name, userUuid, selectNodeList);
         }
+        System.out.println("osResourceTypeIdList=" + osResourceTypeIdList);
         for (Long typeId : osResourceTypeIdList) {
+            System.out.println("typeId=" + typeId);
             Long combopId = inspectMapper.getCombopIdByCiId(typeId);
             if (combopId == null) {
                 continue;
@@ -186,19 +202,27 @@ public class InspectAppSystemScheduleJob extends JobBase {
                     searchVo.setCurrentPage(currentPage);
                     List<Long> idList = resourceCrossoverMapper.getOsResourceIdListByAppSystemIdAndAppModuleIdAndEnvIdAndTypeId(searchVo);
                     if (CollectionUtils.isNotEmpty(idList)) {
+                        System.out.println("idList=" + idList);
                         List<ResourceVo> resourceList = resourceCrossoverMapper.getResourceByIdList(idList);
                         for (ResourceVo resourceVo : resourceList) {
                             selectNodeList.add(new AutoexecNodeVo(resourceVo));
                         }
                     }
                 }
+//                createAndFireJob(combopId, id, name, userUuid, selectNodeList);
+                try {
+                    createAndFireJob(combopId, id, name, userUuid, selectNodeList);
+                } catch (Exception e) {
+                    logger.error(e.getMessage(), e);
+                    System.out.println(e.getMessage());
+                }
             }
-            createAndFireJob(combopId, id, name, userUuid, selectNodeList);
         }
 
     }
 
     private void createAndFireJob(Long combopId, Long invokeId, String name, String userUuid, List<AutoexecNodeVo> selectNodeList) throws Exception {
+        System.out.println("createAndFireJob=" + combopId);
         JSONObject paramObj = new JSONObject();
         paramObj.put("combopId", combopId);
         paramObj.put("source", JobSource.INSPECT.getValue());
@@ -220,6 +244,7 @@ public class InspectAppSystemScheduleJob extends JobBase {
         autoexecJobActionCrossoverService.validateAndCreateJobFromCombop(jobVo);
         jobVo.setAction(JobAction.FIRE.getValue());
         IAutoexecJobActionHandler fireAction = AutoexecJobActionHandlerFactory.getAction(JobAction.FIRE.getValue());
-        fireAction.doService(jobVo);
+        JSONObject resultObj = fireAction.doService(jobVo);
+        System.out.println("jobId=" + resultObj.get("jobId"));
     }
 }

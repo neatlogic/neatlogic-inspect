@@ -110,6 +110,7 @@ public class SaveInspectAppSystemScheduleApi extends PrivateApiComponentBase {
                 .setType("private")
                 .build();
         if (scheduleVo.getIsActive() == 1) {
+            System.out.println("loadJob");
             schedulerManager.loadJob(jobObject);
         } else {
             schedulerManager.unloadJob(jobObject);
