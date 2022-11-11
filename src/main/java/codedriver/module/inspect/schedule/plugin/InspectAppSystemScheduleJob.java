@@ -22,7 +22,6 @@ import codedriver.framework.cmdb.dto.ci.CiVo;
 import codedriver.framework.cmdb.dto.resourcecenter.ResourceSearchVo;
 import codedriver.framework.cmdb.dto.resourcecenter.ResourceVo;
 import codedriver.framework.common.constvalue.SystemUser;
-import codedriver.framework.common.dto.BasePageVo;
 import codedriver.framework.crossover.CrossoverServiceFactory;
 import codedriver.framework.dao.mapper.UserMapper;
 import codedriver.framework.dto.UserVo;
@@ -31,22 +30,20 @@ import codedriver.framework.inspect.constvalue.JobSource;
 import codedriver.framework.inspect.dao.mapper.InspectMapper;
 import codedriver.framework.inspect.dao.mapper.InspectScheduleMapper;
 import codedriver.framework.inspect.dto.InspectAppSystemScheduleVo;
-import codedriver.framework.inspect.dto.InspectResourceVo;
-import codedriver.framework.inspect.dto.InspectScheduleVo;
 import codedriver.framework.scheduler.core.JobBase;
 import codedriver.framework.scheduler.dto.JobObject;
-import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.quartz.DisallowConcurrentExecution;
 import org.quartz.JobExecutionContext;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 import java.util.Set;
 
 /**
@@ -56,6 +53,8 @@ import java.util.Set;
 @Component
 @DisallowConcurrentExecution
 public class InspectAppSystemScheduleJob extends JobBase {
+
+    private Logger logger = LoggerFactory.getLogger(InspectAppSystemScheduleJob.class);
 
     @Resource
     InspectScheduleMapper inspectScheduleMapper;
@@ -163,8 +162,12 @@ public class InspectAppSystemScheduleJob extends JobBase {
                         }
                     }
                 }
+                try {
+                    createAndFireJob(combopId, id, name, userUuid, selectNodeList);
+                } catch (Exception e) {
+                    logger.error(e.getMessage(), e);
+                }
             }
-            createAndFireJob(combopId, id, name, userUuid, selectNodeList);
         }
         for (Long typeId : osResourceTypeIdList) {
             Long combopId = inspectMapper.getCombopIdByCiId(typeId);
@@ -192,8 +195,12 @@ public class InspectAppSystemScheduleJob extends JobBase {
                         }
                     }
                 }
+                try {
+                    createAndFireJob(combopId, id, name, userUuid, selectNodeList);
+                } catch (Exception e) {
+                    logger.error(e.getMessage(), e);
+                }
             }
-            createAndFireJob(combopId, id, name, userUuid, selectNodeList);
         }
 
     }
