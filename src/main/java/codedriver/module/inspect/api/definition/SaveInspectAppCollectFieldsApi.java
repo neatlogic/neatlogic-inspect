@@ -24,12 +24,13 @@ import codedriver.framework.restful.constvalue.OperationTypeEnum;
 import codedriver.framework.restful.core.privateapi.PrivateApiComponentBase;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
+import com.mongodb.client.MongoCollection;
 import org.bson.Document;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
+import javax.annotation.Resource;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -44,7 +45,7 @@ import java.util.List;
 @OperationType(type = OperationTypeEnum.UPDATE)
 public class SaveInspectAppCollectFieldsApi extends PrivateApiComponentBase {
 
-    @Autowired
+    @Resource
     private MongoTemplate mongoTemplate;
 
     @Override
@@ -64,12 +65,12 @@ public class SaveInspectAppCollectFieldsApi extends PrivateApiComponentBase {
 
     @Input({
             @Param(name = "name", type = ApiParamType.STRING, isRequired = true, desc = "集合名称（唯一标识）"),
-            @Param(name = "appId", type = ApiParamType.LONG, isRequired = true, desc = "应用id"),
+            @Param(name = "appSystemId", type = ApiParamType.LONG, isRequired = true, desc = "应用id"),
             @Param(name = "thresholds", type = ApiParamType.JSONARRAY, desc = "集合数据定义")})
     @Description(desc = "保存应用巡检阈值设置，需要依赖mongodb")
     @Override
     public Object myDoService(JSONObject paramObj) throws Exception {
-        Long appId = paramObj.getLong("appId");
+        Long appSystemId = paramObj.getLong("appSystemId");
         String name = paramObj.getString("name");
         JSONArray thresholds = paramObj.getJSONArray("thresholds");
         if (!CollectionUtils.isEmpty(thresholds)) {
@@ -97,23 +98,33 @@ public class SaveInspectAppCollectFieldsApi extends PrivateApiComponentBase {
 
         //校验应用id是否存在
         ICiEntityCrossoverMapper iCiEntityCrossoverMapper = CrossoverServiceFactory.getApi(ICiEntityCrossoverMapper.class);
-
-        CiEntityVo appSystemCiEntity = iCiEntityCrossoverMapper.getCiEntityBaseInfoById(paramObj.getLong("appId"));
+        CiEntityVo appSystemCiEntity = iCiEntityCrossoverMapper.getCiEntityBaseInfoById(appSystemId);
         if (appSystemCiEntity == null) {
-            throw new CiEntityNotFoundException(paramObj.getLong("appId"));
+            throw new CiEntityNotFoundException(paramObj.getLong("appSystemId"));
         }
 
         Document whereDoc = new Document();
         Document updateDoc = new Document();
         Document setDocument = new Document();
-        whereDoc.put("id", appId);
+        whereDoc.put("appSystemId", appSystemId);
         whereDoc.put("name", name);
         updateDoc.put("thresholds", thresholds);
         updateDoc.put("lcu", UserContext.get().getUserUuid());
         updateDoc.put("lcd", new Date());
         setDocument.put("$set", updateDoc);
-        mongoTemplate.getCollection("_inspectdef_app").updateOne(whereDoc, setDocument);
+        MongoCollection<Document> defAppCollection = mongoTemplate.getCollection("_inspectdef_app");
 
+        if (defAppCollection.find(whereDoc).first() != null) {
+            mongoTemplate.getCollection("_inspectdef_app").updateOne(whereDoc, setDocument);
+        } else {
+            Document newDoc = new Document();
+            newDoc.put("appSystemId", appSystemId);
+            newDoc.put("name", name);
+            newDoc.put("thresholds", thresholds);
+            newDoc.put("lcu", UserContext.get().getUserUuid());
+            newDoc.put("lcd", new Date());
+            defAppCollection.insertOne(newDoc);
+        }
         return null;
     }
 }

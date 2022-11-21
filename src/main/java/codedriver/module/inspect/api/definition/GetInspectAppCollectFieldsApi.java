@@ -5,12 +5,10 @@
 package codedriver.module.inspect.api.definition;
 
 import codedriver.framework.auth.core.AuthAction;
+import codedriver.framework.cmdb.exception.sync.CollectionNotFoundException;
 import codedriver.framework.common.constvalue.ApiParamType;
 import codedriver.framework.inspect.auth.INSPECT_MODIFY;
-import codedriver.framework.restful.annotation.Description;
-import codedriver.framework.restful.annotation.Input;
-import codedriver.framework.restful.annotation.OperationType;
-import codedriver.framework.restful.annotation.Param;
+import codedriver.framework.restful.annotation.*;
 import codedriver.framework.restful.constvalue.OperationTypeEnum;
 import codedriver.framework.restful.core.privateapi.PrivateApiComponentBase;
 import com.alibaba.fastjson.JSON;
@@ -34,7 +32,7 @@ import java.util.Map;
 
 @Service
 @AuthAction(action = INSPECT_MODIFY.class)
-@OperationType(type = OperationTypeEnum.UPDATE)
+@OperationType(type = OperationTypeEnum.SEARCH)
 public class GetInspectAppCollectFieldsApi extends PrivateApiComponentBase {
 
     @Resource
@@ -57,49 +55,69 @@ public class GetInspectAppCollectFieldsApi extends PrivateApiComponentBase {
 
     @Input({
             @Param(name = "name", type = ApiParamType.STRING, isRequired = true, desc = "集合名称（唯一标识）"),
-            @Param(name = "appId", type = ApiParamType.LONG, isRequired = true, desc = "应用id")
+            @Param(name = "appSystemId", type = ApiParamType.LONG, isRequired = true, desc = "应用id")
+    })
+    @Output({
+            @Param(name = "fields", type = ApiParamType.LONG, desc = "数据结构列表"),
+            @Param(name = "thresholds", type = ApiParamType.LONG, desc = "阈值规则列表")
     })
     @Description(desc = "获取应用巡检阈值设置，需要依赖mongodb")
     @Override
     public Object myDoService(JSONObject paramObj) throws Exception {
-        Long appId = paramObj.getLong("appId");
+        JSONObject returnObject = new JSONObject();
+        JSONArray returnFieldsArray = new JSONArray();
 
-        JSONArray returnArray = new JSONArray();
+        Long appSystemId = paramObj.getLong("appSystemId");
+
         //获取数据结构
         JSONObject dictionary = mongoTemplate.findOne(new Query(Criteria.where("name").is(paramObj.getString("name"))), JSONObject.class, "_dictionary");
+        if (dictionary == null) {
+            throw new CollectionNotFoundException("_dictionary");
+        }
         JSONArray dictionaryArray = dictionary.getJSONArray("fields");
         if (CollectionUtils.isEmpty(dictionaryArray)) {
-            return returnArray;
+            return returnObject;
         }
-
         //获取过滤指标
         Document doc = new Document();
         Document fieldDocument = new Document();
-        doc.put("id", appId);
         doc.put("name", paramObj.getString("name"));
-        fieldDocument.put("fields",true);
-        JSONArray fieldsSelectedArray = JSONObject.parseObject(mongoTemplate.getDb().getCollection("_inspectdef_app").find(doc).projection(fieldDocument).first().toJson()).getJSONArray("fields");
-        if (CollectionUtils.isEmpty(fieldsSelectedArray)) {
-            return returnArray;
+        fieldDocument.put("fields", true);
+        Document defDoc = mongoTemplate.getDb().getCollection("_inspectdef").find(doc).projection(fieldDocument).first();
+        if (defDoc == null) {
+            throw new CollectionNotFoundException("_inspectdef");
         }
-
-        //封装数据返回给前端
+        JSONArray fieldsSelectedArray = JSONObject.parseObject(defDoc.toJson()).getJSONArray("fields");
+        if (CollectionUtils.isEmpty(fieldsSelectedArray)) {
+            return dictionaryArray;
+        }
+        //封装数据fields
         Map<String, Integer> fieldsSelectMap = new HashMap<>();
         for (Object object : fieldsSelectedArray) {
             JSONObject dbObject = (JSONObject) JSON.toJSON(object);
             fieldsSelectMap.put(dbObject.getString("name"), dbObject.getInteger("selected"));
         }
-
         for (Object object : dictionaryArray) {
-            JSONObject needObject = new JSONObject();
+            JSONObject dictionaryObject = new JSONObject();
             JSONObject dbObject = (JSONObject) JSON.toJSON(object);
-            needObject.put("name", dbObject.get("name"));
-            needObject.put("desc", dbObject.get("desc"));
-            needObject.put("type", dbObject.get("type"));
-            needObject.put("selected", fieldsSelectMap.get(dbObject.get("name")));
-            returnArray.add(needObject);
+            dictionaryObject.put("name", dbObject.get("name"));
+            dictionaryObject.put("desc", dbObject.get("desc"));
+            dictionaryObject.put("type", dbObject.get("type"));
+            dictionaryObject.put("selected", fieldsSelectMap.get(dbObject.getString("name")));
+            returnFieldsArray.add(dictionaryObject);
         }
+        returnObject.put("fields", returnFieldsArray);
 
-        return returnArray;
+        //获取应用个性化阈值
+        Document thresholdsDoc = new Document();
+        doc.put("appSystemId", appSystemId);
+        doc.put("name", paramObj.getString("name"));
+        thresholdsDoc.put("thresholds", true);
+
+        Document defAppDoc = mongoTemplate.getDb().getCollection("_inspectdef_app").find(doc).projection(thresholdsDoc).first();
+        if (defAppDoc != null) {
+            returnObject.put("thresholds", JSONObject.parseObject(defAppDoc.toJson()).getJSONArray("thresholds"));
+        }
+        return returnObject;
     }
 }
