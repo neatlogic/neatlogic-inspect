@@ -4,10 +4,18 @@
  */
 package codedriver.module.inspect.service;
 
+import codedriver.framework.cmdb.crossover.ICiCrossoverMapper;
+import codedriver.framework.cmdb.crossover.IResourceCrossoverMapper;
+import codedriver.framework.cmdb.dto.ci.CiVo;
+import codedriver.framework.cmdb.dto.resourcecenter.ResourceVo;
+import codedriver.framework.cmdb.exception.resourcecenter.ResourceNotFoundException;
+import codedriver.framework.crossover.CrossoverServiceFactory;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.mongodb.client.FindIterable;
+import com.mongodb.client.MongoCollection;
+import org.apache.commons.collections4.CollectionUtils;
 import org.bson.Document;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,7 +25,10 @@ import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * @author longrf
@@ -33,7 +44,7 @@ public class InspectCollectServiceImpl implements InspectCollectService {
     private MongoTemplate mongoTemplate;
 
     @Override
-    public JSONObject getCollectionByName(String name) {
+    public JSONObject getCollectionByName(String name) throws ParseException {
         JSONObject returnObject = new JSONObject();
         JSONArray returnFieldsArray = new JSONArray();
 
@@ -53,6 +64,8 @@ public class InspectCollectServiceImpl implements InspectCollectService {
         doc.put("name", name);
         fieldDocument.put("fields", true);
         fieldDocument.put("thresholds", true);
+        fieldDocument.put("lcd", true);
+        fieldDocument.put("lcu", true);
         JSONObject inspectDefJson = JSONObject.parseObject(mongoTemplate.getDb().getCollection("_inspectdef").find(doc).projection(fieldDocument).first().toJson());
         JSONArray fieldsSelectedArray = inspectDefJson.getJSONArray("fields");
 
@@ -83,6 +96,14 @@ public class InspectCollectServiceImpl implements InspectCollectService {
 
         returnObject.put("fields", returnFieldsArray);
         returnObject.put("thresholds", inspectDefJson.getJSONArray("thresholds"));
+        JSONObject lcdJson = inspectDefJson.getJSONObject("lcd");
+        if (lcdJson != null) {
+            String strDate = lcdJson.getString("$date");
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'hh:mm:ss'.'sss'Z'");
+            Date datetime = sdf.parse(strDate);
+            returnObject.put("lcd",datetime);
+        }
+        returnObject.put("lcu", inspectDefJson.getString("lcu"));
         return returnObject;
     }
 
@@ -154,5 +175,52 @@ public class InspectCollectServiceImpl implements InspectCollectService {
         }
 
         return returnArray;
+    }
+
+    @Override
+    public List<Long> getResourceThresholdsAppSystemIdByResourceId(Long resourceId) {
+        List<Long> returnAppSystemIdList = new ArrayList<>();
+        IResourceCrossoverMapper iResourceCrossoverMapper = CrossoverServiceFactory.getApi(IResourceCrossoverMapper.class);
+        ResourceVo resourceVo = iResourceCrossoverMapper.getResourceById(resourceId);
+        if (resourceVo == null) {
+            throw new ResourceNotFoundException(resourceId);
+        }
+        ICiCrossoverMapper iCiCrossoverMapper = CrossoverServiceFactory.getApi(ICiCrossoverMapper.class);
+        CiVo ciVo = iCiCrossoverMapper.getCiById(resourceVo.getTypeId());
+        List<CiVo> parentCiList = iCiCrossoverMapper.getUpwardCiListByLR(ciVo.getLft(), ciVo.getRht());
+        if (CollectionUtils.isEmpty(parentCiList)) {
+            return null;
+        }
+
+        List<String> parentCiNameList = parentCiList.stream().map(CiVo::getName).collect(Collectors.toList());
+        MongoCollection<Document> collection = mongoTemplate.getCollection("_inspectdef_app");
+        Document searchDoc = new Document();
+
+        //只有OS类型的会关联多个应用实例，才需要取时间最新的那一份阈值
+        if (parentCiNameList.contains("OS")) {
+            Set<Long> resourceAppSystemIdList = iResourceCrossoverMapper.getOsResourceAppSystemIdListByOsId(resourceId);
+            if (CollectionUtils.isNotEmpty(resourceAppSystemIdList)) {
+                searchDoc.put("appSystemId", new Document().append("$in", resourceAppSystemIdList));
+            }
+            FindIterable<Document> collectionList = collection.find(searchDoc);
+            if (collectionList.first() != null) {
+                JSONArray defAppArray = collectionList.into(new JSONArray());
+                for (Object object : defAppArray) {
+                    JSONObject dbObject = (JSONObject) JSON.toJSON(object);
+                    returnAppSystemIdList.add(dbObject.getLong("appSystemId"));
+                }
+            }
+        } else {
+            Long resourceAppSystemId = iResourceCrossoverMapper.getAppSystemIdByResourceId(resourceId);
+            if (resourceAppSystemId != null) {
+                searchDoc.put("appSystemId", resourceAppSystemId);
+            }
+            FindIterable<Document> collectionList = collection.find(searchDoc);
+            if (collectionList.first() != null) {
+                JSONObject defAppJson = JSONObject.parseObject(Objects.requireNonNull(collectionList.first()).toJson());
+                returnAppSystemIdList.add(defAppJson.getLong("appSystemId"));
+            }
+        }
+        return returnAppSystemIdList;
     }
 }

@@ -39,7 +39,7 @@ import java.util.Set;
 @Service
 @AuthAction(action = INSPECT_MODIFY.class)
 @OperationType(type = OperationTypeEnum.SEARCH)
-public class ListInspectCollectionApi extends PrivateApiComponentBase {
+public class ListInspectAppThresholdsCollectionApi extends PrivateApiComponentBase {
 
     @Resource
     private MongoTemplate mongoTemplate;

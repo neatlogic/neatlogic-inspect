@@ -43,7 +43,7 @@ import java.util.List;
 @Service
 @AuthAction(action = INSPECT_MODIFY.class)
 @OperationType(type = OperationTypeEnum.UPDATE)
-public class SaveInspectAppCollectFieldsApi extends PrivateApiComponentBase {
+public class SaveInspectAppCollectionThresholdsApi extends PrivateApiComponentBase {
 
     @Resource
     private MongoTemplate mongoTemplate;
@@ -103,18 +103,18 @@ public class SaveInspectAppCollectFieldsApi extends PrivateApiComponentBase {
             throw new CiEntityNotFoundException(paramObj.getLong("appSystemId"));
         }
 
+        MongoCollection<Document> defAppCollection = mongoTemplate.getCollection("_inspectdef_app");
         Document whereDoc = new Document();
-        Document updateDoc = new Document();
-        Document setDocument = new Document();
         whereDoc.put("appSystemId", appSystemId);
         whereDoc.put("name", name);
-        updateDoc.put("thresholds", thresholds);
-        updateDoc.put("lcu", UserContext.get().getUserUuid());
-        updateDoc.put("lcd", new Date());
-        setDocument.put("$set", updateDoc);
-        MongoCollection<Document> defAppCollection = mongoTemplate.getCollection("_inspectdef_app");
 
         if (defAppCollection.find(whereDoc).first() != null) {
+            Document updateDoc = new Document();
+            Document setDocument = new Document();
+            updateDoc.put("thresholds", thresholds);
+            updateDoc.put("lcu", UserContext.get().getUserUuid());
+            updateDoc.put("lcd", new Date());
+            setDocument.put("$set", updateDoc);
             mongoTemplate.getCollection("_inspectdef_app").updateOne(whereDoc, setDocument);
         } else {
             Document newDoc = new Document();

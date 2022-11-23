@@ -24,6 +24,7 @@ import org.springframework.stereotype.Service;
 import javax.annotation.Resource;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * @author longrf
@@ -50,7 +51,7 @@ public class GetInspectAppCollectFieldsApi extends PrivateApiComponentBase {
 
     @Override
     public String getToken() {
-        return "inspect/app/collection/thresholds/get";
+            return "inspect/app/collection/fields/get";
     }
 
     @Input({
@@ -66,8 +67,7 @@ public class GetInspectAppCollectFieldsApi extends PrivateApiComponentBase {
     public Object myDoService(JSONObject paramObj) throws Exception {
         JSONObject returnObject = new JSONObject();
         JSONArray returnFieldsArray = new JSONArray();
-
-        Long appSystemId = paramObj.getLong("appSystemId");
+        Map<String, JSONObject> returnThresholdsMap = new HashMap<>();
 
         //获取数据结构
         JSONObject dictionary = mongoTemplate.findOne(new Query(Criteria.where("name").is(paramObj.getString("name"))), JSONObject.class, "_dictionary");
@@ -78,45 +78,63 @@ public class GetInspectAppCollectFieldsApi extends PrivateApiComponentBase {
         if (CollectionUtils.isEmpty(dictionaryArray)) {
             return returnObject;
         }
-        //获取过滤指标
-        Document doc = new Document();
+        //获取数据结构 fields
+        Document searchDoc = new Document();
         Document fieldDocument = new Document();
-        doc.put("name", paramObj.getString("name"));
+        searchDoc.put("name", paramObj.getString("name"));
         fieldDocument.put("fields", true);
-        Document defDoc = mongoTemplate.getDb().getCollection("_inspectdef").find(doc).projection(fieldDocument).first();
+        fieldDocument.put("thresholds", true);
+        Document defDoc = mongoTemplate.getDb().getCollection("_inspectdef").find(searchDoc).projection(fieldDocument).first();
         if (defDoc == null) {
             throw new CollectionNotFoundException("_inspectdef");
         }
         JSONArray fieldsSelectedArray = JSONObject.parseObject(defDoc.toJson()).getJSONArray("fields");
-        if (CollectionUtils.isEmpty(fieldsSelectedArray)) {
-            return dictionaryArray;
-        }
-        //封装数据fields
-        Map<String, Integer> fieldsSelectMap = new HashMap<>();
-        for (Object object : fieldsSelectedArray) {
-            JSONObject dbObject = (JSONObject) JSON.toJSON(object);
-            fieldsSelectMap.put(dbObject.getString("name"), dbObject.getInteger("selected"));
-        }
-        for (Object object : dictionaryArray) {
-            JSONObject dictionaryObject = new JSONObject();
-            JSONObject dbObject = (JSONObject) JSON.toJSON(object);
-            dictionaryObject.put("name", dbObject.get("name"));
-            dictionaryObject.put("desc", dbObject.get("desc"));
-            dictionaryObject.put("type", dbObject.get("type"));
-            dictionaryObject.put("selected", fieldsSelectMap.get(dbObject.getString("name")));
-            returnFieldsArray.add(dictionaryObject);
-        }
-        returnObject.put("fields", returnFieldsArray);
+        if (CollectionUtils.isNotEmpty(fieldsSelectedArray)) {
 
-        //获取应用个性化阈值
-        Document thresholdsDoc = new Document();
-        doc.put("appSystemId", appSystemId);
-        doc.put("name", paramObj.getString("name"));
-        thresholdsDoc.put("thresholds", true);
+            //1、指标过滤
+            Map<String, Integer> fieldsSelectMap = new HashMap<>();
+            for (Object object : fieldsSelectedArray) {
+                JSONObject dbObject = (JSONObject) JSON.toJSON(object);
+                fieldsSelectMap.put(dbObject.getString("name"), dbObject.getInteger("selected"));
+            }
+            //2、根据指标获取数据结构
+            for (Object object : dictionaryArray) {
+                JSONObject dbObject = (JSONObject) JSON.toJSON(object);
+                if (Objects.equals(fieldsSelectMap.get(dbObject.get("name")), 1)) {
+                    JSONObject dictionaryObject = new JSONObject();
+                    dictionaryObject.put("name", dbObject.get("name"));
+                    dictionaryObject.put("desc", dbObject.get("desc"));
+                    dictionaryObject.put("type", dbObject.get("type"));
+                    returnFieldsArray.add(dictionaryObject);
+                }
+            }
+            returnObject.put("fields", returnFieldsArray);
 
-        Document defAppDoc = mongoTemplate.getDb().getCollection("_inspectdef_app").find(doc).projection(thresholdsDoc).first();
-        if (defAppDoc != null) {
-            returnObject.put("thresholds", JSONObject.parseObject(defAppDoc.toJson()).getJSONArray("thresholds"));
+            //获取应用个性化阈值 thresholds
+            //1、获取顶层阈值规则
+            JSONArray defThresholds = JSONObject.parseObject(defDoc.toJson()).getJSONArray("thresholds");
+            for (Object object : defThresholds) {
+                JSONObject dbObject = (JSONObject) JSON.toJSON(object);
+                returnThresholdsMap.put(dbObject.getString("name"), dbObject);
+            }
+
+            //2、应用层个性化阈值覆盖
+            Document thresholdsDoc = new Document();
+            searchDoc.put("appSystemId", paramObj.getLong("appSystemId"));
+            thresholdsDoc.put("thresholds", true);
+            thresholdsDoc.put("lcd", true);
+            thresholdsDoc.put("lcu", true);
+            Document defAppDoc = mongoTemplate.getDb().getCollection("_inspectdef_app").find(searchDoc).projection(thresholdsDoc).first();
+            if (defAppDoc != null) {
+                JSONArray defAppThresholds = JSONObject.parseObject(defAppDoc.toJson()).getJSONArray("thresholds");
+                if (CollectionUtils.isNotEmpty(defAppThresholds)) {
+                    for (Object object : defAppThresholds) {
+                        JSONObject dbObject = (JSONObject) JSON.toJSON(object);
+                        returnThresholdsMap.put(dbObject.getString("name"), dbObject);
+                    }
+                }
+            }
+            returnObject.put("thresholds", returnThresholdsMap.values());
         }
         return returnObject;
     }
