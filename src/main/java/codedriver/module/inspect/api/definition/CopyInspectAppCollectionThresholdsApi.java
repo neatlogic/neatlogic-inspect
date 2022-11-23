@@ -67,25 +67,28 @@ public class CopyInspectAppCollectionThresholdsApi extends PrivateApiComponentBa
     @Description(desc = "复制应用巡检阈值设置，需要依赖mongodb")
     @Override
     public Object myDoService(JSONObject paramObj) throws Exception {
-        List<Long> targetAppSystemIdList = paramObj.getJSONArray("targetAppSystemIdList").toJavaList(Long.class);
-        if (CollectionUtils.isEmpty(targetAppSystemIdList)) {
-            return null;
-        }
         Long appSystemId = paramObj.getLong("appSystemId");
         ICiEntityCrossoverMapper iCiEntityCrossoverMapper = CrossoverServiceFactory.getApi(ICiEntityCrossoverMapper.class);
         CiEntityVo appSystemCiEntity = iCiEntityCrossoverMapper.getCiEntityBaseInfoById(appSystemId);
         if (appSystemCiEntity == null) {
             throw new CiEntityNotFoundException(appSystemId);
         }
+
+        List<Long> targetAppSystemIdList = paramObj.getJSONArray("targetAppSystemIdList").toJavaList(Long.class);
+        List<CiEntityVo> targetCiEntityList = iCiEntityCrossoverMapper.getCiEntityBaseInfoByIdList(targetAppSystemIdList);
+        if (CollectionUtils.isEmpty(targetCiEntityList)) {
+            return null;
+        }
+
+        //获取应用个性化阈值
         String name = paramObj.getString("name");
-        //2、应用层个性化阈值覆盖
         Document searchDoc = new Document();
-        Document thresholdsDoc = new Document();
+        Document returnDoc = new Document();
         searchDoc.put("name", paramObj.getString("name"));
         searchDoc.put("appSystemId", appSystemId);
-        thresholdsDoc.put("thresholds", true);
+        returnDoc.put("thresholds", true);
         MongoCollection<Document> defAppCollection = mongoTemplate.getDb().getCollection("_inspectdef_app");
-        Document defAppDoc = defAppCollection.find(searchDoc).projection(thresholdsDoc).first();
+        Document defAppDoc = defAppCollection.find(searchDoc).projection(returnDoc).first();
         if (defAppDoc == null) {
             return null;
         }
@@ -95,16 +98,14 @@ public class CopyInspectAppCollectionThresholdsApi extends PrivateApiComponentBa
             return null;
         }
 
-        List<CiEntityVo> targetCiEntityList = iCiEntityCrossoverMapper.getCiEntityBaseInfoByIdList(targetAppSystemIdList);
-        if (CollectionUtils.isEmpty(targetCiEntityList)) {
-            return null;
-        }
-
         List<Long> targetCiEntityIdList = targetCiEntityList.stream().map(CiEntityVo::getId).collect(Collectors.toList());
         for (Long targetAppSystemId : targetAppSystemIdList) {
+
+            //目标系统已不存在，将不会复制个姓化阈值
             if (!targetCiEntityIdList.contains(targetAppSystemId)) {
                 continue;
             }
+
             Document whereDoc = new Document();
             whereDoc.put("appSystemId", targetAppSystemId);
             whereDoc.put("name", name);

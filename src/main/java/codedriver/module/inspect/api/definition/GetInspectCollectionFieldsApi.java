@@ -34,7 +34,7 @@ public class GetInspectCollectionFieldsApi extends PrivateApiComponentBase {
 
     @Override
     public String getName() {
-        return "巡检定义指标过滤获取接口";
+        return "获取巡检定义集合数据结构和阈值规则";
     }
 
     @Override
@@ -51,10 +51,9 @@ public class GetInspectCollectionFieldsApi extends PrivateApiComponentBase {
             @Param(name = "name", type = ApiParamType.STRING, isRequired = true, desc = "唯一标识")
     })
     @Output({
-            @Param(name = "fields",  type = ApiParamType.LONG,desc = "数据结构列表"),
-            @Param(name = "thresholds",  type = ApiParamType.LONG,desc = "阈值规则列表")
+            @Param(name = "fields",  type = ApiParamType.LONG,desc = "数据结构列表")
     })
-    @Description(desc = "巡检定义指标过滤获取接口")
+    @Description(desc = "获取巡检定义集合数据结构和阈值规则")
     @Override
     public Object myDoService(JSONObject paramObj) throws Exception {
         JSONArray returnArray = new JSONArray();

@@ -35,6 +35,6 @@ public interface InspectCollectService {
      * @param resourceId 资产id
      * @return 资产阈值设置的来源（应用id）
      */
-    List<Long> getResourceThresholdsAppSystemIdByResourceId(Long resourceId);
+    List<Long> getCollectionThresholdsAppSystemIdListByResourceId(Long resourceId);
 
 }

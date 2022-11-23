@@ -178,7 +178,7 @@ public class InspectCollectServiceImpl implements InspectCollectService {
     }
 
     @Override
-    public List<Long> getResourceThresholdsAppSystemIdByResourceId(Long resourceId) {
+    public List<Long> getCollectionThresholdsAppSystemIdListByResourceId(Long resourceId) {
         List<Long> returnAppSystemIdList = new ArrayList<>();
         IResourceCrossoverMapper iResourceCrossoverMapper = CrossoverServiceFactory.getApi(IResourceCrossoverMapper.class);
         ResourceVo resourceVo = iResourceCrossoverMapper.getResourceById(resourceId);

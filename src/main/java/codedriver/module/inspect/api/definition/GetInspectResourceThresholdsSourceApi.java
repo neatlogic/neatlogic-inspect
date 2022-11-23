@@ -68,7 +68,7 @@ public class GetInspectResourceThresholdsSourceApi extends PrivateApiComponentBa
             throw new ResourceNotFoundException(resourceId);
         }
         returnObj.put("resourceVo", resourceVo);
-        List<Long> returnAppSystemIdList = inspectCollectService.getResourceThresholdsAppSystemIdByResourceId(resourceId);
+        List<Long> returnAppSystemIdList = inspectCollectService.getCollectionThresholdsAppSystemIdListByResourceId(resourceId);
         if (CollectionUtils.isNotEmpty(returnAppSystemIdList)) {
             returnObj.put("appSystemVoList", iResourceCrossoverMapper.searchAppSystemListByIdList(returnAppSystemIdList));
         }

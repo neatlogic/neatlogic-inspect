@@ -41,7 +41,7 @@ public class GetInspectAppCollectFieldsApi extends PrivateApiComponentBase {
 
     @Override
     public String getName() {
-        return "获取应用巡检阈值设置";
+        return "获取应用巡检数据结构和阈值规则";
     }
 
     @Override
@@ -62,7 +62,7 @@ public class GetInspectAppCollectFieldsApi extends PrivateApiComponentBase {
             @Param(name = "fields", type = ApiParamType.LONG, desc = "数据结构列表"),
             @Param(name = "thresholds", type = ApiParamType.LONG, desc = "阈值规则列表")
     })
-    @Description(desc = "获取应用巡检阈值设置，需要依赖mongodb")
+    @Description(desc = "获取应用巡检数据结构和阈值规则，需要依赖mongodb")
     @Override
     public Object myDoService(JSONObject paramObj) throws Exception {
         JSONObject returnObject = new JSONObject();
@@ -119,12 +119,12 @@ public class GetInspectAppCollectFieldsApi extends PrivateApiComponentBase {
             }
 
             //2、应用层个性化阈值覆盖
-            Document thresholdsDoc = new Document();
+            Document returnDoc = new Document();
             searchDoc.put("appSystemId", paramObj.getLong("appSystemId"));
-            thresholdsDoc.put("thresholds", true);
-            thresholdsDoc.put("lcd", true);
-            thresholdsDoc.put("lcu", true);
-            Document defAppDoc = mongoTemplate.getDb().getCollection("_inspectdef_app").find(searchDoc).projection(thresholdsDoc).first();
+            returnDoc.put("thresholds", true);
+            returnDoc.put("lcd", true);
+            returnDoc.put("lcu", true);
+            Document defAppDoc = mongoTemplate.getDb().getCollection("_inspectdef_app").find(searchDoc).projection(returnDoc).first();
             if (defAppDoc != null) {
                 JSONArray defAppThresholds = JSONObject.parseObject(defAppDoc.toJson()).getJSONArray("thresholds");
                 if (CollectionUtils.isNotEmpty(defAppThresholds)) {

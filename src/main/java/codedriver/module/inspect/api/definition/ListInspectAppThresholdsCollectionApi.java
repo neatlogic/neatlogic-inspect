@@ -7,10 +7,9 @@ package codedriver.module.inspect.api.definition;
 import codedriver.framework.auth.core.AuthAction;
 import codedriver.framework.cmdb.crossover.ICiCrossoverMapper;
 import codedriver.framework.cmdb.crossover.IResourceCrossoverMapper;
-import codedriver.framework.cmdb.crossover.ISyncCrossoverService;
+import codedriver.framework.cmdb.crossover.ISyncCrossoverMapper;
 import codedriver.framework.cmdb.dto.ci.CiVo;
 import codedriver.framework.cmdb.dto.resourcecenter.ResourceSearchVo;
-import codedriver.framework.cmdb.dto.sync.SyncCiCollectionVo;
 import codedriver.framework.cmdb.enums.sync.CollectMode;
 import codedriver.framework.common.constvalue.ApiParamType;
 import codedriver.framework.crossover.CrossoverServiceFactory;
@@ -30,6 +29,7 @@ import javax.annotation.Resource;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * @author longrf
@@ -82,24 +82,20 @@ public class ListInspectAppThresholdsCollectionApi extends PrivateApiComponentBa
             ICiCrossoverMapper iCiCrossoverMapper = CrossoverServiceFactory.getApi(ICiCrossoverMapper.class);
             List<CiVo> ciVoList = iCiCrossoverMapper.getCiByIdList(resourceTypeIdList);
             if (CollectionUtils.isNotEmpty(ciVoList)) {
-                List<String> searchList = new ArrayList<>();
+                List<String> collectionNameList = new ArrayList<>();
 
                 //获取对应的主动采集模型name searchList
-                for (CiVo ciVo : ciVoList) {
-                    ISyncCrossoverService iSyncCrossoverService = CrossoverServiceFactory.getApi(ISyncCrossoverService.class);
-                    List<SyncCiCollectionVo> syncCiCollectionList = iSyncCrossoverService.searchSyncCiCollection(new SyncCiCollectionVo(ciVo.getName(), CollectMode.INITIATIVE.getValue()));
-                    if (CollectionUtils.isNotEmpty(syncCiCollectionList)) {
-                        for (SyncCiCollectionVo syncCiCollectionVo : syncCiCollectionList) {
-                            searchList.add(syncCiCollectionVo.getCollectionName());
-                        }
-                    }
+                List<String> ciNameList = ciVoList.stream().map(CiVo::getName).collect(Collectors.toList());
+                if (CollectionUtils.isNotEmpty(ciNameList)) {
+                    ISyncCrossoverMapper iSyncCrossoverMapper = CrossoverServiceFactory.getApi(ISyncCrossoverMapper.class);
+                    collectionNameList = iSyncCrossoverMapper.getSyncCiCollectionNameListByCiNameListAndCollectMode(ciNameList, CollectMode.INITIATIVE.getValue());
                 }
 
                 //根据模型名称获取对应的集合信息
-                if (CollectionUtils.isNotEmpty(searchList)) {
+                if (CollectionUtils.isNotEmpty(collectionNameList)) {
                     MongoCollection<Document> collection = mongoTemplate.getCollection("_inspectdef");
                     Document searchDoc = new Document();
-                    searchDoc.put("name", new Document().append("$in", searchList));
+                    searchDoc.put("name", new Document().append("$in", collectionNameList));
                     FindIterable<Document> collectionList = collection.find(searchDoc);
                     return collectionList.into(new ArrayList<>());
                 }
