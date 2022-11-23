@@ -196,7 +196,7 @@ public class InspectCollectServiceImpl implements InspectCollectService {
         MongoCollection<Document> collection = mongoTemplate.getCollection("_inspectdef_app");
         Document searchDoc = new Document();
 
-        //只有OS类型的会关联多个应用实例，才需要取时间最新的那一份阈值
+        //只有OS类型的会关联多个应用实例，因此会有多个系统id
         if (parentCiNameList.contains("OS")) {
             Set<Long> resourceAppSystemIdList = iResourceCrossoverMapper.getOsResourceAppSystemIdListByOsId(resourceId);
             if (CollectionUtils.isNotEmpty(resourceAppSystemIdList)) {

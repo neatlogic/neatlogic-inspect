@@ -101,7 +101,7 @@ public class CopyInspectAppCollectionThresholdsApi extends PrivateApiComponentBa
         List<Long> targetCiEntityIdList = targetCiEntityList.stream().map(CiEntityVo::getId).collect(Collectors.toList());
         for (Long targetAppSystemId : targetAppSystemIdList) {
 
-            //目标系统已不存在，将不会复制个姓化阈值
+            //目标系统已不存在，将不会复制个性化阈值
             if (!targetCiEntityIdList.contains(targetAppSystemId)) {
                 continue;
             }
