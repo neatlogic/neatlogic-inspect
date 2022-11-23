@@ -6,12 +6,15 @@ package codedriver.module.inspect.api.definition;
 
 import codedriver.framework.asynchronization.threadlocal.UserContext;
 import codedriver.framework.auth.core.AuthAction;
-import codedriver.framework.cmdb.crossover.ICiEntityCrossoverMapper;
-import codedriver.framework.cmdb.dto.cientity.CiEntityVo;
+import codedriver.framework.cmdb.crossover.IAppSystemMapper;
+import codedriver.framework.cmdb.dto.resourcecenter.entity.AppSystemVo;
 import codedriver.framework.cmdb.exception.cientity.CiEntityNotFoundException;
+import codedriver.framework.cmdb.exception.sync.CollectionNotFoundException;
 import codedriver.framework.common.constvalue.ApiParamType;
 import codedriver.framework.crossover.CrossoverServiceFactory;
 import codedriver.framework.inspect.auth.INSPECT_MODIFY;
+import codedriver.framework.inspect.exception.InspectAppThresholdsCopyTargetAppSystemNotFoundException;
+import codedriver.framework.inspect.exception.InspectAppThresholdsNotFoundException;
 import codedriver.framework.restful.annotation.Description;
 import codedriver.framework.restful.annotation.Input;
 import codedriver.framework.restful.annotation.OperationType;
@@ -62,51 +65,50 @@ public class CopyInspectAppCollectionThresholdsApi extends PrivateApiComponentBa
     @Input({
             @Param(name = "name", type = ApiParamType.STRING, isRequired = true, desc = "集合名称（唯一标识）"),
             @Param(name = "appSystemId", type = ApiParamType.LONG, isRequired = true, desc = "应用id"),
-                @Param(name = "targetAppSystemIdList", type = ApiParamType.JSONARRAY, isRequired = true, desc = "应用id")
+            @Param(name = "targetAppSystemIdList", type = ApiParamType.JSONARRAY, isRequired = true, desc = "应用id")
     })
     @Description(desc = "复制应用巡检阈值设置，需要依赖mongodb")
     @Override
     public Object myDoService(JSONObject paramObj) throws Exception {
         Long appSystemId = paramObj.getLong("appSystemId");
-        ICiEntityCrossoverMapper iCiEntityCrossoverMapper = CrossoverServiceFactory.getApi(ICiEntityCrossoverMapper.class);
-        CiEntityVo appSystemCiEntity = iCiEntityCrossoverMapper.getCiEntityBaseInfoById(appSystemId);
-        if (appSystemCiEntity == null) {
+        IAppSystemMapper iAppSystemMapper = CrossoverServiceFactory.getApi(IAppSystemMapper.class);
+        AppSystemVo appSystemVo = iAppSystemMapper.getAppSystemById(appSystemId);
+        if (appSystemVo == null) {
             throw new CiEntityNotFoundException(appSystemId);
         }
 
         List<Long> targetAppSystemIdList = paramObj.getJSONArray("targetAppSystemIdList").toJavaList(Long.class);
-        List<CiEntityVo> targetCiEntityList = iCiEntityCrossoverMapper.getCiEntityBaseInfoByIdList(targetAppSystemIdList);
-        if (CollectionUtils.isEmpty(targetCiEntityList)) {
-            return null;
+        List<AppSystemVo> targetAppSystemList = iAppSystemMapper.getAppSystemListByIdList(targetAppSystemIdList);
+        if (CollectionUtils.isEmpty(targetAppSystemList)) {
+            throw new InspectAppThresholdsCopyTargetAppSystemNotFoundException();
         }
 
         //获取应用个性化阈值
         String name = paramObj.getString("name");
         Document searchDoc = new Document();
         Document returnDoc = new Document();
-        searchDoc.put("name", paramObj.getString("name"));
+        searchDoc.put("name", name);
         searchDoc.put("appSystemId", appSystemId);
         returnDoc.put("thresholds", true);
         MongoCollection<Document> defAppCollection = mongoTemplate.getDb().getCollection("_inspectdef_app");
         Document defAppDoc = defAppCollection.find(searchDoc).projection(returnDoc).first();
         if (defAppDoc == null) {
-            return null;
+            throw new CollectionNotFoundException("_inspectdef_app");
         }
 
         JSONArray defAppThresholds = JSONObject.parseObject(defAppDoc.toJson()).getJSONArray("thresholds");
         if (CollectionUtils.isEmpty(defAppThresholds)) {
-            return null;
+            return new InspectAppThresholdsNotFoundException(appSystemId, name);
         }
 
-        List<Long> targetCiEntityIdList = targetCiEntityList.stream().map(CiEntityVo::getId).collect(Collectors.toList());
+        List<Long> existTargetAppSystemIdList = targetAppSystemList.stream().map(AppSystemVo::getId).collect(Collectors.toList());
         for (Long targetAppSystemId : targetAppSystemIdList) {
-
             //目标系统已不存在，将不会复制个性化阈值
-            if (!targetCiEntityIdList.contains(targetAppSystemId)) {
+            if (!existTargetAppSystemIdList.contains(targetAppSystemId)) {
                 continue;
             }
 
-            Document whereDoc = new Document();
+                                                                            Document whereDoc = new Document();
             whereDoc.put("appSystemId", targetAppSystemId);
             whereDoc.put("name", name);
             if (defAppCollection.find(whereDoc).first() != null) {
