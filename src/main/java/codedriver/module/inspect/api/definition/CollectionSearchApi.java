@@ -52,14 +52,14 @@ public class CollectionSearchApi extends PrivateApiComponentBase {
         String keyword = paramObj.getString("keyword");
         JSONObject result = new JSONObject();
         MongoCollection<Document> collection = mongoTemplate.getCollection("_inspectdef");
-        Document orDoc  = new Document();
+        Document orDoc = new Document();
         if (StringUtils.isNotBlank(keyword)) {
-            Pattern pattern=Pattern.compile("^.*"+keyword+".*$", Pattern.CASE_INSENSITIVE);
+            Pattern pattern = Pattern.compile("^.*" + keyword + ".*$", Pattern.CASE_INSENSITIVE);
             Document nameDoc = new Document();
-            nameDoc.put("name" , pattern);
+            nameDoc.put("name", pattern);
             Document labelDoc = new Document();
-            labelDoc.put("label" , pattern);
-            orDoc.put("$or", Arrays.asList(nameDoc,labelDoc));
+            labelDoc.put("label", pattern);
+            orDoc.put("$or", Arrays.asList(nameDoc, labelDoc));
         }
         FindIterable<Document> collectionList = collection.find(orDoc);
         result.put("tbodyList", collectionList.into(new ArrayList<>()));
