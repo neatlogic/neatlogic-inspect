@@ -48,7 +48,7 @@ public class GetInspectCollectionFieldsApi extends PrivateApiComponentBase {
     }
 
     @Input({
-            @Param(name = "name", type = ApiParamType.STRING, isRequired = true, desc = "唯一标识")
+            @Param(name = "name", type = ApiParamType.STRING, isRequired = true, desc = "模型名称（唯一标识）")
     })
     @Output({
             @Param(name = "fields",  type = ApiParamType.LONG,desc = "数据结构列表")

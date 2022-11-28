@@ -55,7 +55,7 @@ public class GetInspectAppCollectFieldsApi extends PrivateApiComponentBase {
     }
 
     @Input({
-            @Param(name = "name", type = ApiParamType.STRING, isRequired = true, desc = "集合名称（唯一标识）"),
+            @Param(name = "name", type = ApiParamType.STRING, isRequired = true, desc = "模型名称（唯一标识）"),
             @Param(name = "appSystemId", type = ApiParamType.LONG, isRequired = true, desc = "应用id")
     })
     @Output({
@@ -126,7 +126,13 @@ public class GetInspectAppCollectFieldsApi extends PrivateApiComponentBase {
             returnDoc.put("lcu", true);
             Document defAppDoc = mongoTemplate.getDb().getCollection("_inspectdef_app").find(searchDoc).projection(returnDoc).first();
             if (defAppDoc != null) {
-                JSONArray defAppThresholds = JSONObject.parseObject(defAppDoc.toJson()).getJSONArray("thresholds");
+                JSONObject inspectDefAppJson = JSONObject.parseObject(defAppDoc.toJson());
+                JSONObject lcdJson = inspectDefAppJson.getJSONObject("lcd");
+                if (lcdJson != null) {
+                    returnObject.put("lcd",lcdJson.getDate("$date"));
+                }
+                returnObject.put("lcu", inspectDefAppJson.getString("lcu"));
+                JSONArray defAppThresholds = inspectDefAppJson.getJSONArray("thresholds");
                 if (CollectionUtils.isNotEmpty(defAppThresholds)) {
                     for (Object object : defAppThresholds) {
                         JSONObject dbObject = (JSONObject) JSON.toJSON(object);

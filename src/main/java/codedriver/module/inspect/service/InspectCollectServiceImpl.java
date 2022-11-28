@@ -44,7 +44,7 @@ public class InspectCollectServiceImpl implements InspectCollectService {
     private MongoTemplate mongoTemplate;
 
     @Override
-    public JSONObject getCollectionByName(String name) throws ParseException {
+    public JSONObject getCollectionByName(String name){
         JSONObject returnObject = new JSONObject();
         JSONArray returnFieldsArray = new JSONArray();
 
@@ -98,10 +98,7 @@ public class InspectCollectServiceImpl implements InspectCollectService {
         returnObject.put("thresholds", inspectDefJson.getJSONArray("thresholds"));
         JSONObject lcdJson = inspectDefJson.getJSONObject("lcd");
         if (lcdJson != null) {
-            String strDate = lcdJson.getString("$date");
-            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'hh:mm:ss'.'sss'Z'");
-            Date datetime = sdf.parse(strDate);
-            returnObject.put("lcd",datetime);
+            returnObject.put("lcd",lcdJson.getDate("$date"));
         }
         returnObject.put("lcu", inspectDefJson.getString("lcu"));
         return returnObject;

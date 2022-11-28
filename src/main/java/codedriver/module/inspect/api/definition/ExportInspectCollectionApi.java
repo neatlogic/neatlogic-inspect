@@ -69,7 +69,7 @@ public class ExportInspectCollectionApi extends PrivateBinaryStreamApiComponentB
     }
 
     @Input({
-            @Param(name = "name", type = ApiParamType.STRING, desc = "唯一标识"),
+            @Param(name = "name", type = ApiParamType.STRING, desc = "模型名称（唯一标识）"),
             @Param(name = "isAll", type = ApiParamType.INTEGER, isRequired = true, desc = "是否全量（1：全量，0：单个）")
     })
     @Description(desc = "导出巡检指标和规则")

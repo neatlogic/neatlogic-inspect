@@ -64,7 +64,7 @@ public class CopyInspectAppCollectionThresholdsApi extends PrivateApiComponentBa
     }
 
     @Input({
-            @Param(name = "name", type = ApiParamType.STRING, isRequired = true, desc = "集合名称（唯一标识）"),
+            @Param(name = "name", type = ApiParamType.STRING, isRequired = true, desc = "模型名称（唯一标识）"),
             @Param(name = "appSystemId", type = ApiParamType.LONG, isRequired = true, desc = "应用id"),
             @Param(name = "targetAppSystemIdList", type = ApiParamType.JSONARRAY, isRequired = true, desc = "应用id")
     })
@@ -102,11 +102,10 @@ public class CopyInspectAppCollectionThresholdsApi extends PrivateApiComponentBa
             return new InspectAppThresholdsNotFoundException(appSystemId, name);
         }
 
-        List<Long> existTargetAppSystemIdList = targetAppSystemList.stream().map(AppSystemVo::getId).collect(Collectors.toList());
         Map<Long, AppSystemVo> existTargetAppSystemVoMap = targetAppSystemList.stream().collect(Collectors.toMap(AppSystemVo::getId, e -> e));
         for (Long targetAppSystemId : targetAppSystemIdList) {
             //目标系统已不存在，将不会复制个性化阈值
-            if (!existTargetAppSystemIdList.contains(targetAppSystemId)) {
+            if (!existTargetAppSystemVoMap.containsKey(targetAppSystemId)) {
                 continue;
             }
 

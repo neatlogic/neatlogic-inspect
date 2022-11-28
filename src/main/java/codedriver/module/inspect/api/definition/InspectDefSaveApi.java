@@ -50,7 +50,7 @@ public class InspectDefSaveApi extends PrivateApiComponentBase {
     }
 
     @Input({
-            @Param(name = "name", type = ApiParamType.STRING, isRequired = true, desc = "唯一标识"),
+            @Param(name = "name", type = ApiParamType.STRING, isRequired = true, desc = "模型名称（唯一标识）"),
             @Param(name = "thresholds", type = ApiParamType.JSONARRAY, desc = "集合数据定义")})
     @Description(desc = "保存巡检规则接口，用于巡检模块的巡检规则保存，需要依赖mongodb")
     @Override

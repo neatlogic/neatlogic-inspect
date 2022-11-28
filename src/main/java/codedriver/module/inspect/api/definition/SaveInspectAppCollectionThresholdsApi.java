@@ -66,7 +66,7 @@ public class SaveInspectAppCollectionThresholdsApi extends PrivateApiComponentBa
     }
 
     @Input({
-            @Param(name = "name", type = ApiParamType.STRING, isRequired = true, desc = "集合名称（唯一标识）"),
+            @Param(name = "name", type = ApiParamType.STRING, isRequired = true, desc = "模型名称（唯一标识）"),
             @Param(name = "appSystemId", type = ApiParamType.LONG, isRequired = true, desc = "应用id"),
             @Param(name = "thresholds", type = ApiParamType.JSONARRAY, desc = "集合数据定义")})
     @Description(desc = "保存应用巡检阈值设置，需要依赖mongodb")

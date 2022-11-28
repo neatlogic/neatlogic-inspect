@@ -38,7 +38,7 @@ public class GetInspectCollectApi extends PrivateApiComponentBase {
         return "inspect/collection/get";
     }
 
-    @Input({@Param(name = "name", type = ApiParamType.STRING, desc = "唯一标识")})
+    @Input({@Param(name = "name", type = ApiParamType.STRING, desc = "模型名称（唯一标识）")})
     @Output({
             @Param(name = "fields", type = ApiParamType.LONG, desc = "数据结构列表"),
             @Param(name = "thresholds", type = ApiParamType.LONG, desc = "阈值规则列表")

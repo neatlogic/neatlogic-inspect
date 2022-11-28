@@ -19,7 +19,7 @@ public interface InspectCollectService {
      * @param name 唯一标志
      * @return 集合（名称、指标、规则）
      */
-    JSONObject getCollectionByName(String name) throws ParseException;
+    JSONObject getCollectionByName(String name);
 
 
     /**
