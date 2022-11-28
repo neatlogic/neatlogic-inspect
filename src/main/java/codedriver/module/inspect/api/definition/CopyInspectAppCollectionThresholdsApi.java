@@ -32,6 +32,7 @@ import org.springframework.stereotype.Service;
 import javax.annotation.Resource;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
@@ -102,13 +103,14 @@ public class CopyInspectAppCollectionThresholdsApi extends PrivateApiComponentBa
         }
 
         List<Long> existTargetAppSystemIdList = targetAppSystemList.stream().map(AppSystemVo::getId).collect(Collectors.toList());
+        Map<Long, AppSystemVo> existTargetAppSystemVoMap = targetAppSystemList.stream().collect(Collectors.toMap(AppSystemVo::getId, e -> e));
         for (Long targetAppSystemId : targetAppSystemIdList) {
             //目标系统已不存在，将不会复制个性化阈值
             if (!existTargetAppSystemIdList.contains(targetAppSystemId)) {
                 continue;
             }
 
-                                                                            Document whereDoc = new Document();
+            Document whereDoc = new Document();
             whereDoc.put("appSystemId", targetAppSystemId);
             whereDoc.put("name", name);
             if (defAppCollection.find(whereDoc).first() != null) {
@@ -117,6 +119,8 @@ public class CopyInspectAppCollectionThresholdsApi extends PrivateApiComponentBa
                 updateDoc.put("thresholds", defAppThresholds);
                 updateDoc.put("lcu", UserContext.get().getUserUuid());
                 updateDoc.put("lcd", new Date());
+                updateDoc.put("appSystemName", existTargetAppSystemVoMap.get(targetAppSystemId).getName());
+                updateDoc.put("appSystemAbbrName", existTargetAppSystemVoMap.get(targetAppSystemId).getAbbrName());
                 setDocument.put("$set", updateDoc);
                 defAppCollection.updateOne(whereDoc, setDocument);
             } else {
@@ -126,6 +130,8 @@ public class CopyInspectAppCollectionThresholdsApi extends PrivateApiComponentBa
                 newDoc.put("thresholds", defAppThresholds);
                 newDoc.put("lcu", UserContext.get().getUserUuid());
                 newDoc.put("lcd", new Date());
+                newDoc.put("appSystemName", existTargetAppSystemVoMap.get(targetAppSystemId).getName());
+                newDoc.put("appSystemAbbrName", existTargetAppSystemVoMap.get(targetAppSystemId).getAbbrName());
                 defAppCollection.insertOne(newDoc);
             }
         }
