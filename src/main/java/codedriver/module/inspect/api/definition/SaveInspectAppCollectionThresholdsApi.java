@@ -6,8 +6,10 @@ package codedriver.module.inspect.api.definition;
 
 import codedriver.framework.asynchronization.threadlocal.UserContext;
 import codedriver.framework.auth.core.AuthAction;
+import codedriver.framework.cmdb.crossover.IAppSystemMapper;
 import codedriver.framework.cmdb.crossover.ICiEntityCrossoverMapper;
 import codedriver.framework.cmdb.dto.cientity.CiEntityVo;
+import codedriver.framework.cmdb.dto.resourcecenter.entity.AppSystemVo;
 import codedriver.framework.cmdb.exception.cientity.CiEntityNotFoundException;
 import codedriver.framework.common.constvalue.ApiParamType;
 import codedriver.framework.crossover.CrossoverServiceFactory;
@@ -108,12 +110,17 @@ public class SaveInspectAppCollectionThresholdsApi extends PrivateApiComponentBa
         whereDoc.put("appSystemId", appSystemId);
         whereDoc.put("name", name);
 
+        IAppSystemMapper iAppSystemMapper = CrossoverServiceFactory.getApi(IAppSystemMapper.class);
+        AppSystemVo appSystemVo = iAppSystemMapper.getAppSystemById(appSystemId);
+
         if (defAppCollection.find(whereDoc).first() != null) {
             Document updateDoc = new Document();
             Document setDocument = new Document();
             updateDoc.put("thresholds", thresholds);
             updateDoc.put("lcu", UserContext.get().getUserUuid());
             updateDoc.put("lcd", new Date());
+            updateDoc.put("appSystemName", appSystemVo.getName());
+            updateDoc.put("appSystemAbbrName",appSystemVo.getAbbrName());
             setDocument.put("$set", updateDoc);
             mongoTemplate.getCollection("_inspectdef_app").updateOne(whereDoc, setDocument);
         } else {
@@ -123,6 +130,8 @@ public class SaveInspectAppCollectionThresholdsApi extends PrivateApiComponentBa
             newDoc.put("thresholds", thresholds);
             newDoc.put("lcu", UserContext.get().getUserUuid());
             newDoc.put("lcd", new Date());
+            newDoc.put("appSystemName", appSystemVo.getName());
+            newDoc.put("appSystemAbbrName",appSystemVo.getAbbrName());
             defAppCollection.insertOne(newDoc);
         }
         return null;

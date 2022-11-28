@@ -69,7 +69,7 @@ public class GetInspectAppCollectFieldsApi extends PrivateApiComponentBase {
         JSONArray returnFieldsArray = new JSONArray();
         Map<String, JSONObject> returnThresholdsMap = new HashMap<>();
 
-        //获取数据结构
+        //获取字典数据结构
         JSONObject dictionary = mongoTemplate.findOne(new Query(Criteria.where("name").is(paramObj.getString("name"))), JSONObject.class, "_dictionary");
         if (dictionary == null) {
             throw new CollectionNotFoundException("_dictionary");
@@ -78,7 +78,7 @@ public class GetInspectAppCollectFieldsApi extends PrivateApiComponentBase {
         if (CollectionUtils.isEmpty(dictionaryArray)) {
             return returnObject;
         }
-        //获取数据结构 fields
+        //获取顶层数据结构的过滤条件和顶层规则 fields、thresholds
         Document searchDoc = new Document();
         Document fieldDocument = new Document();
         searchDoc.put("name", paramObj.getString("name"));
