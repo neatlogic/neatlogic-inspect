@@ -44,10 +44,10 @@ public class ListInspectAppEnvApi extends PrivateApiComponentBase {
     }
 
     @Input({
-            @Param(name = "appSystemId", type = ApiParamType.LONG,isRequired = true, desc = "系统id"),
+            @Param(name = "appSystemId", type = ApiParamType.LONG, isRequired = true, desc = "系统id"),
     })
     @Output({
-            @Param(name = "tbodyList", explode = AppEnvVo[].class, desc = "发起应用巡检的环境列表")
+            @Param(explode = AppEnvVo[].class, desc = "发起应用巡检的环境列表")
     })
     @Description(desc = "获取发起应用巡检的环境列表")
     @Override
