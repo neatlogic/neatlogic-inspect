@@ -43,7 +43,7 @@ public class InspectCollectionFieldsSaveApi extends PrivateApiComponentBase {
     }
 
     @Input({
-            @Param(name = "name", type = ApiParamType.STRING, isRequired = true, desc = "唯一标识"),
+            @Param(name = "name", type = ApiParamType.STRING, isRequired = true, desc = "模型名称（唯一标识）"),
             @Param(name = "fields", type = ApiParamType.JSONARRAY, isRequired = true,desc = "指标过滤列表")
     })
     @Description(desc = "巡检定义指标过滤保存接口")
