@@ -44,6 +44,7 @@ import org.springframework.stereotype.Component;
 import javax.annotation.Resource;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 
 /**
@@ -72,7 +73,13 @@ public class InspectAppSystemScheduleJob extends JobBase {
 
     @Override
     public Boolean isMyHealthy(JobObject jobObject) {
-        return true;
+        String idStr = jobObject.getJobName();
+        Long id = Long.parseLong(idStr);
+        InspectAppSystemScheduleVo scheduleVo = inspectScheduleMapper.getInspectAppSystemScheduleById(id);
+        if (scheduleVo == null) {
+            return false;
+        }
+        return Objects.equals(scheduleVo.getIsActive(), 1) && Objects.equals(scheduleVo.getCron(), jobObject.getCron());
     }
 
     @Override

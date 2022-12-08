@@ -61,7 +61,12 @@ public class InspectScheduleJob extends JobBase {
 
     @Override
     public Boolean isMyHealthy(JobObject jobObject) {
-        return true;
+        String uuid = jobObject.getJobName();
+        InspectScheduleVo inspectScheduleVo = inspectScheduleMapper.getInspectScheduleByUuid(uuid);
+        if (inspectScheduleVo == null) {
+            return false;
+        }
+        return Objects.equals(inspectScheduleVo.getIsActive(), 1) && Objects.equals(inspectScheduleVo.getCron(), jobObject.getCron());
     }
 
     @Override
