@@ -245,7 +245,8 @@
             `inspect_time` AS inspectTime,
             `file_id` AS fileId,
             `audit_id` AS auditId,
-            `path_id` AS pathId
+            `path_id` AS pathId,
+            `job_id` AS jobId
         FROM `inspect_config_file_version`
         WHERE `path_id` IN
         <foreach collection="list" item="pathId" open="(" separator="," close=")">
@@ -319,7 +320,8 @@
         `inspect_time` AS inspectTime,
         `file_id` AS fileId,
         `audit_id` AS auditId,
-        `path_id` AS pathId
+        `path_id` AS pathId,
+        `job_id` AS jobId
         FROM `inspect_config_file_version`
         WHERE `id` IN
         <foreach collection="list" item="id" open="(" separator="," close=")">
@@ -335,7 +337,8 @@
         `inspect_time` AS inspectTime,
         `file_id` AS fileId,
         `audit_id` AS auditId,
-        `path_id` AS pathId
+        `path_id` AS pathId,
+        `job_id` AS jobId
         FROM `inspect_config_file_version`
         WHERE `id` = #{value}
     </select>
@@ -395,6 +398,35 @@
         LIMIT #{startNum}, #{pageSize}
     </select>
 
+    <select id="getInspectConfigFilePathListByJobId" parameterType="java.lang.Long" resultType="codedriver.framework.inspect.dto.InspectConfigFilePathVo">
+        SELECT
+            a.`id`,
+            a.`resource_id` AS resourceId,
+            a.`path`,
+            a.`md5`,
+            a.`inspect_time` AS inspectTime,
+            a.`file_id` AS fileId,
+            b.`name` AS resourceName,
+            b.`ip` AS resourceIP,
+            b.`port`  AS resourcePort,
+            b.`type_label`  AS resourceTypeLabel,
+            c.`id` AS versionId
+        FROM `inspect_config_file_path` a
+        JOIN @{DATA_SCHEMA}.`scence_ipobject_ip_port` b ON b.`id` = a.`resource_id`
+        JOIN `inspect_config_file_version` c ON c.`path_id` = a.`id` AND c.`file_id` = a.`file_id`
+        WHERE c.`job_id` = #{value}
+    </select>
+
+    <select id="getPreviousVersionIdByPathIdAndVersionId" resultType="java.lang.Long">
+        SELECT
+            `id`
+        FROM `inspect_config_file_version`
+        WHERE `path_id` = #{pathId}
+        AND `id` &lt; #{versionId}
+        ORDER BY id DESC
+        LIMIT 1
+    </select>
+
     <insert id="insertInspectConfigFilePath" parameterType="codedriver.framework.inspect.dto.InspectConfigFilePathVo">
         INSERT INTO `inspect_config_file_path` (
             `id`,
@@ -430,7 +462,8 @@
             `inspect_time`,
             `file_id`,
             `audit_id`,
-            `path_id`
+            `path_id`,
+            `job_id`
         )
         VALUES
         (
@@ -439,7 +472,8 @@
             #{inspectTime},
             #{fileId},
             #{auditId},
-            #{pathId}
+            #{pathId},
+            #{jobId}
         )
     </insert>
 
