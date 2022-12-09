@@ -215,7 +215,7 @@ public class InspectAppSystemScheduleJob extends JobBase {
     private void createAndFireJob(Long combopId, Long invokeId, String name, String userUuid, List<AutoexecNodeVo> selectNodeList) throws Exception {
         JSONObject paramObj = new JSONObject();
         paramObj.put("combopId", combopId);
-        paramObj.put("source", JobSource.INSPECT.getValue());
+        paramObj.put("source", JobSource.SCHEDULE_INSPECT.getValue());
         paramObj.put("operationId", combopId);
         paramObj.put("invokeId", invokeId);
         paramObj.put("isFirstFire", 1);

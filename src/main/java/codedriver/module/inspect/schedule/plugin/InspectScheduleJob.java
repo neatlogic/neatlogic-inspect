@@ -107,7 +107,7 @@ public class InspectScheduleJob extends JobBase {
         if (combopId != null && ci != null) {
             JSONObject paramObj = new JSONObject();
             paramObj.put("combopId", combopId);
-            paramObj.put("source", JobSource.INSPECT.getValue());
+            paramObj.put("source", JobSource.SCHEDULE_INSPECT.getValue());
             paramObj.put("operationId", combopId);
             paramObj.put("invokeId", inspectScheduleVo.getId());
             paramObj.put("isFirstFire", 1);
