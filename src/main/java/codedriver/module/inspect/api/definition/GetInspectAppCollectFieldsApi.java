@@ -120,8 +120,7 @@ public class GetInspectAppCollectFieldsApi extends PrivateApiComponentBase {
 
             //获取应用个性化阈值 thresholds
             //1、获取顶层阈值规则
-            JSONArray defThresholds = JSONObject.parseObject(defDoc.toJson()).getJSONArray("thresholds");
-            returnObject.put("globalThresholds", defThresholds);
+            returnObject.put("globalThresholds",  JSONObject.parseObject(defDoc.toJson()).getJSONArray("thresholds"));
             //2、应用层个性化阈值覆盖
             Document returnDoc = new Document();
             searchDoc.put("appSystemId", paramObj.getLong("appSystemId"));
@@ -140,8 +139,7 @@ public class GetInspectAppCollectFieldsApi extends PrivateApiComponentBase {
                     UserVo userVo = userMapper.getUserByUuid(lcu);
                     returnObject.put("userVo", userVo);
                 }
-                JSONArray defAppThresholds = inspectDefAppJson.getJSONArray("thresholds");
-                returnObject.put("appThresholds", defAppThresholds);
+                returnObject.put("appThresholds", inspectDefAppJson.getJSONArray("thresholds"));
             }
         }
         return returnObject;
