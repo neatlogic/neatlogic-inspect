@@ -62,7 +62,7 @@ import java.util.stream.Collectors;
 @AuthAction(action = INSPECT_SCHEDULE_EXECUTE.class)
 @AuthAction(action = INSPECT_EXECUTE.class)
 @OperationType(type = OperationTypeEnum.SEARCH)
-public class InspectAutoexecJobReportPushApi extends PrivateApiComponentBase {
+public class InspectAutoexecJobReportNotifyApi extends PrivateApiComponentBase {
 
     @Resource
     MongoTemplate mongoTemplate;
@@ -87,12 +87,12 @@ public class InspectAutoexecJobReportPushApi extends PrivateApiComponentBase {
 
     @Override
     public String getToken() {
-        return "inspect/autoexec/job/report/push";
+        return "inspect/autoexec/job/report/notify";
     }
 
     @Override
     public String getName() {
-        return "推送巡检报告";
+        return "推送巡检报告通知";
     }
 
     @Override
@@ -108,7 +108,7 @@ public class InspectAutoexecJobReportPushApi extends PrivateApiComponentBase {
     @Output({
 
     })
-    @Description(desc = "推送巡检报告")
+    @Description(desc = "推送巡检报告通知")
     @Override
     public Object myDoService(JSONObject paramObj) throws Exception {
         String notifyHandler = paramObj.getString("notifyHandler");
