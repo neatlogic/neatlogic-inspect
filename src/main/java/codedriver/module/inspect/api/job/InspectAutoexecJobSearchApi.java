@@ -13,6 +13,7 @@ import codedriver.framework.common.dto.BasePageVo;
 import codedriver.framework.crossover.CrossoverServiceFactory;
 import codedriver.framework.inspect.auth.INSPECT_EXECUTE;
 import codedriver.framework.inspect.auth.INSPECT_SCHEDULE_EXECUTE;
+import codedriver.framework.inspect.constvalue.JobSource;
 import codedriver.framework.restful.annotation.*;
 import codedriver.framework.restful.constvalue.OperationTypeEnum;
 import codedriver.framework.restful.core.privateapi.PrivateApiComponentBase;
@@ -79,7 +80,8 @@ public class InspectAutoexecJobSearchApi extends PrivateApiComponentBase {
         jsonObj.put("invokeId", jsonObj.getLong("scheduleId"));
         AutoexecJobVo jobVo = JSONObject.toJavaObject(jsonObj, AutoexecJobVo.class);
         List<String> sourceList = new ArrayList<>();
-        sourceList.add("inspect");
+        sourceList.add(JobSource.INSPECT.getValue());
+        sourceList.add(JobSource.SCHEDULE_INSPECT.getValue());
         jobVo.setSourceList(sourceList);
         IAutoexecJobCrossoverService iAutoexecJobCrossoverService = CrossoverServiceFactory.getApi(IAutoexecJobCrossoverService.class);
         return TableResultUtil.getResult(iAutoexecJobCrossoverService.searchJob(jobVo), jobVo);
