@@ -50,6 +50,10 @@ public interface InspectConfigFileMapper {
 
     List<InspectConfigFilePathVo> getInspectConfigFilePathList(InspectConfigFilePathSearchVo searchVo);
 
+    List<InspectConfigFilePathVo> getInspectConfigFilePathListByJobId(Long jobId);
+
+    Long getPreviousVersionIdByPathIdAndVersionId(@Param("pathId") Long pathId, @Param("versionId") Long versionId);
+
     int insertInspectConfigFilePath(InspectConfigFilePathVo pathVo);
 
     int insertInspectConfigFileAudit(InspectConfigFileAuditVo auditVo);
