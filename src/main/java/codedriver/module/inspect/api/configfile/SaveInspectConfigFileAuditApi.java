@@ -62,6 +62,7 @@ public class SaveInspectConfigFileAuditApi extends PrivateApiComponentBase {
     }
 
     @Input({
+            @Param(name = "jobId", type = ApiParamType.LONG, isRequired = true, desc = "作业id"),
             @Param(name = "resourceId", type = ApiParamType.LONG, isRequired = true, desc = "资源id"),
             @Param(name = "pathId", type = ApiParamType.LONG, desc = "路径id"),
             @Param(name = "path", type = ApiParamType.STRING, desc = "路径"),
@@ -124,7 +125,8 @@ public class SaveInspectConfigFileAuditApi extends PrivateApiComponentBase {
             if (modifyTime == null) {
                 throw new ParamNotExistsException("modifyTime");
             }
-            InspectConfigFileVersionVo versionVo = new InspectConfigFileVersionVo(md5, modifyTime, fileId, auditVo.getId(), pathId);
+            Long jobId = paramObj.getLong("jobId");
+            InspectConfigFileVersionVo versionVo = new InspectConfigFileVersionVo(md5, modifyTime, fileId, auditVo.getId(), pathId, jobId);
             inspectConfigFileMapper.insertInspectConfigFileVersion(versionVo);
             InspectConfigFilePathVo pathVo = new InspectConfigFilePathVo(pathId, md5, modifyTime, fileId);
             inspectConfigFileMapper.updateInspectConfigFilePath(pathVo);
