@@ -68,6 +68,7 @@ public class SaveInspectAppCollectionThresholdsApi extends PrivateApiComponentBa
     @Input({
             @Param(name = "name", type = ApiParamType.STRING, isRequired = true, desc = "模型名称（唯一标识）"),
             @Param(name = "appSystemId", type = ApiParamType.LONG, isRequired = true, desc = "应用id"),
+            @Param(name = "isOverWrite", type = ApiParamType.INTEGER, isRequired = true, desc = "是否覆盖(0不覆盖，1覆盖)"),
             @Param(name = "thresholds", type = ApiParamType.JSONARRAY, desc = "集合数据定义")})
     @Description(desc = "保存应用巡检阈值设置，需要依赖mongodb")
     @Override
@@ -117,10 +118,11 @@ public class SaveInspectAppCollectionThresholdsApi extends PrivateApiComponentBa
             Document updateDoc = new Document();
             Document setDocument = new Document();
             updateDoc.put("thresholds", thresholds);
+            updateDoc.put("isOverWrite", paramObj.getInteger("isOverWrite"));
             updateDoc.put("lcu", UserContext.get().getUserUuid());
             updateDoc.put("lcd", new Date());
             updateDoc.put("appSystemName", appSystemVo.getName());
-            updateDoc.put("appSystemAbbrName",appSystemVo.getAbbrName());
+            updateDoc.put("appSystemAbbrName", appSystemVo.getAbbrName());
             setDocument.put("$set", updateDoc);
             mongoTemplate.getCollection("_inspectdef_app").updateOne(whereDoc, setDocument);
         } else {
@@ -128,10 +130,11 @@ public class SaveInspectAppCollectionThresholdsApi extends PrivateApiComponentBa
             newDoc.put("appSystemId", appSystemId);
             newDoc.put("name", name);
             newDoc.put("thresholds", thresholds);
+            newDoc.put("isOverWrite", paramObj.getInteger("isOverWrite"));
             newDoc.put("lcu", UserContext.get().getUserUuid());
             newDoc.put("lcd", new Date());
             newDoc.put("appSystemName", appSystemVo.getName());
-            newDoc.put("appSystemAbbrName",appSystemVo.getAbbrName());
+            newDoc.put("appSystemAbbrName", appSystemVo.getAbbrName());
             defAppCollection.insertOne(newDoc);
         }
         return null;
