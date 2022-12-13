@@ -94,7 +94,7 @@ public class SaveInspectDefApi extends PrivateApiComponentBase {
         updateDoc.put("lcu", UserContext.get().getUserUuid());
         updateDoc.put("lcd", new Date());
         setDocument.put("$set", updateDoc);
-//        mongoTemplate.getCollection("_inspectdef").updateOne(whereDoc, setDocument);
+        mongoTemplate.getCollection("_inspectdef").updateOne(whereDoc, setDocument);
 
         /*
          1、找出此模型并且含有重写规则的个性化阈值列表
