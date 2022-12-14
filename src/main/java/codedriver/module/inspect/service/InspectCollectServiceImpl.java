@@ -10,12 +10,16 @@ import codedriver.framework.cmdb.dto.ci.CiVo;
 import codedriver.framework.cmdb.dto.resourcecenter.ResourceVo;
 import codedriver.framework.cmdb.exception.resourcecenter.ResourceNotFoundException;
 import codedriver.framework.crossover.CrossoverServiceFactory;
+import codedriver.framework.dao.mapper.UserMapper;
+import codedriver.framework.dto.UserVo;
+import codedriver.framework.inspect.exception.*;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoCollection;
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.bson.Document;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,8 +29,6 @@ import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -43,8 +45,11 @@ public class InspectCollectServiceImpl implements InspectCollectService {
     @Resource
     private MongoTemplate mongoTemplate;
 
+    @Resource
+    private UserMapper userMapper;
+
     @Override
-    public JSONObject getCollectionByName(String name){
+    public JSONObject getCollectionByName(String name) {
         JSONObject returnObject = new JSONObject();
         JSONArray returnFieldsArray = new JSONArray();
 
@@ -98,9 +103,13 @@ public class InspectCollectServiceImpl implements InspectCollectService {
         returnObject.put("thresholds", inspectDefJson.getJSONArray("thresholds"));
         JSONObject lcdJson = inspectDefJson.getJSONObject("lcd");
         if (lcdJson != null) {
-            returnObject.put("lcd",lcdJson.getDate("$date"));
+            returnObject.put("lcd", lcdJson.getDate("$date"));
         }
-        returnObject.put("lcu", inspectDefJson.getString("lcu"));
+        String lcu = inspectDefJson.getString("lcu");
+        if (StringUtils.isNotEmpty(lcu)) {
+            UserVo userVo = userMapper.getUserByUuid(lcu);
+            returnObject.put("userVo", userVo);
+        }
         return returnObject;
     }
 
@@ -219,5 +228,34 @@ public class InspectCollectServiceImpl implements InspectCollectService {
             }
         }
         return returnAppSystemIdList;
+    }
+
+    @Override
+    public void checkThresholdsParam(JSONArray thresholds) {
+        if (!org.springframework.util.CollectionUtils.isEmpty(thresholds)) {
+            List<String> nameList = new ArrayList<>();
+            for (int i = 0; i < thresholds.size(); i++) {
+                JSONObject thresholdTmp = thresholds.getJSONObject(i);
+                if (!thresholdTmp.containsKey("name")) {
+                    throw new InspectDefLessNameException(i);
+                }
+                if (!thresholdTmp.containsKey("level")) {
+                    throw new InspectDefLessLevelException(i);
+                }
+                if (!thresholdTmp.containsKey("rule")) {
+                    throw new InspectDefLessRuleException(i);
+                }
+                if (!thresholdTmp.containsKey("ruleUuid")) {
+                    throw new InspectDefLessRuleUuidException(i);
+                }
+
+                //判断name是否重复
+                String nameTmp = thresholdTmp.getString("name");
+                if (nameList.contains(nameTmp)) {
+                    throw new InspectDefRoleNameRepeatException(nameTmp);
+                }
+                nameList.add(thresholdTmp.getString("name"));
+            }
+        }
     }
 }

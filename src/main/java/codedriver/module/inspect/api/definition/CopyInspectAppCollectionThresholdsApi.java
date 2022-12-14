@@ -91,6 +91,7 @@ public class CopyInspectAppCollectionThresholdsApi extends PrivateApiComponentBa
         searchDoc.put("name", name);
         searchDoc.put("appSystemId", appSystemId);
         returnDoc.put("thresholds", true);
+        returnDoc.put("isOverWrite", true);
         MongoCollection<Document> defAppCollection = mongoTemplate.getDb().getCollection("_inspectdef_app");
         Document defAppDoc = defAppCollection.find(searchDoc).projection(returnDoc).first();
         if (defAppDoc == null) {
@@ -102,6 +103,7 @@ public class CopyInspectAppCollectionThresholdsApi extends PrivateApiComponentBa
             return new InspectAppThresholdsNotFoundException(appSystemId, name);
         }
 
+        boolean isOverWrite = JSONObject.parseObject(defAppDoc.toJson()).getInteger("isOverWrite") == 1;
         Map<Long, AppSystemVo> existTargetAppSystemVoMap = targetAppSystemList.stream().collect(Collectors.toMap(AppSystemVo::getId, e -> e));
         for (Long targetAppSystemId : targetAppSystemIdList) {
             //目标系统已不存在，将不会复制个性化阈值
@@ -116,6 +118,10 @@ public class CopyInspectAppCollectionThresholdsApi extends PrivateApiComponentBa
                 Document updateDoc = new Document();
                 Document setDocument = new Document();
                 updateDoc.put("thresholds", defAppThresholds);
+                if (isOverWrite) {
+                    updateDoc.put("isOverWrite", 1);
+                }
+                updateDoc.put("thresholds", defAppThresholds);
                 updateDoc.put("lcu", UserContext.get().getUserUuid());
                 updateDoc.put("lcd", new Date());
                 updateDoc.put("appSystemName", existTargetAppSystemVoMap.get(targetAppSystemId).getName());
@@ -127,6 +133,9 @@ public class CopyInspectAppCollectionThresholdsApi extends PrivateApiComponentBa
                 newDoc.put("appSystemId", targetAppSystemId);
                 newDoc.put("name", name);
                 newDoc.put("thresholds", defAppThresholds);
+                if (isOverWrite) {
+                    newDoc.put("isOverWrite", 1);
+                }
                 newDoc.put("lcu", UserContext.get().getUserUuid());
                 newDoc.put("lcd", new Date());
                 newDoc.put("appSystemName", existTargetAppSystemVoMap.get(targetAppSystemId).getName());
