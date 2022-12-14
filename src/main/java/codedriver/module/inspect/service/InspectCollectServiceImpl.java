@@ -12,6 +12,7 @@ import codedriver.framework.cmdb.exception.resourcecenter.ResourceNotFoundExcept
 import codedriver.framework.crossover.CrossoverServiceFactory;
 import codedriver.framework.dao.mapper.UserMapper;
 import codedriver.framework.dto.UserVo;
+import codedriver.framework.inspect.exception.*;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
@@ -227,5 +228,34 @@ public class InspectCollectServiceImpl implements InspectCollectService {
             }
         }
         return returnAppSystemIdList;
+    }
+
+    @Override
+    public void checkThresholdsParam(JSONArray thresholds) {
+        if (!org.springframework.util.CollectionUtils.isEmpty(thresholds)) {
+            List<String> nameList = new ArrayList<>();
+            for (int i = 0; i < thresholds.size(); i++) {
+                JSONObject thresholdTmp = thresholds.getJSONObject(i);
+                if (!thresholdTmp.containsKey("name")) {
+                    throw new InspectDefLessNameException(i);
+                }
+                if (!thresholdTmp.containsKey("level")) {
+                    throw new InspectDefLessLevelException(i);
+                }
+                if (!thresholdTmp.containsKey("rule")) {
+                    throw new InspectDefLessRuleException(i);
+                }
+                if (!thresholdTmp.containsKey("ruleUuid")) {
+                    throw new InspectDefLessRuleUuidException(i);
+                }
+
+                //判断name是否重复
+                String nameTmp = thresholdTmp.getString("name");
+                if (nameList.contains(nameTmp)) {
+                    throw new InspectDefRoleNameRepeatException(nameTmp);
+                }
+                nameList.add(thresholdTmp.getString("name"));
+            }
+        }
     }
 }

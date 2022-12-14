@@ -3,7 +3,6 @@ package codedriver.module.inspect.service;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 
-import java.text.ParseException;
 import java.util.List;
 
 /**
@@ -37,4 +36,6 @@ public interface InspectCollectService {
      */
     List<Long> getCollectionThresholdsAppSystemIdListByResourceId(Long resourceId);
 
+
+    void checkThresholdsParam(JSONArray thresholds);
 }

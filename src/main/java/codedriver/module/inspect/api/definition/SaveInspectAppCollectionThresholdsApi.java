@@ -14,25 +14,22 @@ import codedriver.framework.cmdb.exception.cientity.CiEntityNotFoundException;
 import codedriver.framework.common.constvalue.ApiParamType;
 import codedriver.framework.crossover.CrossoverServiceFactory;
 import codedriver.framework.inspect.auth.INSPECT_MODIFY;
-import codedriver.framework.inspect.exception.*;
 import codedriver.framework.restful.annotation.Description;
 import codedriver.framework.restful.annotation.Input;
 import codedriver.framework.restful.annotation.OperationType;
 import codedriver.framework.restful.annotation.Param;
 import codedriver.framework.restful.constvalue.OperationTypeEnum;
 import codedriver.framework.restful.core.privateapi.PrivateApiComponentBase;
+import codedriver.module.inspect.service.InspectCollectService;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.mongodb.client.MongoCollection;
 import org.bson.Document;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.stereotype.Service;
-import org.springframework.util.CollectionUtils;
 
 import javax.annotation.Resource;
-import java.util.ArrayList;
 import java.util.Date;
-import java.util.List;
 
 /**
  * @author longrf
@@ -46,6 +43,9 @@ public class SaveInspectAppCollectionThresholdsApi extends PrivateApiComponentBa
 
     @Resource
     private MongoTemplate mongoTemplate;
+
+    @Resource
+    private InspectCollectService inspectCollectService;
 
     @Override
     public String getName() {
@@ -73,31 +73,8 @@ public class SaveInspectAppCollectionThresholdsApi extends PrivateApiComponentBa
         Long appSystemId = paramObj.getLong("appSystemId");
         String name = paramObj.getString("name");
         JSONArray thresholds = paramObj.getJSONArray("thresholds");
-        if (!CollectionUtils.isEmpty(thresholds)) {
-            List<String> nameList = new ArrayList<>();
-            for (int i = 0; i < thresholds.size(); i++) {
-                JSONObject thresholdTmp = thresholds.getJSONObject(i);
-                if (!thresholdTmp.containsKey("name")) {
-                    throw new InspectDefLessNameException(i);
-                }
-                if (!thresholdTmp.containsKey("level")) {
-                    throw new InspectDefLessLevelException(i);
-                }
-                if (!thresholdTmp.containsKey("rule")) {
-                    throw new InspectDefLessRuleException(i);
-                }
-                if (!thresholdTmp.containsKey("ruleUuid")) {
-                    throw new InspectDefLessRuleUuidException(i);
-                }
-
-                //判断name是否重复
-                String nameTmp = thresholdTmp.getString("name");
-                if (nameList.contains(nameTmp)) {
-                    throw new InspectDefRoleNameRepeatException(nameTmp);
-                }
-                nameList.add(thresholdTmp.getString("name"));
-            }
-        }
+        //校验阈值规则参数
+        inspectCollectService.checkThresholdsParam(thresholds);
 
         //校验应用id是否存在
         ICiEntityCrossoverMapper iCiEntityCrossoverMapper = CrossoverServiceFactory.getApi(ICiEntityCrossoverMapper.class);

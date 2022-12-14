@@ -4,13 +4,13 @@ import codedriver.framework.asynchronization.threadlocal.UserContext;
 import codedriver.framework.auth.core.AuthAction;
 import codedriver.framework.common.constvalue.ApiParamType;
 import codedriver.framework.inspect.auth.INSPECT_MODIFY;
-import codedriver.framework.inspect.exception.*;
 import codedriver.framework.restful.annotation.Description;
 import codedriver.framework.restful.annotation.Input;
 import codedriver.framework.restful.annotation.OperationType;
 import codedriver.framework.restful.annotation.Param;
 import codedriver.framework.restful.constvalue.OperationTypeEnum;
 import codedriver.framework.restful.core.privateapi.PrivateApiComponentBase;
+import codedriver.module.inspect.service.InspectCollectService;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.mongodb.client.FindIterable;
@@ -23,9 +23,8 @@ import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
+import javax.annotation.Resource;
 import java.util.Date;
-import java.util.List;
 import java.util.Objects;
 
 @Service
@@ -36,6 +35,9 @@ public class SaveInspectDefApi extends PrivateApiComponentBase {
 
     @Autowired
     private MongoTemplate mongoTemplate;
+
+    @Resource
+    private InspectCollectService inspectCollectService;
 
     @Override
     public String getName() {
@@ -62,31 +64,8 @@ public class SaveInspectDefApi extends PrivateApiComponentBase {
     public Object myDoService(JSONObject paramObj) throws Exception {
         String name = paramObj.getString("name");
         JSONArray thresholds = paramObj.getJSONArray("thresholds");
-        if (!CollectionUtils.isEmpty(thresholds)) {
-            List<String> nameList = new ArrayList<>();
-            for (int i = 0; i < thresholds.size(); i++) {
-                JSONObject thresholdTmp = thresholds.getJSONObject(i);
-                if (!thresholdTmp.containsKey("name")) {
-                    throw new InspectDefLessNameException(i);
-                }
-                if (!thresholdTmp.containsKey("level")) {
-                    throw new InspectDefLessLevelException(i);
-                }
-                if (!thresholdTmp.containsKey("rule")) {
-                    throw new InspectDefLessRuleException(i);
-                }
-                if (!thresholdTmp.containsKey("ruleUuid")) {
-                    throw new InspectDefLessRuleUuidException(i);
-                }
-
-                //判断name是否重复
-                String nameTmp = thresholdTmp.getString("name");
-                if (nameList.contains(nameTmp)) {
-                    throw new InspectDefRoleNameRepeatException(nameTmp);
-                }
-                nameList.add(thresholdTmp.getString("name"));
-            }
-        }
+        //校验阈值规则参数
+        inspectCollectService.checkThresholdsParam(thresholds);
         Document whereDoc = new Document();
         Document updateDoc = new Document();
         Document setDocument = new Document();
@@ -124,7 +103,7 @@ public class SaveInspectDefApi extends PrivateApiComponentBase {
                         if (Objects.isNull(appSystemId) || CollectionUtils.isEmpty(docThresholds)) {
                             continue;
                         }
-                        //重写的规则条数
+                        //重写的规则标志
                         boolean overwriteFlag = false;
                         //需要删除的规则
                         JSONArray removeList = new JSONArray();
@@ -132,6 +111,7 @@ public class SaveInspectDefApi extends PrivateApiComponentBase {
                             JSONObject jsonObject = (JSONObject) object;
                             String ruleUuid = jsonObject.getString("ruleUuid");
                             if (StringUtils.isEmpty(ruleUuid)) {
+                                removeList.add(object);
                                 continue;
                             }
                             if (deletedRuleUuidArray.contains(ruleUuid)) {
@@ -140,7 +120,7 @@ public class SaveInspectDefApi extends PrivateApiComponentBase {
                                 overwriteFlag = true;
                             }
                         }
-                        //重写的规则条数为0表示：没有重写的规则了
+                        //重写的规则标志为false表示：没有重写的规则
                         if (!overwriteFlag) {
                             appDefJson.put("isOverWrite", 0);
                         }
