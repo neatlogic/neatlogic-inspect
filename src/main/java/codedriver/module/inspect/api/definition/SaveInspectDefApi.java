@@ -134,16 +134,14 @@ public class SaveInspectDefApi extends PrivateApiComponentBase {
                             if (StringUtils.isEmpty(ruleUuid)) {
                                 continue;
                             }
-                            if (jsonObject.containsKey("isOverWrite") && jsonObject.getInteger("isOverWrite") == 1) {
+                            if (deletedRuleUuidArray.contains(ruleUuid)) {
+                                removeList.add(object);
+                            } else if (jsonObject.containsKey("isOverWrite") && jsonObject.getInteger("isOverWrite") == 1) {
                                 overwriteNum++;
-                                if (deletedRuleUuidArray.contains(ruleUuid)) {
-                                    removeList.add(object);
-                                }
                             }
-
                         }
-                        //重写的规则条数 - 需要删除的规则条数 = 0 代表现存所有规则已经没有重写的规则了，则外层标志（isOverWrite）为0
-                        if (overwriteNum != 0 && removeList.size() != 0 && (overwriteNum - removeList.size() == 0)) {
+                        //重写的规则条数为0表示：没有重写的规则了
+                        if (overwriteNum == 0) {
                             appDefJson.put("isOverWrite", 0);
                         }
                         if (CollectionUtils.isNotEmpty(removeList)) {
