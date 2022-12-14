@@ -14,20 +14,22 @@ import codedriver.framework.restful.annotation.OperationType;
 import codedriver.framework.restful.annotation.Param;
 import codedriver.framework.restful.constvalue.OperationTypeEnum;
 import codedriver.framework.restful.core.privateapi.PrivateApiComponentBase;
-import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoCollection;
 import org.apache.commons.collections4.CollectionUtils;
-import org.apache.commons.collections4.MapUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.bson.Document;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import java.util.Objects;
 
 @Service
 @Transactional
@@ -56,8 +58,7 @@ public class SaveInspectDefApi extends PrivateApiComponentBase {
     @Input({
             @Param(name = "name", type = ApiParamType.STRING, isRequired = true, desc = "模型名称（唯一标识）"),
             @Param(name = "thresholds", type = ApiParamType.JSONARRAY, desc = "集合数据定义"),
-            @Param(name = "changeRuleIdJson", type = ApiParamType.JSONOBJECT, desc = "变化的规则序号Json"),
-            @Param(name = "deletedRuleIdList", type = ApiParamType.JSONARRAY, desc = "删除的规则序号列表")
+            @Param(name = "deletedRuleUuidList", type = ApiParamType.JSONARRAY, desc = "删除的规则序号列表")
     })
     @Description(desc = "保存巡检规则接口，用于巡检模块的巡检规则保存，需要依赖mongodb")
     @Override
@@ -99,13 +100,9 @@ public class SaveInspectDefApi extends PrivateApiComponentBase {
         /*
          1、找出此模型并且含有重写规则的个性化阈值列表
          2、删除rule
-         3、更换换ruleId
-
-         注：必须先删除rule，因为更换后的ruleId可能会是需要删除的ruleId
          */
-        JSONObject changeRuleIdJson = paramObj.getJSONObject("changeRuleIdJson");
-        JSONArray deletedRuleIdArray = paramObj.getJSONArray("deletedRuleIdList");
-        if (MapUtils.isNotEmpty(changeRuleIdJson) || CollectionUtils.isNotEmpty(deletedRuleIdArray)) {
+        JSONArray deletedRuleUuidArray = paramObj.getJSONArray("deletedRuleUuidList");
+        if (CollectionUtils.isNotEmpty(deletedRuleUuidArray)) {
 
             //1、找出此模型并且含有重写规则的个性化阈值列表
             Document returnDoc = new Document();
@@ -119,7 +116,7 @@ public class SaveInspectDefApi extends PrivateApiComponentBase {
 
             //2、删除rule
             if (documents.first() != null) {
-                if (CollectionUtils.isNotEmpty(deletedRuleIdArray)) {
+                if (CollectionUtils.isNotEmpty(deletedRuleUuidArray)) {
                     for (Document document : documents) {
                         JSONObject appDefJson = JSONObject.parseObject(document.toJson());
                         Long appSystemId = appDefJson.getLong("appSystemId");
@@ -133,15 +130,17 @@ public class SaveInspectDefApi extends PrivateApiComponentBase {
                         JSONArray removeList = new JSONArray();
                         for (Object object : docThresholds) {
                             JSONObject jsonObject = (JSONObject) object;
-                            Integer ruleId = jsonObject.getInteger("ruleId");
-                            if (ruleId != null) {
-                                if (ruleId > 0 && ruleId <= 5000) {
-                                    overwriteNum++;
-                                    if (deletedRuleIdArray.contains(ruleId)) {
-                                        removeList.add(object);
-                                    }
+                            String ruleUuid = jsonObject.getString("ruleUuid");
+                            if (StringUtils.isEmpty(ruleUuid)) {
+                                continue;
+                            }
+                            if (jsonObject.containsKey("isOverWrite") && jsonObject.getInteger("isOverWrite") == 1) {
+                                overwriteNum++;
+                                if (deletedRuleUuidArray.contains(ruleUuid)) {
+                                    removeList.add(object);
                                 }
                             }
+
                         }
                         //重写的规则条数 - 需要删除的规则条数 = 0 代表现存所有规则已经没有重写的规则了，则外层标志（isOverWrite）为0
                         if (overwriteNum != 0 && removeList.size() != 0 && (overwriteNum - removeList.size() == 0)) {
@@ -158,39 +157,6 @@ public class SaveInspectDefApi extends PrivateApiComponentBase {
                             if (appDefJson.containsKey("isOverWrite")) {
                                 updateAppDoc.put("isOverWrite", appDefJson.getInteger("isOverWrite"));
                             }
-                            setAppDoc.put("$set", updateAppDoc);
-                            defAppCollection.updateOne(whereAppDoc, setAppDoc);
-                        }
-                    }
-                }
-                //3、更换ruleId
-                if (MapUtils.isNotEmpty(changeRuleIdJson)) {
-                    Map<Integer, Integer> changeRuleIdMap = (Map<Integer, Integer>) JSON.parse(String.valueOf(changeRuleIdJson));
-                    for (Document document : documents) {
-                        JSONObject appDefJson = JSONObject.parseObject(document.toJson());
-                        Long appSystemId = appDefJson.getLong("appSystemId");
-                        JSONArray docThresholds = appDefJson.getJSONArray("thresholds");
-                        if (Objects.isNull(appSystemId) || CollectionUtils.isEmpty(docThresholds)) {
-                            continue;
-                        }
-                        boolean needUpdate = false;
-                        for (Object object : docThresholds) {
-                            JSONObject jsonObject = (JSONObject) object;
-                            Integer ruleId = jsonObject.getInteger("ruleId");
-                            if (ruleId != null && changeRuleIdMap.containsKey(ruleId) && !ruleId.equals(changeRuleIdMap.get(ruleId))) {
-                                jsonObject.put("ruleId", changeRuleIdMap.get(ruleId));
-                                if (!needUpdate) {
-                                    needUpdate = true;
-                                }
-                            }
-                        }
-                        if (needUpdate) {
-                            Document whereAppDoc = new Document();
-                            whereAppDoc.put("name", name);
-                            whereAppDoc.put("appSystemId", appDefJson.getLong("appSystemId"));
-                            Document updateAppDoc = new Document();
-                            Document setAppDoc = new Document();
-                            updateAppDoc.put("thresholds", docThresholds);
                             setAppDoc.put("$set", updateAppDoc);
                             defAppCollection.updateOne(whereAppDoc, setAppDoc);
                         }
