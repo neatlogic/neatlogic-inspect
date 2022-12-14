@@ -125,7 +125,7 @@ public class SaveInspectDefApi extends PrivateApiComponentBase {
                             continue;
                         }
                         //重写的规则条数
-                        int overwriteNum = 0;
+                        boolean overwriteFlag = false;
                         //需要删除的规则
                         JSONArray removeList = new JSONArray();
                         for (Object object : docThresholds) {
@@ -136,12 +136,12 @@ public class SaveInspectDefApi extends PrivateApiComponentBase {
                             }
                             if (deletedRuleUuidArray.contains(ruleUuid)) {
                                 removeList.add(object);
-                            } else if (jsonObject.containsKey("isOverWrite") && jsonObject.getInteger("isOverWrite") == 1) {
-                                overwriteNum++;
+                            } else if (jsonObject.containsKey("isOverWrite") && jsonObject.getInteger("isOverWrite") == 1 && !overwriteFlag) {
+                                overwriteFlag = true;
                             }
                         }
                         //重写的规则条数为0表示：没有重写的规则了
-                        if (overwriteNum == 0) {
+                        if (!overwriteFlag) {
                             appDefJson.put("isOverWrite", 0);
                         }
                         if (CollectionUtils.isNotEmpty(removeList)) {
