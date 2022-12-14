@@ -4,10 +4,7 @@ import codedriver.framework.asynchronization.threadlocal.UserContext;
 import codedriver.framework.auth.core.AuthAction;
 import codedriver.framework.common.constvalue.ApiParamType;
 import codedriver.framework.inspect.auth.INSPECT_MODIFY;
-import codedriver.framework.inspect.exception.InspectDefLessLevelException;
-import codedriver.framework.inspect.exception.InspectDefLessNameException;
-import codedriver.framework.inspect.exception.InspectDefLessRuleException;
-import codedriver.framework.inspect.exception.InspectDefRoleNameRepeatException;
+import codedriver.framework.inspect.exception.*;
 import codedriver.framework.restful.annotation.Description;
 import codedriver.framework.restful.annotation.Input;
 import codedriver.framework.restful.annotation.OperationType;
@@ -77,6 +74,9 @@ public class SaveInspectDefApi extends PrivateApiComponentBase {
                 }
                 if (!thresholdTmp.containsKey("rule")) {
                     throw new InspectDefLessRuleException(i);
+                }
+                if (!thresholdTmp.containsKey("ruleUuid")) {
+                    throw new InspectDefLessRuleUuidException(i);
                 }
 
                 //判断name是否重复
