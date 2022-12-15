@@ -81,7 +81,9 @@ public class InspectAutoexecJobSearchApi extends PrivateApiComponentBase {
         AutoexecJobVo jobVo = JSONObject.toJavaObject(jsonObj, AutoexecJobVo.class);
         List<String> sourceList = new ArrayList<>();
         sourceList.add(JobSource.INSPECT.getValue());
+        sourceList.add(JobSource.INSPECT_APP.getValue());
         sourceList.add(JobSource.SCHEDULE_INSPECT.getValue());
+        sourceList.add(JobSource.SCHEDULE_INSPECT_APP.getValue());
         jobVo.setSourceList(sourceList);
         IAutoexecJobCrossoverService iAutoexecJobCrossoverService = CrossoverServiceFactory.getApi(IAutoexecJobCrossoverService.class);
         return TableResultUtil.getResult(iAutoexecJobCrossoverService.searchJob(jobVo), jobVo);
