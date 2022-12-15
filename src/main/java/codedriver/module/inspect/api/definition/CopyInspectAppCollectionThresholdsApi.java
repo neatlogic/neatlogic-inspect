@@ -12,7 +12,7 @@ import codedriver.framework.cmdb.exception.cientity.CiEntityNotFoundException;
 import codedriver.framework.cmdb.exception.sync.CollectionNotFoundException;
 import codedriver.framework.common.constvalue.ApiParamType;
 import codedriver.framework.crossover.CrossoverServiceFactory;
-import codedriver.framework.inspect.auth.INSPECT_MODIFY;
+import codedriver.framework.inspect.auth.INSPECT_BASE;
 import codedriver.framework.inspect.exception.InspectAppThresholdsCopyTargetAppSystemNotFoundException;
 import codedriver.framework.inspect.exception.InspectAppThresholdsNotFoundException;
 import codedriver.framework.restful.annotation.Description;
@@ -41,7 +41,7 @@ import java.util.stream.Collectors;
  */
 
 @Service
-@AuthAction(action = INSPECT_MODIFY.class)
+@AuthAction(action = INSPECT_BASE.class)
 @OperationType(type = OperationTypeEnum.UPDATE)
 public class CopyInspectAppCollectionThresholdsApi extends PrivateApiComponentBase {
 
