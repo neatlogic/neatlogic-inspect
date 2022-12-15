@@ -3,7 +3,7 @@ package codedriver.module.inspect.api.definition;
 import codedriver.framework.auth.core.AuthAction;
 import codedriver.framework.common.constvalue.ApiParamType;
 import codedriver.framework.dto.UserVo;
-import codedriver.framework.inspect.auth.INSPECT_MODIFY;
+import codedriver.framework.inspect.auth.INSPECT_BASE;
 import codedriver.framework.restful.annotation.Input;
 import codedriver.framework.restful.annotation.OperationType;
 import codedriver.framework.restful.annotation.Output;
@@ -17,7 +17,7 @@ import org.springframework.stereotype.Service;
 import javax.annotation.Resource;
 
 @Service
-@AuthAction(action = INSPECT_MODIFY.class)
+@AuthAction(action = INSPECT_BASE.class)
 @OperationType(type = OperationTypeEnum.SEARCH)
 public class GetInspectCollectApi extends PrivateApiComponentBase {
 
