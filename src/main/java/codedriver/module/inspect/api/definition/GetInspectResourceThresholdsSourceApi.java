@@ -6,7 +6,9 @@ package codedriver.module.inspect.api.definition;
 
 import codedriver.framework.auth.core.AuthAction;
 import codedriver.framework.cmdb.crossover.IResourceCrossoverMapper;
+import codedriver.framework.cmdb.crossover.ISyncCrossoverMapper;
 import codedriver.framework.cmdb.dto.resourcecenter.ResourceVo;
+import codedriver.framework.cmdb.enums.sync.CollectMode;
 import codedriver.framework.cmdb.exception.resourcecenter.ResourceNotFoundException;
 import codedriver.framework.common.constvalue.ApiParamType;
 import codedriver.framework.crossover.CrossoverServiceFactory;
@@ -67,7 +69,10 @@ public class GetInspectResourceThresholdsSourceApi extends PrivateApiComponentBa
         if (resourceVo == null) {
             throw new ResourceNotFoundException(resourceId);
         }
+        ISyncCrossoverMapper iSyncCrossoverMapper = CrossoverServiceFactory.getApi(ISyncCrossoverMapper.class);
+        String collectionName = iSyncCrossoverMapper.getSyncCiCollectionNameListByCiNameAndCollectMode(resourceVo.getTypeName(), CollectMode.INITIATIVE.getValue());
         returnObj.put("resourceVo", resourceVo);
+        returnObj.put("collectionName", collectionName);
         List<Long> returnAppSystemIdList = inspectCollectService.getCollectionThresholdsAppSystemIdListByResourceId(resourceId);
         if (CollectionUtils.isNotEmpty(returnAppSystemIdList)) {
             returnObj.put("appSystemVoList", iResourceCrossoverMapper.searchAppSystemListByIdList(returnAppSystemIdList));
