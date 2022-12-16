@@ -11,7 +11,7 @@
 		<version>[2.0.0, 3.0.0)</version>
 	</parent>
 	<artifactId>codedriver-inspect</artifactId>
-    <version>2.0.0</version>
+    <version>2.0.1</version>
 	<build>
 		<resources>
 			<resource>
