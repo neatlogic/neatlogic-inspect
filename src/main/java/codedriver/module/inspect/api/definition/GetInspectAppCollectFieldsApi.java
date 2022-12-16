@@ -7,7 +7,9 @@ package codedriver.module.inspect.api.definition;
 import codedriver.framework.auth.core.AuthAction;
 import codedriver.framework.cmdb.exception.sync.CollectionNotFoundException;
 import codedriver.framework.common.constvalue.ApiParamType;
-import codedriver.framework.inspect.auth.INSPECT_MODIFY;
+import codedriver.framework.dao.mapper.UserMapper;
+import codedriver.framework.dto.UserVo;
+import codedriver.framework.inspect.auth.INSPECT_BASE;
 import codedriver.framework.restful.annotation.*;
 import codedriver.framework.restful.constvalue.OperationTypeEnum;
 import codedriver.framework.restful.core.privateapi.PrivateApiComponentBase;
@@ -15,6 +17,7 @@ import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.bson.Document;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
@@ -32,12 +35,15 @@ import java.util.Objects;
  */
 
 @Service
-@AuthAction(action = INSPECT_MODIFY.class)
+@AuthAction(action = INSPECT_BASE.class)
 @OperationType(type = OperationTypeEnum.SEARCH)
 public class GetInspectAppCollectFieldsApi extends PrivateApiComponentBase {
 
     @Resource
     private MongoTemplate mongoTemplate;
+
+    @Resource
+    private UserMapper userMapper;
 
     @Override
     public String getName() {
@@ -51,7 +57,7 @@ public class GetInspectAppCollectFieldsApi extends PrivateApiComponentBase {
 
     @Override
     public String getToken() {
-            return "inspect/app/collection/fields/get";
+        return "inspect/app/collection/fields/get";
     }
 
     @Input({
@@ -60,14 +66,16 @@ public class GetInspectAppCollectFieldsApi extends PrivateApiComponentBase {
     })
     @Output({
             @Param(name = "fields", type = ApiParamType.LONG, desc = "数据结构列表"),
-            @Param(name = "thresholds", type = ApiParamType.LONG, desc = "阈值规则列表")
+            @Param(name = "globalThresholds", type = ApiParamType.LONG, desc = "全局阈值规则列表"),
+            @Param(name = "appThresholds", type = ApiParamType.LONG, desc = "应用层个性化阈值规则列表"),
+            @Param(name = "userVo", explode = UserVo.class, desc = "修改人"),
+            @Param(name = "lcd", type = ApiParamType.LONG, desc = "修改时间戳")
     })
     @Description(desc = "获取应用巡检数据结构和阈值规则，需要依赖mongodb")
     @Override
     public Object myDoService(JSONObject paramObj) throws Exception {
         JSONObject returnObject = new JSONObject();
         JSONArray returnFieldsArray = new JSONArray();
-        Map<String, JSONObject> returnThresholdsMap = new HashMap<>();
 
         //获取字典数据结构
         JSONObject dictionary = mongoTemplate.findOne(new Query(Criteria.where("name").is(paramObj.getString("name"))), JSONObject.class, "_dictionary");
@@ -112,12 +120,7 @@ public class GetInspectAppCollectFieldsApi extends PrivateApiComponentBase {
 
             //获取应用个性化阈值 thresholds
             //1、获取顶层阈值规则
-            JSONArray defThresholds = JSONObject.parseObject(defDoc.toJson()).getJSONArray("thresholds");
-            for (Object object : defThresholds) {
-                JSONObject dbObject = (JSONObject) JSON.toJSON(object);
-                returnThresholdsMap.put(dbObject.getString("name"), dbObject);
-            }
-
+            returnObject.put("globalThresholds",  JSONObject.parseObject(defDoc.toJson()).getJSONArray("thresholds"));
             //2、应用层个性化阈值覆盖
             Document returnDoc = new Document();
             searchDoc.put("appSystemId", paramObj.getLong("appSystemId"));
@@ -129,18 +132,15 @@ public class GetInspectAppCollectFieldsApi extends PrivateApiComponentBase {
                 JSONObject inspectDefAppJson = JSONObject.parseObject(defAppDoc.toJson());
                 JSONObject lcdJson = inspectDefAppJson.getJSONObject("lcd");
                 if (lcdJson != null) {
-                    returnObject.put("lcd",lcdJson.getDate("$date"));
+                    returnObject.put("lcd", lcdJson.getDate("$date"));
                 }
-                returnObject.put("lcu", inspectDefAppJson.getString("lcu"));
-                JSONArray defAppThresholds = inspectDefAppJson.getJSONArray("thresholds");
-                if (CollectionUtils.isNotEmpty(defAppThresholds)) {
-                    for (Object object : defAppThresholds) {
-                        JSONObject dbObject = (JSONObject) JSON.toJSON(object);
-                        returnThresholdsMap.put(dbObject.getString("name"), dbObject);
-                    }
+                String lcu = inspectDefAppJson.getString("lcu");
+                if (StringUtils.isNotEmpty(lcu)) {
+                    UserVo userVo = userMapper.getUserByUuid(lcu);
+                    returnObject.put("userVo", userVo);
                 }
+                returnObject.put("appThresholds", inspectDefAppJson.getJSONArray("thresholds"));
             }
-            returnObject.put("thresholds", returnThresholdsMap.values());
         }
         return returnObject;
     }
