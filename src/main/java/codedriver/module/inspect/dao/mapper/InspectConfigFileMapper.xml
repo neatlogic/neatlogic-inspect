@@ -63,6 +63,12 @@
                 #{stateId}
             </foreach>
         </if>
+        <if test="vendorIdList != null and vendorIdList.size() > 0">
+            AND a.`vendor_id` IN
+            <foreach collection="vendorIdList" item="vendorId" open="(" separator="," close=")">
+                #{vendorId}
+            </foreach>
+        </if>
         <if test="envIdList != null and envIdList.size() > 0">
             AND a.`env_id` IN
             <foreach collection="envIdList" item="envId" open="(" separator="," close=")">
