@@ -57,16 +57,24 @@ public class ReSaveInspectCollectionThresholdsApi extends PrivateApiComponentBas
                 if (CollectionUtils.isEmpty(docThresholds)) {
                     continue;
                 }
+                if (!appDefJson.getString("name").equals("mysql")) {
+                    continue;
+                }
                 JSONArray updateThreshold = new JSONArray();
                 boolean updateFlag = false;
                 for (Object object : docThresholds) {
                     JSONObject jsonObject = (JSONObject) object;
                     String ruleUuid = jsonObject.getString("ruleUuid");
                     if (StringUtils.isEmpty(ruleUuid)) {
-                        ruleUuid  = UUID.randomUUID().toString().replace("-", "");
+                        ruleUuid = UUID.randomUUID().toString().replace("-", "");
                         if (!updateFlag) {
                             updateFlag = true;
                         }
+                    }
+                    JSONObject astgentime = jsonObject.getJSONObject("_astgentime");
+                    if (astgentime != null) {
+                        jsonObject.put("_astgentime", astgentime.getDate("$date"));
+
                     }
                     jsonObject.remove("ruleId");
                     jsonObject.put("ruleUuid", ruleUuid);
