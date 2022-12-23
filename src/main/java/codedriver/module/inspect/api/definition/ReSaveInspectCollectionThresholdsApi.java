@@ -57,9 +57,6 @@ public class ReSaveInspectCollectionThresholdsApi extends PrivateApiComponentBas
                 if (CollectionUtils.isEmpty(docThresholds)) {
                     continue;
                 }
-                if (!appDefJson.getString("name").equals("mysql")) {
-                    continue;
-                }
                 JSONArray updateThreshold = new JSONArray();
                 boolean updateFlag = false;
                 for (Object object : docThresholds) {
