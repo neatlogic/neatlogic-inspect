@@ -63,10 +63,15 @@ public class ReSaveInspectCollectionThresholdsApi extends PrivateApiComponentBas
                     JSONObject jsonObject = (JSONObject) object;
                     String ruleUuid = jsonObject.getString("ruleUuid");
                     if (StringUtils.isEmpty(ruleUuid)) {
-                        ruleUuid  = UUID.randomUUID().toString().replace("-", "");
+                        ruleUuid = UUID.randomUUID().toString().replace("-", "");
                         if (!updateFlag) {
                             updateFlag = true;
                         }
+                    }
+                    JSONObject astgentime = jsonObject.getJSONObject("_astgentime");
+                    if (astgentime != null) {
+                        jsonObject.put("_astgentime", astgentime.getDate("$date"));
+
                     }
                     jsonObject.remove("ruleId");
                     jsonObject.put("ruleUuid", ruleUuid);
