@@ -101,7 +101,7 @@ public class InspectAutoexecJobReportNotifyApi extends PrivateApiComponentBase {
     }
 
     @Input({
-            @Param(name = "notifyHandler", type = ApiParamType.ENUM, rule = "emailNotifyHandler", isRequired = true, desc = "推送方式"),
+            @Param(name = "notifyHandler", type = ApiParamType.ENUM, rule = "EmailNotifyHandler", isRequired = true, desc = "推送方式"),
             @Param(name = "receiverList", type = ApiParamType.JSONARRAY, isRequired = true, minSize = 1, desc = "推送对象"),
             @Param(name = "jobId", type = ApiParamType.LONG, isRequired = true, desc = "作业ID")
     })
