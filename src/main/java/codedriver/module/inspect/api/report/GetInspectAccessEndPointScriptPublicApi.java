@@ -10,6 +10,7 @@ import codedriver.framework.restful.annotation.*;
 import codedriver.framework.restful.constvalue.OperationTypeEnum;
 import codedriver.framework.restful.core.publicapi.PublicApiComponentBase;
 import com.alibaba.fastjson.JSONObject;
+import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 
@@ -57,7 +58,7 @@ public class GetInspectAccessEndPointScriptPublicApi extends PublicApiComponentB
             return new JSONObject();
         }
         JSONObject config = resourceScriptVo.getConfig();
-        if (config != null) {
+        if (MapUtils.isNotEmpty(config)) {
             String type = config.getString("type");
             if (StringUtils.equals(type, "urlConfig")) {
                 returnObject.put("config", config.getJSONArray("config"));
