@@ -14,7 +14,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
-import java.util.Objects;
 
 @Service
 @OperationType(type = OperationTypeEnum.SEARCH)
@@ -58,7 +57,7 @@ public class GetInspectAccessEndPointScriptPublicApi extends PublicApiComponentB
             return new JSONObject();
         }
         JSONObject config = resourceScriptVo.getConfig();
-        if (Objects.nonNull(config)) {
+        if (config != null) {
             String type = config.getString("type");
             if (StringUtils.equals(type, "urlConfig")) {
                 returnObject.put("config", config.getJSONArray("config"));
