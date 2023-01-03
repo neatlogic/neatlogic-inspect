@@ -25,7 +25,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
 import java.util.Date;
-import java.util.Objects;
 
 @Service
 @Transactional
@@ -100,7 +99,7 @@ public class SaveInspectDefApi extends PrivateApiComponentBase {
                         JSONObject appDefJson = JSONObject.parseObject(document.toJson());
                         Long appSystemId = appDefJson.getLong("appSystemId");
                         JSONArray docThresholds = appDefJson.getJSONArray("thresholds");
-                        if (Objects.isNull(appSystemId) || CollectionUtils.isEmpty(docThresholds)) {
+                        if (appSystemId == null || CollectionUtils.isEmpty(docThresholds)) {
                             continue;
                         }
                         //重写的规则标志
