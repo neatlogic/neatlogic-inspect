@@ -204,7 +204,7 @@ public class InspectCollectServiceImpl implements InspectCollectService {
 
         //只有OS类型的会关联多个应用实例，因此会有多个系统id
         if (parentCiNameList.contains("OS")) {
-            Set<Long> resourceAppSystemIdList = iResourceCrossoverMapper.getOsResourceAppSystemIdListByOsId(resourceId);
+            Set<Long> resourceAppSystemIdList = iResourceCrossoverMapper.getResourceAppSystemIdListByResourceId(resourceId);
             if (CollectionUtils.isNotEmpty(resourceAppSystemIdList)) {
                 searchDoc.put("appSystemId", new Document().append("$in", resourceAppSystemIdList));
             }
