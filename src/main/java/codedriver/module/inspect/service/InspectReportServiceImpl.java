@@ -225,7 +225,8 @@ public class InspectReportServiceImpl implements InspectReportService {
                             JSONObject alert = alerts.getJSONObject(j);
                             Map<String, Object> dataMap = new HashMap<>();
                             JSONObject threholdJson;
-                            if (MapUtils.isNotEmpty(thresholds) && MapUtils.isNotEmpty(threholdJson = thresholds.getJSONObject(alert.getString("ruleName")))) {
+                            if (MapUtils.isNotEmpty(thresholds) && MapUtils.isNotEmpty(threholdJson = thresholds.getJSONObject(alert.getString("ruleSeq")))) {
+                                dataMap.put("ruleSeq", alert.getString("ruleSeq"));
                                 dataMap.put("alertLevel", threholdJson.getString("level"));
                                 dataMap.put("alertTips", threholdJson.getString("name"));
                                 dataMap.put("alertRule", threholdJson.getString("rule"));
