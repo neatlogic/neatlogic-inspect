@@ -5,8 +5,11 @@
 package codedriver.module.inspect.api.definition;
 
 import codedriver.framework.auth.core.AuthAction;
+import codedriver.framework.cmdb.crossover.IAppSystemMapper;
+import codedriver.framework.cmdb.dto.resourcecenter.entity.AppSystemVo;
 import codedriver.framework.cmdb.exception.sync.CollectionNotFoundException;
 import codedriver.framework.common.constvalue.ApiParamType;
+import codedriver.framework.crossover.CrossoverServiceFactory;
 import codedriver.framework.dao.mapper.UserMapper;
 import codedriver.framework.dto.UserVo;
 import codedriver.framework.inspect.auth.INSPECT_BASE;
@@ -65,6 +68,9 @@ public class GetInspectAppCollectFieldsApi extends PrivateApiComponentBase {
             @Param(name = "appSystemId", type = ApiParamType.LONG, isRequired = true, desc = "应用id")
     })
     @Output({
+            @Param(name = "appSystemName", type = ApiParamType.LONG, desc = "应用系统名"),
+            @Param(name = "appSystemAbbrName", type = ApiParamType.LONG, desc = "应用系统简称"),
+            @Param(name = "label", type = ApiParamType.STRING, desc = "名称"),
             @Param(name = "fields", type = ApiParamType.LONG, desc = "数据结构列表"),
             @Param(name = "globalThresholds", type = ApiParamType.LONG, desc = "全局阈值规则列表"),
             @Param(name = "appThresholds", type = ApiParamType.LONG, desc = "应用层个性化阈值规则列表"),
@@ -86,6 +92,16 @@ public class GetInspectAppCollectFieldsApi extends PrivateApiComponentBase {
         if (CollectionUtils.isEmpty(dictionaryArray)) {
             return returnObject;
         }
+
+        IAppSystemMapper iAppSystemMapper = CrossoverServiceFactory.getApi(IAppSystemMapper.class);
+        AppSystemVo appSystemVo = iAppSystemMapper.getAppSystemById(paramObj.getLong("appSystemId"));
+        if (appSystemVo == null) {
+            return null;
+        }
+        returnObject.put("appSystemName", appSystemVo.getName());
+        returnObject.put("appSystemAbbrName", appSystemVo.getAbbrName());
+        returnObject.put("label", dictionary.getString("label"));
+
         //获取顶层数据结构的过滤条件和顶层规则 fields、thresholds
         Document searchDoc = new Document();
         Document fieldDocument = new Document();
@@ -120,7 +136,7 @@ public class GetInspectAppCollectFieldsApi extends PrivateApiComponentBase {
 
             //获取应用个性化阈值 thresholds
             //1、获取顶层阈值规则
-            returnObject.put("globalThresholds",  JSONObject.parseObject(defDoc.toJson()).getJSONArray("thresholds"));
+            returnObject.put("globalThresholds", JSONObject.parseObject(defDoc.toJson()).getJSONArray("thresholds"));
             //2、应用层个性化阈值覆盖
             Document returnDoc = new Document();
             searchDoc.put("appSystemId", paramObj.getLong("appSystemId"));
