@@ -72,7 +72,7 @@ public class GetInspectResourceThresholdsSourceApi extends PrivateApiComponentBa
         ISyncCrossoverMapper iSyncCrossoverMapper = CrossoverServiceFactory.getApi(ISyncCrossoverMapper.class);
         String collectionName = iSyncCrossoverMapper.getSyncCiCollectionNameListByCiNameAndCollectMode(resourceVo.getTypeName(), CollectMode.INITIATIVE.getValue());
         returnObj.put("resourceVo", resourceVo);
-        returnObj.put("name", collectionName);
+        returnObj.put("collectionName", collectionName);
         List<Long> returnAppSystemIdList = inspectCollectService.getCollectionThresholdsAppSystemIdListByResourceId(resourceId);
         if (CollectionUtils.isNotEmpty(returnAppSystemIdList)) {
             returnObj.put("appSystemVoList", iResourceCrossoverMapper.searchAppSystemListByIdList(returnAppSystemIdList));
