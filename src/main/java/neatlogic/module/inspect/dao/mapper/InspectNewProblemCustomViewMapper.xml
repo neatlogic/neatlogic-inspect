@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="neatlogic.module.inspect.dao.mapper.InspectNewProblemCustomViewMapper">
+
+    <select id="checkInspectNewProblemCustomViewIsExists" parameterType="neatlogic.framework.inspect.dto.InspectNewProblemCustomViewVo" resultType="java.lang.Integer">
+        select count(1) from inspect_new_problem_customview where `name` = #{name} and `user_uuid` = #{userUuid} and `id` != #{id}
+    </select>
+
+    <select id="getInspectNewProblemCustomViewById" parameterType="java.lang.Long"
+            resultType="neatlogic.framework.inspect.dto.InspectNewProblemCustomViewVo">
+        select `id`,
+               `name`,
+               `user_uuid` as userUuid,
+               `condition_config` as conditionConfigStr,
+               `sort`
+        from inspect_new_problem_customview
+        where `id` = #{value}
+    </select>
+
+    <select id="getInspectNewProblemCustomViewListByUserUuid" parameterType="java.lang.String"
+            resultType="neatlogic.framework.inspect.dto.InspectNewProblemCustomViewVo">
+        select `id`,
+               `name`,
+               `user_uuid` as userUuid,
+               `condition_config` as conditionConfigStr,
+               `sort`
+        from inspect_new_problem_customview
+        where `user_uuid` = #{value}
+        order by `sort`
+    </select>
+
+    <select id="getMaxSortByUserUuid" parameterType="java.lang.String" resultType="java.lang.Integer">
+        select max(`sort`) from inspect_new_problem_customview where `user_uuid` = #{value}
+    </select>
+
+    <update id="updateInspectNewProblemCustomViewName" parameterType="neatlogic.framework.inspect.dto.InspectNewProblemCustomViewVo">
+        update inspect_new_problem_customview set
+        `name` = #{name}
+        where `id` = #{id}
+    </update>
+
+    <update id="updateInspectNewProblemCustomViewCondition" parameterType="neatlogic.framework.inspect.dto.InspectNewProblemCustomViewVo">
+        update inspect_new_problem_customview set
+        `condition_config` = #{conditionConfigStr}
+        where `id` = #{id}
+    </update>
+
+    <update id="updateInspectNewProblemCustomViewSort" parameterType="neatlogic.framework.inspect.dto.InspectNewProblemCustomViewVo">
+        update inspect_new_problem_customview set
+        `sort` = #{sort}
+        where `id` = #{id}
+    </update>
+
+    <update id="updateSortDecrement">
+        update `inspect_new_problem_customview` set `sort` = `sort` - 1
+        where `user_uuid` = #{userUuid}
+        and `sort` &gt;= #{fromSort}
+        <if test="toSort != null">
+            and `sort` &lt;= #{toSort}
+        </if>
+    </update>
+
+    <update id="updateSortIncrement">
+        update `inspect_new_problem_customview` set `sort` = `sort` + 1
+        where `user_uuid` = #{userUuid}
+        and `sort` &gt;= #{fromSort}
+        <if test="toSort != null">
+            and `sort` &lt;= #{toSort}
+        </if>
+    </update>
+
+    <insert id="insertInspectNewProblemCustomView" parameterType="neatlogic.framework.inspect.dto.InspectNewProblemCustomViewVo">
+        insert into inspect_new_problem_customview (
+            `id`,
+            `name`,
+            `user_uuid`,
+            `condition_config`,
+            `sort`
+        ) values (
+              #{id},
+              #{name},
+              #{userUuid},
+              #{conditionConfigStr},
+              #{sort}
+        )
+    </insert>
+
+    <delete id="deleteInspectNewProblemCustomViewById" parameterType="java.lang.Long">
+        delete from inspect_new_problem_customview where `id` = #{value}
+    </delete>
+
+</mapper>
+
