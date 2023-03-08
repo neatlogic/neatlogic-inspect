@@ -1,7 +1,7 @@
 -- ----------------------------
 -- Table structure for inspect_accessendpoint_script
 -- ----------------------------
-CREATE TABLE `inspect_accessendpoint_script` (
+CREATE TABLE IF NOT EXISTS `inspect_accessendpoint_script` (
   `resource_id` bigint NOT NULL COMMENT '资源id',
   `script_id` bigint DEFAULT NULL COMMENT '脚本id',
   `config` text CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci COMMENT '拓展配置',
@@ -11,7 +11,7 @@ CREATE TABLE `inspect_accessendpoint_script` (
 -- ----------------------------
 -- Table structure for inspect_alert_everyday
 -- ----------------------------
-CREATE TABLE `inspect_alert_everyday` (
+CREATE TABLE IF NOT EXISTS `inspect_alert_everyday` (
   `report_time` date NOT NULL COMMENT '巡检时间',
   `resource_id` bigint NOT NULL COMMENT '资产ID',
   `alert_level` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '告警等级',
@@ -26,7 +26,7 @@ CREATE TABLE `inspect_alert_everyday` (
 -- ----------------------------
 -- Table structure for inspect_appsystem_schedule
 -- ----------------------------
-CREATE TABLE `inspect_appsystem_schedule` (
+CREATE TABLE IF NOT EXISTS `inspect_appsystem_schedule` (
   `id` bigint NOT NULL COMMENT 'id',
   `app_system_id` bigint NOT NULL COMMENT '应用ID',
   `cron` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT 'cron',
@@ -44,7 +44,7 @@ CREATE TABLE `inspect_appsystem_schedule` (
 -- ----------------------------
 -- Table structure for inspect_ci_combop
 -- ----------------------------
-CREATE TABLE `inspect_ci_combop` (
+CREATE TABLE IF NOT EXISTS `inspect_ci_combop` (
   `ci_id` bigint NOT NULL COMMENT 'ciType',
   `combop_id` bigint DEFAULT NULL COMMENT '组合工具id',
   PRIMARY KEY (`ci_id`) USING BTREE
@@ -53,7 +53,7 @@ CREATE TABLE `inspect_ci_combop` (
 -- ----------------------------
 -- Table structure for inspect_config_file_audit
 -- ----------------------------
-CREATE TABLE `inspect_config_file_audit` (
+CREATE TABLE IF NOT EXISTS `inspect_config_file_audit` (
   `id` bigint NOT NULL COMMENT '唯一标识',
   `inspect_time` timestamp(3) NOT NULL COMMENT '巡检时间',
   `path_id` bigint NOT NULL COMMENT '配置文件路径id',
@@ -64,7 +64,7 @@ CREATE TABLE `inspect_config_file_audit` (
 -- ----------------------------
 -- Table structure for inspect_config_file_last_change_time
 -- ----------------------------
-CREATE TABLE `inspect_config_file_last_change_time` (
+CREATE TABLE IF NOT EXISTS `inspect_config_file_last_change_time` (
   `resource_id` bigint NOT NULL COMMENT '资产id',
   `last_change_time` timestamp(3) NOT NULL COMMENT '最近变更时间',
   PRIMARY KEY (`resource_id`) USING BTREE,
@@ -74,7 +74,7 @@ CREATE TABLE `inspect_config_file_last_change_time` (
 -- ----------------------------
 -- Table structure for inspect_config_file_path
 -- ----------------------------
-CREATE TABLE `inspect_config_file_path` (
+CREATE TABLE IF NOT EXISTS `inspect_config_file_path` (
   `id` bigint NOT NULL COMMENT '唯一标识',
   `resource_id` bigint NOT NULL COMMENT '资源id',
   `path` text CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '路径',
@@ -88,7 +88,7 @@ CREATE TABLE `inspect_config_file_path` (
 -- ----------------------------
 -- Table structure for inspect_config_file_version
 -- ----------------------------
-CREATE TABLE `inspect_config_file_version` (
+CREATE TABLE IF NOT EXISTS `inspect_config_file_version` (
   `id` bigint NOT NULL COMMENT '唯一标识',
   `md5` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT 'MD5',
   `inspect_time` timestamp(3) NOT NULL COMMENT '巡检时间',
@@ -104,7 +104,7 @@ CREATE TABLE `inspect_config_file_version` (
 -- ----------------------------
 -- Table structure for inspect_new_problem_customview
 -- ----------------------------
-CREATE TABLE `inspect_new_problem_customview` (
+CREATE TABLE IF NOT EXISTS `inspect_new_problem_customview` (
   `id` bigint NOT NULL COMMENT 'id',
   `name` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '名称',
   `user_uuid` char(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '所属用户',
@@ -117,7 +117,7 @@ CREATE TABLE `inspect_new_problem_customview` (
 -- ----------------------------
 -- Table structure for inspect_schedule
 -- ----------------------------
-CREATE TABLE `inspect_schedule` (
+CREATE TABLE IF NOT EXISTS `inspect_schedule` (
   `id` bigint NOT NULL COMMENT 'id',
   `uuid` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT 'uuid',
   `ci_id` bigint NOT NULL COMMENT '模型id',
