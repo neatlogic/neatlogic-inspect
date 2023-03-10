@@ -124,7 +124,7 @@ public class InspectNewProblemReportSendEmailApi extends PrivateApiComponentBase
             }
             workbook = inspectReportService.getInspectNewProblemReportWorkbookByAppSystemId(appSystemId, isNeedAlertDetail);
         } else {
-            throw new ParamNotExistsException("类型ID（typeId）", "应用ID（appSystemId）");
+            throw new ParamNotExistsException("typeId", "appSystemId");
         }
         if (workbook != null) {
             Workbook book = workbook;

@@ -116,7 +116,7 @@ public class SaveInspectConfigFileAuditApi extends PrivateApiComponentBase {
                 pathId = pathVo.getId();
             }
         } else {
-            throw new ParamNotExistsException("路径id(pathId)", "路径(path)");
+            throw new ParamNotExistsException("pathI", "path");
         }
         Date inspectTime = paramObj.getDate("inspectTime");
         InspectConfigFileAuditVo auditVo = new InspectConfigFileAuditVo(inspectTime, pathId);

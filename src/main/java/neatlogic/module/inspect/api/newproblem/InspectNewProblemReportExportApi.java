@@ -111,7 +111,7 @@ public class InspectNewProblemReportExportApi extends PrivateBinaryStreamApiComp
             workbook = inspectReportService.getInspectNewProblemReportWorkbookByAppSystemId(appSystemId, isNeedAlertDetail);
             fileNameEncode = appSystemId + "_" +appSystem.getName() + ".xlsx";
         } else {
-            throw new ParamNotExistsException("类型ID（typeId）", "应用ID（appSystemId）");
+            throw new ParamNotExistsException("typeId", "appSystemId");
         }
         if (workbook != null) {
             boolean flag = request.getHeader("User-Agent").indexOf("Gecko") > 0;
