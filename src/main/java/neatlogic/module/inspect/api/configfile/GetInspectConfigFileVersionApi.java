@@ -99,7 +99,7 @@ public class GetInspectConfigFileVersionApi extends PrivateApiComponentBase  {
             versionVo.setLineList(lineList);
             return versionVo;
         } else {
-            throw new ParamNotExistsException("(路径id)pathId", "(版本id)versionId");
+            throw new ParamNotExistsException("pathId", "versionId");
         }
     }
 }
