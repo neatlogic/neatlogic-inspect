@@ -19,12 +19,20 @@ package neatlogic.module.inspect.job.source.handler;
 import neatlogic.framework.autoexec.source.IAutoexecJobSource;
 import neatlogic.framework.common.dto.ValueTextVo;
 import neatlogic.framework.inspect.constvalue.JobSource;
+import neatlogic.framework.inspect.dao.mapper.InspectScheduleMapper;
+import neatlogic.framework.inspect.dto.InspectScheduleVo;
+import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.stereotype.Component;
 
+import javax.annotation.Resource;
+import java.util.ArrayList;
 import java.util.List;
 
 @Component
 public class ScheduleInspectJobSourceHandler implements IAutoexecJobSource {
+
+    @Resource
+    private InspectScheduleMapper inspectScheduleMapper;
 
     @Override
     public String getValue() {
@@ -38,6 +46,14 @@ public class ScheduleInspectJobSourceHandler implements IAutoexecJobSource {
 
     @Override
     public List<ValueTextVo> getListByIdList(List<Long> idList) {
-        return null;
+        if (CollectionUtils.isEmpty(idList)) {
+            return null;
+        }
+        List<ValueTextVo> resultList = new ArrayList<>();
+        List<InspectScheduleVo> list = inspectScheduleMapper.getInspectScheduleListByIdList(idList);
+        for (InspectScheduleVo scheduleVo : list) {
+            resultList.add(new ValueTextVo(scheduleVo.getId(), scheduleVo.getCiLabel()));
+        }
+        return resultList;
     }
 }
