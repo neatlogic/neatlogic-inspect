@@ -121,6 +121,7 @@ public class InspectScheduleJob extends JobBase {
             paramObj.put("source", JobSource.SCHEDULE_INSPECT.getValue());
             paramObj.put("operationId", combopId);
             paramObj.put("invokeId", inspectScheduleVo.getId());
+            paramObj.put("routeId", inspectScheduleVo.getId());
             paramObj.put("isFirstFire", 1);
             paramObj.put("operationType", CombopOperationType.COMBOP.getValue());
             paramObj.put("name", ci.getLabel() + (ci.getName() != null ? "(" + ci.getName() + ")" : StringUtils.EMPTY) + " 巡检");

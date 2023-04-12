@@ -16,13 +16,19 @@
 
 package neatlogic.module.inspect.job.source.handler;
 
+import com.alibaba.fastjson.JSONObject;
+import neatlogic.framework.autoexec.dto.job.AutoexecJobRouteVo;
 import neatlogic.framework.autoexec.source.IAutoexecJobSource;
-import neatlogic.framework.common.dto.ValueTextVo;
+import neatlogic.framework.cmdb.crossover.ICiCrossoverMapper;
+import neatlogic.framework.cmdb.dto.ci.CiVo;
+import neatlogic.framework.crossover.CrossoverServiceFactory;
 import neatlogic.framework.inspect.constvalue.JobSource;
+import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.stereotype.Component;
 
+import java.util.ArrayList;
 import java.util.List;
-
+@Deprecated
 @Component
 public class InspectJobSourceHandler implements IAutoexecJobSource {
 
@@ -37,7 +43,22 @@ public class InspectJobSourceHandler implements IAutoexecJobSource {
     }
 
     @Override
-    public List<ValueTextVo> getListByIdList(List<Long> idList) {
-        return null;
+    public List<AutoexecJobRouteVo> getListByUniqueKeyList(List<String> uniqueKeyList) {
+        if (CollectionUtils.isEmpty(uniqueKeyList)) {
+            return null;
+        }
+        List<Long> idList = new ArrayList<>();
+        for (String str : uniqueKeyList) {
+            idList.add(Long.valueOf(str));
+        }
+        List<AutoexecJobRouteVo> resultList = new ArrayList<>();
+        ICiCrossoverMapper ciCrossoverMapper = CrossoverServiceFactory.getApi(ICiCrossoverMapper.class);
+        List<CiVo> list = ciCrossoverMapper.getCiByIdList(idList);
+        for (CiVo ciVo : list) {
+            JSONObject config = new JSONObject();
+            config.put("id", ciVo.getId());
+            resultList.add(new AutoexecJobRouteVo(ciVo.getId(), ciVo.getLabel() + "(" + ciVo.getName() + ")", config));
+        }
+        return resultList;
     }
 }

@@ -229,6 +229,7 @@ public class InspectAppSystemScheduleJob extends JobBase {
         paramObj.put("source", JobSource.SCHEDULE_INSPECT_APP.getValue());
         paramObj.put("operationId", combopId);
         paramObj.put("invokeId", invokeId);
+        paramObj.put("routeId", invokeId);
         paramObj.put("isFirstFire", 1);
         paramObj.put("operationType", CombopOperationType.COMBOP.getValue());
         paramObj.put("name", name);
