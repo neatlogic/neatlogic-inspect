@@ -16,16 +16,26 @@
 
 package neatlogic.module.inspect.api.job;
 
+import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import neatlogic.framework.auth.core.AuthAction;
 import neatlogic.framework.autoexec.auth.AUTOEXEC_BASE;
 import neatlogic.framework.autoexec.constvalue.JobTriggerType;
+import neatlogic.framework.cmdb.crossover.IResourceCrossoverMapper;
+import neatlogic.framework.cmdb.dto.resourcecenter.ResourceVo;
+import neatlogic.framework.cmdb.exception.resourcecenter.AppSystemNotFoundException;
 import neatlogic.framework.common.constvalue.ApiParamType;
+import neatlogic.framework.crossover.CrossoverServiceFactory;
 import neatlogic.framework.restful.annotation.*;
 import neatlogic.framework.restful.constvalue.OperationTypeEnum;
 import neatlogic.framework.restful.core.privateapi.PrivateApiComponentBase;
+import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.collections4.MapUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @Transactional
 @Service
@@ -43,16 +53,8 @@ public class CreateInspectAppJobApi extends PrivateApiComponentBase {
     }
 
     @Input({
-            @Param(name = "combopId", type = ApiParamType.LONG, isRequired = true, desc = "组合工具ID"),
-            @Param(name = "combopVersionId", type = ApiParamType.LONG, desc = "组合工具版本ID"),
-            @Param(name = "name", type = ApiParamType.STRING, isRequired = true, desc = "作业名"),
-            @Param(name = "param", type = ApiParamType.JSONOBJECT, isRequired = true, desc = "执行参数"),
-            @Param(name = "scenarioId", type = ApiParamType.LONG, desc = "场景id"),
-            @Param(name = "scenarioName", type = ApiParamType.STRING, desc = "场景名, 如果入参也有scenarioId，则会以scenarioName为准"),
-            @Param(name = "roundCount", type = ApiParamType.LONG, desc = "分组数 "),
-            @Param(name = "executeConfig", type = ApiParamType.JSONOBJECT, desc = "执行目标"),
-            @Param(name = "planStartTime", type = ApiParamType.LONG, desc = "计划时间"),
-            @Param(name = "triggerType", type = ApiParamType.ENUM, member = JobTriggerType.class, desc = "触发方式")
+            @Param(name = "appSystemId", type = ApiParamType.LONG, isRequired = true, desc = "组合工具ID"),
+            @Param(name = "envList", type = ApiParamType.JSONARRAY, isRequired = true, minSize = 1, desc = "环境列表")
     })
     @Output({
             @Param(name = "jobId", type = ApiParamType.LONG, desc = "作业ID")
@@ -61,6 +63,32 @@ public class CreateInspectAppJobApi extends PrivateApiComponentBase {
     @ResubmitInterval(value = 2)
     @Override
     public Object myDoService(JSONObject paramObj) throws Exception {
+        Long appSystemId = paramObj.getLong("appSystemId");
+        IResourceCrossoverMapper resourceCrossoverMapper = CrossoverServiceFactory.getApi(IResourceCrossoverMapper.class);
+        ResourceVo appSystemVo = resourceCrossoverMapper.getAppSystemById(appSystemId);
+        if (appSystemVo == null) {
+            throw new AppSystemNotFoundException(appSystemId);
+        }
+        List<Long> envIdList = new ArrayList<>();
+        List<Long> allAppModuleIdList = new ArrayList<>();
+        JSONArray envList = paramObj.getJSONArray("envList");
+        for (int i = 0; i < envList.size(); i++) {
+            JSONObject envObj = envList.getJSONObject(i);
+            if (MapUtils.isEmpty(envObj)) {
+                continue;
+            }
+            Long id = envObj.getLong("id");
+            if (id == null) {
+                continue;
+            }
+            envIdList.add(id);
+            JSONArray appModuleIdArray = envObj.getJSONArray("appModuleIdList");
+            if (CollectionUtils.isEmpty(appModuleIdArray)) {
+                continue;
+            }
+            List<Long> appModuleIdList = appModuleIdArray.toJavaList(Long.class);
+            allAppModuleIdList.addAll(appModuleIdList);
+        }
         return null;
     }
 

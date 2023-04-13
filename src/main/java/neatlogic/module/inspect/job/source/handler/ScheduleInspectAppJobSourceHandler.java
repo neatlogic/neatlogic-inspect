@@ -19,8 +19,8 @@ package neatlogic.module.inspect.job.source.handler;
 import com.alibaba.fastjson.JSONObject;
 import neatlogic.framework.autoexec.dto.job.AutoexecJobRouteVo;
 import neatlogic.framework.autoexec.source.IAutoexecJobSource;
-import neatlogic.framework.cmdb.crossover.IAppSystemMapper;
-import neatlogic.framework.cmdb.dto.resourcecenter.entity.AppSystemVo;
+import neatlogic.framework.cmdb.crossover.IResourceCrossoverMapper;
+import neatlogic.framework.cmdb.dto.resourcecenter.AppSystemVo;
 import neatlogic.framework.crossover.CrossoverServiceFactory;
 import neatlogic.framework.inspect.constvalue.JobSource;
 import neatlogic.framework.inspect.dao.mapper.InspectScheduleMapper;
@@ -63,8 +63,8 @@ public class ScheduleInspectAppJobSourceHandler implements IAutoexecJobSource {
         List<AutoexecJobRouteVo> resultList = new ArrayList<>();
         List<InspectAppSystemScheduleVo> list = inspectScheduleMapper.getInspectAppSystemScheduleListByIdList(idList);
         Set<Long> appSystemIdSet = list.stream().map(InspectAppSystemScheduleVo::getAppSystemId).collect(Collectors.toSet());
-        IAppSystemMapper appSystemMapper = CrossoverServiceFactory.getApi(IAppSystemMapper.class);
-        List<AppSystemVo> appSystemList = appSystemMapper.getAppSystemListByIdList(new ArrayList<>(appSystemIdSet));
+        IResourceCrossoverMapper resourceCrossoverMapper = CrossoverServiceFactory.getApi(IResourceCrossoverMapper.class);
+        List<AppSystemVo> appSystemList = resourceCrossoverMapper.getAppSystemListByIdList(new ArrayList<>(appSystemIdSet));
         Map<Long, AppSystemVo> appSystemMap = appSystemList.stream().collect(Collectors.toMap(e -> e.getId(), e -> e));
         for (InspectAppSystemScheduleVo scheduleVo : list) {
             JSONObject config = new JSONObject();

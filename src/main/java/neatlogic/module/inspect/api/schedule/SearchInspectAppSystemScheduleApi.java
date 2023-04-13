@@ -84,17 +84,16 @@ public class SearchInspectAppSystemScheduleApi extends PrivateApiComponentBase {
     @Override
     public Object myDoService(JSONObject paramObj) throws Exception {
         BasePageVo searchVo = paramObj.toJavaObject(BasePageVo.class);
-        JSONArray defaultValue = searchVo.getDefaultValue();
         List<AppSystemVo> appSystemList = new ArrayList<>();
         List<InspectAppSystemScheduleVo> inspectAppSystemScheduleList = new ArrayList<>();
+        IResourceCrossoverMapper resourceCrossoverMapper = CrossoverServiceFactory.getApi(IResourceCrossoverMapper.class);
+        JSONArray defaultValue = searchVo.getDefaultValue();
         if (CollectionUtils.isNotEmpty(defaultValue)) {
             List<Long> idList = defaultValue.toJavaList(Long.class);
             inspectAppSystemScheduleList = inspectScheduleMapper.getInspectAppSystemScheduleListByIdList(idList);
             List<Long> appSystemIdList = inspectAppSystemScheduleList.stream().map(InspectAppSystemScheduleVo::getAppSystemId).collect(Collectors.toList());
-            IResourceCrossoverMapper resourceCrossoverMapper = CrossoverServiceFactory.getApi(IResourceCrossoverMapper.class);
             appSystemList = resourceCrossoverMapper.getAppSystemListByIdList(appSystemIdList);
         } else {
-            IResourceCrossoverMapper resourceCrossoverMapper = CrossoverServiceFactory.getApi(IResourceCrossoverMapper.class);
             int rowNum = resourceCrossoverMapper.getAppSystemCountByKeyword(searchVo);
             if (rowNum == 0) {
                 return TableResultUtil.getResult(new ArrayList<>(), searchVo);
