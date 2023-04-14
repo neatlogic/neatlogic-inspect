@@ -54,10 +54,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 @Transactional
 @Service
@@ -89,7 +86,6 @@ public class CreateInspectAppJobApi extends PrivateApiComponentBase {
     @ResubmitInterval(value = 2)
     @Override
     public Object myDoService(JSONObject paramObj) throws Exception {
-        System.out.println("入参：" + paramObj.toJSONString());
         Long appSystemId = paramObj.getLong("appSystemId");
         IResourceCrossoverMapper resourceCrossoverMapper = CrossoverServiceFactory.getApi(IResourceCrossoverMapper.class);
         ResourceVo appSystemVo = resourceCrossoverMapper.getAppSystemById(appSystemId);
@@ -130,30 +126,49 @@ public class CreateInspectAppJobApi extends PrivateApiComponentBase {
         if (CollectionUtils.isEmpty(searchList)) {
             return null;
         }
-        System.out.println("searchList：" + JSONObject.toJSONString(searchList));
         List<AutoexecJobVo> autoexecJobList = new ArrayList<>();
         List<String> inspectStatusList = new ArrayList<>();
+        Set<Long> allResourceTypeIdSet = new HashSet<>();
         inspectStatusList.add("warn");
         inspectStatusList.add("critical");
         inspectStatusList.add("fatal");
         for (ResourceSearchVo searchVo : searchList) {
             searchVo.setInspectStatusList(inspectStatusList);
-            Set<Long> resourceTypeIdList = resourceCrossoverMapper.getResourceTypeIdListByAppSystemIdAndModuleIdAndEnvIdAndInspectStatusList(searchVo);
-            if (CollectionUtils.isEmpty(resourceTypeIdList)) {
+            Set<Long> resourceTypeIdSet = resourceCrossoverMapper.getResourceTypeIdListByAppSystemIdAndModuleIdAndEnvIdAndInspectStatusList(searchVo);
+            if (CollectionUtils.isEmpty(resourceTypeIdSet)) {
                 continue;
             }
-            ICiCrossoverMapper ciCrossoverMapper = CrossoverServiceFactory.getApi(ICiCrossoverMapper.class);
-            List<CiVo> ciVoList = ciCrossoverMapper.getCiByIdList(new ArrayList<>(resourceTypeIdList));
-            for (CiVo ciVo : ciVoList) {
-                Long ciId = ciVo.getId();
-                Long combopId = inspectMapper.getCombopIdByCiId(ciId);
-                if(combopId == null){
-                    throw new InspectCiCombopNotBindException(ciVo.getLabel());
+            allResourceTypeIdSet.addAll(resourceTypeIdSet);
+            List<Long> resourceTypeIdList = new ArrayList<>(resourceTypeIdSet);
+            searchVo.setTypeIdList(resourceTypeIdList);
+        }
+        Map<Long, CiVo> ciMap = new HashMap<>();
+        Map<Long, Long> ciIdToCombopIdMap = new HashMap<>();
+        ICiCrossoverMapper ciCrossoverMapper = CrossoverServiceFactory.getApi(ICiCrossoverMapper.class);
+        List<CiVo> ciVoList = ciCrossoverMapper.getCiByIdList(new ArrayList<>(allResourceTypeIdSet));
+        for (CiVo ciVo : ciVoList) {
+            Long ciId = ciVo.getId();
+            Long combopId = inspectMapper.getCombopIdByCiId(ciId);
+            if(combopId == null){
+                continue;
+            }
+            AutoexecCombopVo combopVo = autoexecCombopMapper.getAutoexecCombopById(combopId);
+            if (combopVo == null) {
+                continue;
+            }
+            ciMap.put(ciId, ciVo);
+            ciIdToCombopIdMap.put(ciId, combopId);
+        }
+        for (ResourceSearchVo searchVo : searchList) {
+            if (CollectionUtils.isEmpty(searchVo.getTypeIdList())) {
+                continue;
+            }
+            for (Long ciId : searchVo.getTypeIdList()) {
+                Long combopId = ciIdToCombopIdMap.get(ciId);
+                if (combopId == null) {
+                    continue;
                 }
-                AutoexecCombopVo combopVo = autoexecCombopMapper.getAutoexecCombopById(combopId);
-                if (combopVo == null) {
-                    throw new AutoexecCombopNotFoundException(combopId);
-                }
+                CiVo ciVo = ciMap.get(ciId);
                 AutoexecJobVo jobVo = new AutoexecJobVo();
                 jobVo.setRoundCount(64);
                 jobVo.setOperationId(combopId);
@@ -191,7 +206,6 @@ public class CreateInspectAppJobApi extends PrivateApiComponentBase {
             return null;
         }
 
-        System.out.println("autoexecJobList：" + JSONObject.toJSONString(autoexecJobList));
         BatchRunner<AutoexecJobVo> runner = new BatchRunner<>();
         runner.execute(autoexecJobList, 3, jobVo -> {
             try {
