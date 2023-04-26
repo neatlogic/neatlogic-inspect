@@ -224,24 +224,23 @@ public class InspectAppSystemScheduleJob extends JobBase {
     }
 
     private void createAndFireJob(Long combopId, Long invokeId, String name, String userUuid, List<AutoexecNodeVo> selectNodeList) throws Exception {
-        JSONObject paramObj = new JSONObject();
-        paramObj.put("combopId", combopId);
-        paramObj.put("source", JobSource.SCHEDULE_INSPECT_APP.getValue());
-        paramObj.put("operationId", combopId);
-        paramObj.put("invokeId", invokeId);
-        paramObj.put("isFirstFire", 1);
-        paramObj.put("operationType", CombopOperationType.COMBOP.getValue());
-        paramObj.put("name", name);
+        AutoexecJobVo jobVo = new AutoexecJobVo();
+        jobVo.setOperationId(combopId);
+        jobVo.setSource(JobSource.SCHEDULE_INSPECT_APP.getValue());
+        jobVo.setInvokeId(invokeId);
+        jobVo.setRouteId(invokeId.toString());
+        jobVo.setIsFirstFire(1);
+        jobVo.setOperationType(CombopOperationType.COMBOP.getValue());
+        jobVo.setName(name);
         AutoexecCombopExecuteNodeConfigVo executeNodeConfig = new AutoexecCombopExecuteNodeConfigVo();
         executeNodeConfig.setSelectNodeList(selectNodeList);
         AutoexecCombopExecuteConfigVo executeConfig = new AutoexecCombopExecuteConfigVo();
         executeConfig.setExecuteNodeConfig(executeNodeConfig);
-        paramObj.put("executeConfig", executeConfig);
+        jobVo.setExecuteConfig(executeConfig);
         UserVo fcuVo = userMapper.getUserByUuid(userUuid);
         UserContext.init(fcuVo, SystemUser.SYSTEM.getTimezone());
         UserContext.get().setToken("GZIP_" + LoginAuthHandlerBase.buildJwt(fcuVo).getCc());
         IAutoexecJobActionCrossoverService autoexecJobActionCrossoverService = CrossoverServiceFactory.getApi(IAutoexecJobActionCrossoverService.class);
-        AutoexecJobVo jobVo = JSONObject.toJavaObject(paramObj, AutoexecJobVo.class);
         autoexecJobActionCrossoverService.validateAndCreateJobFromCombop(jobVo);
         jobVo.setAction(JobAction.FIRE.getValue());
         IAutoexecJobActionHandler fireAction = AutoexecJobActionHandlerFactory.getAction(JobAction.FIRE.getValue());

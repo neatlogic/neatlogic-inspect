@@ -16,6 +16,7 @@ limitations under the License.
 
 package neatlogic.module.inspect.api.schedule;
 
+import com.alibaba.fastjson.JSONArray;
 import neatlogic.framework.auth.core.AuthAction;
 import neatlogic.framework.autoexec.dao.mapper.AutoexecJobMapper;
 import neatlogic.framework.autoexec.dto.job.AutoexecJobInvokeVo;
@@ -71,6 +72,7 @@ public class SearchInspectAppSystemScheduleApi extends PrivateApiComponentBase {
 
     @Input({
             @Param(name = "keyword", type = ApiParamType.STRING, desc = "关键字"),
+            @Param(name = "defaultValue", type = ApiParamType.JSONARRAY, desc = "默认值"),
             @Param(name = "currentPage", type = ApiParamType.INTEGER, desc = "当前页"),
             @Param(name = "pageSize", type = ApiParamType.INTEGER, desc = "每页数据条目")
     })
@@ -82,18 +84,29 @@ public class SearchInspectAppSystemScheduleApi extends PrivateApiComponentBase {
     @Override
     public Object myDoService(JSONObject paramObj) throws Exception {
         BasePageVo searchVo = paramObj.toJavaObject(BasePageVo.class);
+        List<AppSystemVo> appSystemList = new ArrayList<>();
+        List<InspectAppSystemScheduleVo> inspectAppSystemScheduleList = new ArrayList<>();
         IResourceCrossoverMapper resourceCrossoverMapper = CrossoverServiceFactory.getApi(IResourceCrossoverMapper.class);
-        int rowNum = resourceCrossoverMapper.getAppSystemCountByKeyword(searchVo);
-        if (rowNum == 0) {
-            return TableResultUtil.getResult(new ArrayList<>(), searchVo);
+        JSONArray defaultValue = searchVo.getDefaultValue();
+        if (CollectionUtils.isNotEmpty(defaultValue)) {
+            List<Long> idList = defaultValue.toJavaList(Long.class);
+            inspectAppSystemScheduleList = inspectScheduleMapper.getInspectAppSystemScheduleListByIdList(idList);
+            List<Long> appSystemIdList = inspectAppSystemScheduleList.stream().map(InspectAppSystemScheduleVo::getAppSystemId).collect(Collectors.toList());
+            appSystemList = resourceCrossoverMapper.getAppSystemListByIdList(appSystemIdList);
+        } else {
+            int rowNum = resourceCrossoverMapper.getAppSystemCountByKeyword(searchVo);
+            if (rowNum == 0) {
+                return TableResultUtil.getResult(new ArrayList<>(), searchVo);
+            }
+            searchVo.setRowNum(rowNum);
+            appSystemList = resourceCrossoverMapper.getAppSystemListByKeyword(searchVo);
+            if (CollectionUtils.isEmpty(appSystemList)) {
+                return TableResultUtil.getResult(new ArrayList<>(), searchVo);
+            }
+            List<Long> appSystemIdList = appSystemList.stream().map(AppSystemVo::getId).collect(Collectors.toList());
+            inspectAppSystemScheduleList = inspectScheduleMapper.getInspectAppSystemScheduleListByAppSystemIdList(appSystemIdList);
         }
-        searchVo.setRowNum(rowNum);
-        List<AppSystemVo> appSystemList = resourceCrossoverMapper.getAppSystemListByKeyword(searchVo);
-        if (CollectionUtils.isEmpty(appSystemList)) {
-            return TableResultUtil.getResult(new ArrayList<>(), searchVo);
-        }
-        List<Long> appSystemIdList = appSystemList.stream().map(AppSystemVo::getId).collect(Collectors.toList());
-        List<InspectAppSystemScheduleVo> inspectAppSystemScheduleList = inspectScheduleMapper.getInspectAppSystemScheduleListByAppSystemIdList(appSystemIdList);
+
         Map<Long, InspectAppSystemScheduleVo> inspectAppSystemScheduleMap = inspectAppSystemScheduleList.stream().collect(Collectors.toMap(e -> e.getAppSystemId(), e -> e));
         List<Long> scheduleIdList = inspectAppSystemScheduleList.stream().map(InspectAppSystemScheduleVo::getId).collect(Collectors.toList());
         Map<Long, Integer> execCountMap = new HashMap<>();
