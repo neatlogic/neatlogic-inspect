@@ -100,4 +100,9 @@ public class InspectAutoexecJobSearchApi extends PrivateApiComponentBase {
         return TableResultUtil.getResult(iAutoexecJobCrossoverService.searchJob(jobVo), jobVo);
     }
 
+    @Override
+    public boolean disableReturnCircularReferenceDetect() {
+        return true;
+    }
+
 }
