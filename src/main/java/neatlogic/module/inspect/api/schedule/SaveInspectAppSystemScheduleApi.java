@@ -101,7 +101,6 @@ public class SaveInspectAppSystemScheduleApi extends PrivateApiComponentBase {
             }
             scheduleVo.setLcu(UserContext.get().getUserUuid());
             inspectScheduleMapper.updateInspectAppSystemSchedule(scheduleVo);
-            scheduleVo = vo;
         } else {
             scheduleVo.setId(SnowflakeUtil.uniqueLong());
             scheduleVo.setFcu(UserContext.get().getUserUuid());
