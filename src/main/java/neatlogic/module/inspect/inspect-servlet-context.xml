@@ -15,7 +15,7 @@
 		http://neatlogic.com/schema/neatlogic
 		http://neatlogic.com/schema/neatlogic.xsd">
 
-	<neatlogic:module id="inspect" name="巡检模块" groupName="巡检" group="inspect" groupSort="14" groupDescription="巡检平台" />
+	<neatlogic:module id="inspect" name="term.inspect.name" groupName="term.inspect.groupname" group="inspect" groupSort="14" groupDescription="term.inspect.groupdesc" />
 
 	<context:component-scan base-package="neatlogic.module.inspect" />
 
