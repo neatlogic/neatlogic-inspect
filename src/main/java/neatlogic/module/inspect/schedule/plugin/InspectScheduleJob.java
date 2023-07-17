@@ -31,6 +31,7 @@ import neatlogic.framework.cmdb.dto.ci.CiVo;
 import neatlogic.framework.common.constvalue.SystemUser;
 import neatlogic.framework.crossover.CrossoverServiceFactory;
 import neatlogic.framework.dao.mapper.UserMapper;
+import neatlogic.framework.dto.AuthenticationInfoVo;
 import neatlogic.framework.dto.UserVo;
 import neatlogic.framework.filter.core.LoginAuthHandlerBase;
 import neatlogic.framework.inspect.constvalue.JobSource;
@@ -40,6 +41,7 @@ import neatlogic.framework.inspect.dto.InspectScheduleVo;
 import neatlogic.framework.scheduler.core.JobBase;
 import neatlogic.framework.scheduler.dto.JobObject;
 import com.alibaba.fastjson.JSONObject;
+import neatlogic.framework.service.AuthenticationInfoService;
 import org.apache.commons.lang3.StringUtils;
 import org.quartz.DisallowConcurrentExecution;
 import org.quartz.JobExecutionContext;
@@ -66,6 +68,9 @@ public class InspectScheduleJob extends JobBase {
 
     @Resource
     UserMapper userMapper;
+
+    @Resource
+    private AuthenticationInfoService authenticationInfoService;
 
     @Override
     public String getGroupName() {
@@ -136,7 +141,8 @@ public class InspectScheduleJob extends JobBase {
             executeConfig.setExecuteNodeConfig(executeNodeConfig);
             jobVo.setExecuteConfig(executeConfig);
             UserVo fcuVo = userMapper.getUserByUuid(inspectScheduleVo.getFcu());
-            UserContext.init(fcuVo, SystemUser.SYSTEM.getTimezone());
+            AuthenticationInfoVo authenticationInfoVo = authenticationInfoService.getAuthenticationInfo(inspectScheduleVo.getFcu());
+            UserContext.init(fcuVo, authenticationInfoVo, SystemUser.SYSTEM.getTimezone());
             UserContext.get().setToken("GZIP_" + LoginAuthHandlerBase.buildJwt(fcuVo).getCc());
             IAutoexecJobActionCrossoverService autoexecJobActionCrossoverService = CrossoverServiceFactory.getApi(IAutoexecJobActionCrossoverService.class);
             autoexecJobActionCrossoverService.validateAndCreateJobFromCombop(jobVo);
