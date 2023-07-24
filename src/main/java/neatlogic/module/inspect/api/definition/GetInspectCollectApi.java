@@ -4,10 +4,8 @@ import neatlogic.framework.auth.core.AuthAction;
 import neatlogic.framework.common.constvalue.ApiParamType;
 import neatlogic.framework.dto.UserVo;
 import neatlogic.framework.inspect.auth.INSPECT_BASE;
-import neatlogic.framework.restful.annotation.Input;
-import neatlogic.framework.restful.annotation.OperationType;
-import neatlogic.framework.restful.annotation.Output;
-import neatlogic.framework.restful.annotation.Param;
+import neatlogic.framework.inspect.exception.InspectDefinitionNotFoundEditTargetException;
+import neatlogic.framework.restful.annotation.*;
 import neatlogic.framework.restful.constvalue.OperationTypeEnum;
 import neatlogic.framework.restful.core.privateapi.PrivateApiComponentBase;
 import neatlogic.module.inspect.service.InspectCollectService;
@@ -26,7 +24,7 @@ public class GetInspectCollectApi extends PrivateApiComponentBase {
 
     @Override
     public String getName() {
-        return "获得对应的集合";
+        return "nmiad.getinspectcollectapi.getname";
     }
 
     @Override
@@ -39,15 +37,21 @@ public class GetInspectCollectApi extends PrivateApiComponentBase {
         return "inspect/collection/get";
     }
 
-    @Input({@Param(name = "name", type = ApiParamType.STRING, desc = "模型名称（唯一标识）")})
+    @Input({@Param(name = "name", type = ApiParamType.STRING, desc = "common.name")})
     @Output({
-            @Param(name = "fields", type = ApiParamType.LONG, desc = "数据结构列表"),
-            @Param(name = "thresholds", type = ApiParamType.LONG, desc = "阈值规则列表"),
-            @Param(name = "userVo", explode = UserVo.class, desc = "修改人"),
-            @Param(name = "lcd", type = ApiParamType.LONG, desc = "修改时间戳")
+            @Param(name = "fields", type = ApiParamType.LONG, desc = "term.inspect.fields"),
+            @Param(name = "thresholds", type = ApiParamType.LONG, desc = "term.inspect.thresholds"),
+            @Param(name = "userVo", explode = UserVo.class, desc = "common.editor"),
+            @Param(name = "lcd", type = ApiParamType.LONG, desc = "common.editdate")
     })
+    @Description(desc = "nmiad.getinspectcollectapi.getname")
     @Override
     public Object myDoService(JSONObject paramObj) throws Exception {
-        return inspectCollectService.getCollectionByName(paramObj.getString("name"));
+        String name = paramObj.getString("name");
+        JSONObject resultObj = inspectCollectService.getCollectionByName(name);
+        if (resultObj == null) {
+            throw new InspectDefinitionNotFoundEditTargetException(name);
+        }
+        return resultObj;
     }
 }

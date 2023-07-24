@@ -3,7 +3,7 @@ package neatlogic.module.inspect.api.job;
 import neatlogic.framework.auth.core.AuthAction;
 import neatlogic.framework.autoexec.dao.mapper.AutoexecJobMapper;
 import neatlogic.framework.autoexec.dto.job.AutoexecJobVo;
-import neatlogic.framework.autoexec.exception.AutoexecJobNotFoundException;
+import neatlogic.framework.autoexec.exception.job.AutoexecJobNotFoundEditTargetException;
 import neatlogic.framework.cmdb.crossover.ICiCrossoverMapper;
 import neatlogic.framework.cmdb.dto.ci.CiVo;
 import neatlogic.framework.cmdb.exception.ci.CiNotFoundException;
@@ -41,7 +41,7 @@ public class InspectAutoexecJobNodeSearchApi extends PrivateApiComponentBase {
 
     @Override
     public String getName() {
-        return "查询巡检作业节点资产";
+        return "nmiaj.inspectautoexecjobnodesearchapi.getname";
     }
 
     @Override
@@ -55,35 +55,35 @@ public class InspectAutoexecJobNodeSearchApi extends PrivateApiComponentBase {
     }
 
     @Input({
-            @Param(name = "keyword", type = ApiParamType.STRING, xss = true, desc = "模糊搜索"),
-            @Param(name = "typeId", type = ApiParamType.LONG, isRequired = true, desc = "类型id"),
-            @Param(name = "jobId", type = ApiParamType.LONG, isRequired = true, desc = "类型id"),
-            @Param(name = "protocolIdList", type = ApiParamType.JSONARRAY, desc = "协议id列表"),
-            @Param(name = "stateIdList", type = ApiParamType.JSONARRAY, desc = "状态id列表"),
-            @Param(name = "vendorIdList", type = ApiParamType.JSONARRAY, desc = "厂商id列表"),
-            @Param(name = "envIdList", type = ApiParamType.JSONARRAY, desc = "环境id列表"),
-            @Param(name = "appSystemIdList", type = ApiParamType.JSONARRAY, desc = "应用系统id列表"),
-            @Param(name = "appModuleIdList", type = ApiParamType.JSONARRAY, desc = "应用模块id列表"),
-            @Param(name = "typeIdList", type = ApiParamType.JSONARRAY, desc = "资源类型id列表"),
-            @Param(name = "tagIdList", type = ApiParamType.JSONARRAY, desc = "标签id列表"),
-            @Param(name = "inspectStatusList", type = ApiParamType.JSONARRAY, desc = "巡检状态列表"),
-            @Param(name = "inspectJobPhaseNodeStatusList", type = ApiParamType.JSONARRAY, desc = "巡检作业状态列表"),
-            @Param(name = "currentPage", type = ApiParamType.INTEGER, desc = "当前页"),
-            @Param(name = "pageSize", type = ApiParamType.INTEGER, desc = "每页数据条目"),
-            @Param(name = "needPage", type = ApiParamType.BOOLEAN, desc = "是否需要分页，默认true")
+            @Param(name = "keyword", type = ApiParamType.STRING, xss = true, desc = "common.keyword"),
+            @Param(name = "typeId", type = ApiParamType.LONG, isRequired = true, desc = "common.typeid"),
+            @Param(name = "jobId", type = ApiParamType.LONG, isRequired = true, desc = "term.autoexec.jobid"),
+            @Param(name = "protocolIdList", type = ApiParamType.JSONARRAY, desc = "term.cmdb.protocolidlist"),
+            @Param(name = "stateIdList", type = ApiParamType.JSONARRAY, desc = "term.cmdb.stateidlist"),
+            @Param(name = "vendorIdList", type = ApiParamType.JSONARRAY, desc = "term.cmdb.vendoridlist"),
+            @Param(name = "envIdList", type = ApiParamType.JSONARRAY, desc = "term.cmdb.envidlist"),
+            @Param(name = "appSystemIdList", type = ApiParamType.JSONARRAY, desc = "term.appsystemidlist"),
+            @Param(name = "appModuleIdList", type = ApiParamType.JSONARRAY, desc = "term.cmdb.appmoduleidlist"),
+            @Param(name = "typeIdList", type = ApiParamType.JSONARRAY, desc = "term.cmdb.typeidlist"),
+            @Param(name = "tagIdList", type = ApiParamType.JSONARRAY, desc = "common.tagidlist"),
+            @Param(name = "inspectStatusList", type = ApiParamType.JSONARRAY, desc = "term.inspect.inspectstatuslist"),
+            @Param(name = "inspectJobPhaseNodeStatusList", type = ApiParamType.JSONARRAY, desc = "term.inspect.inspectjobphasenodestatuslist"),
+            @Param(name = "currentPage", type = ApiParamType.INTEGER, desc = "common.currentpage"),
+            @Param(name = "pageSize", type = ApiParamType.INTEGER, desc = "common.pagesize"),
+            @Param(name = "needPage", type = ApiParamType.BOOLEAN, desc = "common.isneedpage")
     })
     @Output({
             @Param(explode = BasePageVo.class),
-            @Param(name = "tbodyList", explode = InspectResourceVo[].class, desc = "巡检作业节点资产列表")
+            @Param(name = "tbodyList", explode = InspectResourceVo[].class, desc = "common.tbodylist")
     })
-    @Description(desc = "巡检作业节点资产查询接口")
+    @Description(desc = "nmiaj.inspectautoexecjobnodesearchapi.getname")
     @Override
     public Object myDoService(JSONObject paramObj) throws Exception {
         InspectResourceSearchVo searchVo = JSON.toJavaObject(paramObj, InspectResourceSearchVo.class);
         Long jobId = searchVo.getJobId();
         AutoexecJobVo jobVo = autoexecJobMapper.getJobInfo(jobId);
         if (jobVo == null) {
-            throw new AutoexecJobNotFoundException(jobId.toString());
+            throw new AutoexecJobNotFoundEditTargetException(jobId);
         }
         ICiCrossoverMapper ciCrossoverMapper = CrossoverServiceFactory.getApi(ICiCrossoverMapper.class);
         CiVo ciVo = ciCrossoverMapper.getCiById(searchVo.getTypeId());
