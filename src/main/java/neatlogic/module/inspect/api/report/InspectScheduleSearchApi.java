@@ -4,10 +4,8 @@ import neatlogic.framework.auth.core.AuthAction;
 import neatlogic.framework.autoexec.dao.mapper.AutoexecJobMapper;
 import neatlogic.framework.autoexec.dto.job.AutoexecJobInvokeVo;
 import neatlogic.framework.cmdb.crossover.ICiCrossoverMapper;
-import neatlogic.framework.cmdb.crossover.IResourceTypeTreeApiCrossoverService;
+import neatlogic.framework.cmdb.crossover.IResourceEntityCrossoverMapper;
 import neatlogic.framework.cmdb.dto.ci.CiVo;
-import neatlogic.framework.cmdb.dto.resourcecenter.ResourceTypeVo;
-import neatlogic.framework.cmdb.exception.ci.CiNotFoundException;
 import neatlogic.framework.common.constvalue.ApiParamType;
 import neatlogic.framework.crossover.CrossoverServiceFactory;
 import neatlogic.framework.inspect.auth.INSPECT_BASE;
@@ -17,6 +15,7 @@ import neatlogic.framework.restful.annotation.*;
 import neatlogic.framework.restful.constvalue.OperationTypeEnum;
 import neatlogic.framework.restful.core.privateapi.PrivateApiComponentBase;
 import com.alibaba.fastjson.JSONObject;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
@@ -58,19 +57,12 @@ public class InspectScheduleSearchApi extends PrivateApiComponentBase {
     public Object myDoService(JSONObject paramObj) throws Exception {
         String keyword = paramObj.getString("keyword");
         List<InspectScheduleVo> result = new ArrayList<>();
-        IResourceTypeTreeApiCrossoverService ciTypeListCrossoverService = CrossoverServiceFactory.getApi(IResourceTypeTreeApiCrossoverService.class);
-        List<ResourceTypeVo> resourceTypeList = ciTypeListCrossoverService.getResourceTypeList();
-        if (!resourceTypeList.isEmpty()) {
+        IResourceEntityCrossoverMapper resourceEntityCrossoverMapper = CrossoverServiceFactory.getApi(IResourceEntityCrossoverMapper.class);
+        List<Long> ciIdList = resourceEntityCrossoverMapper.getAllResourceTypeCiIdList();
+        if (CollectionUtils.isNotEmpty(ciIdList)) {
             List<CiVo> ciList = new ArrayList<>();
-            List<CiVo> ciVoList = new ArrayList<>();
             ICiCrossoverMapper ciCrossoverMapper = CrossoverServiceFactory.getApi(ICiCrossoverMapper.class);
-            for (ResourceTypeVo type : resourceTypeList) {
-                CiVo ciVo = ciCrossoverMapper.getCiByName(type.getName());
-                if (ciVo == null) {
-                    throw new CiNotFoundException(type.getName());
-                }
-                ciVoList.add(ciVo);
-            }
+            List<CiVo> ciVoList = ciCrossoverMapper.getCiByIdList(ciIdList);
             ciVoList.sort(Comparator.comparing(CiVo::getLft));
             ciVoList.forEach(o -> ciList.addAll(ciCrossoverMapper.getDownwardCiListByLR(o.getLft(), o.getRht())));
             if (StringUtils.isNotEmpty(keyword)) {
