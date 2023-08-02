@@ -35,7 +35,7 @@ public class InspectCombopSearchApi extends PrivateApiComponentBase {
 
     @Override
     public String getName() {
-        return "查询巡检组合工具列表";
+        return "nmiad.inspectcombopsearchapi.getname";
     }
 
     @Override
@@ -48,8 +48,10 @@ public class InspectCombopSearchApi extends PrivateApiComponentBase {
         return null;
     }
 
-    @Input({@Param(name = "keyword", type = ApiParamType.STRING, desc = "关键字（name、label）")})
-    @Description(desc = "查询巡检组合工具列表接口")
+    @Input({
+            @Param(name = "keyword", type = ApiParamType.STRING, desc = "common.keyword", help = "name、label")
+    })
+    @Description(desc = "nmiad.inspectcombopsearchapi.getname")
     @Override
     public Object myDoService(JSONObject paramObj) throws Exception {
 

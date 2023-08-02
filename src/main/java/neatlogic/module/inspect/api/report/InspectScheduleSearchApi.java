@@ -37,7 +37,7 @@ public class InspectScheduleSearchApi extends PrivateApiComponentBase {
 
     @Override
     public String getName() {
-        return "查询巡检定时任务列表";
+        return "nmiar.inspectschedulesearchapi.getname";
     }
 
     @Override
@@ -50,9 +50,9 @@ public class InspectScheduleSearchApi extends PrivateApiComponentBase {
         return null;
     }
 
-    @Input({@Param(name = "keyword", type = ApiParamType.STRING, desc = "关键字")})
+    @Input({@Param(name = "keyword", type = ApiParamType.STRING, desc = "common.keyword")})
     @Output({@Param(name = "Return", explode = InspectScheduleVo[].class)})
-    @Description(desc = "查询巡检定时任务列表")
+    @Description(desc = "nmiar.inspectschedulesearchapi.getname")
     @Override
     public Object myDoService(JSONObject paramObj) throws Exception {
         String keyword = paramObj.getString("keyword");
