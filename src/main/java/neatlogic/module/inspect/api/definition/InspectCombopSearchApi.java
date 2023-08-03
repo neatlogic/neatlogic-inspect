@@ -2,10 +2,8 @@ package neatlogic.module.inspect.api.definition;
 
 import neatlogic.framework.auth.core.AuthAction;
 import neatlogic.framework.cmdb.crossover.ICiCrossoverMapper;
-import neatlogic.framework.cmdb.crossover.IResourceTypeTreeApiCrossoverService;
+import neatlogic.framework.cmdb.crossover.IResourceEntityCrossoverMapper;
 import neatlogic.framework.cmdb.dto.ci.CiVo;
-import neatlogic.framework.cmdb.dto.resourcecenter.ResourceTypeVo;
-import neatlogic.framework.cmdb.exception.ci.CiNotFoundException;
 import neatlogic.framework.common.constvalue.ApiParamType;
 import neatlogic.framework.crossover.CrossoverServiceFactory;
 import neatlogic.framework.inspect.auth.INSPECT_MODIFY;
@@ -37,7 +35,7 @@ public class InspectCombopSearchApi extends PrivateApiComponentBase {
 
     @Override
     public String getName() {
-        return "查询巡检组合工具列表";
+        return "nmiad.inspectcombopsearchapi.getname";
     }
 
     @Override
@@ -50,8 +48,10 @@ public class InspectCombopSearchApi extends PrivateApiComponentBase {
         return null;
     }
 
-    @Input({@Param(name = "keyword", type = ApiParamType.STRING, desc = "关键字（name、label）")})
-    @Description(desc = "查询巡检组合工具列表接口")
+    @Input({
+            @Param(name = "keyword", type = ApiParamType.STRING, desc = "common.keyword", help = "name、label")
+    })
+    @Description(desc = "nmiad.inspectcombopsearchapi.getname")
     @Override
     public Object myDoService(JSONObject paramObj) throws Exception {
 
@@ -59,20 +59,13 @@ public class InspectCombopSearchApi extends PrivateApiComponentBase {
         List<InspectCiCombopVo> inspectCiList = inspectMapper.searchInspectCiCombopList();
 
         //获取cmdb的ciType
-        IResourceTypeTreeApiCrossoverService ciTypeListCrossoverService = CrossoverServiceFactory.getApi(IResourceTypeTreeApiCrossoverService.class);
-        List<ResourceTypeVo> resourceTypeList = ciTypeListCrossoverService.getResourceTypeList();
+        IResourceEntityCrossoverMapper resourceEntityCrossoverMapper = CrossoverServiceFactory.getApi(IResourceEntityCrossoverMapper.class);
+        List<Long> ciIdList = resourceEntityCrossoverMapper.getAllResourceTypeCiIdList();
         List<CiVo> ciList = new ArrayList<>();
         List<InspectCiCombopVo> ciCombopVoList = new ArrayList<>();
-        if (CollectionUtils.isNotEmpty(resourceTypeList)) {
-            List<CiVo> ciVoList = new ArrayList<>();
+        if (CollectionUtils.isNotEmpty(ciIdList)) {
             ICiCrossoverMapper ciCrossoverMapper = CrossoverServiceFactory.getApi(ICiCrossoverMapper.class);
-            for (ResourceTypeVo type : resourceTypeList) {
-                CiVo ciVo = ciCrossoverMapper.getCiByName(type.getName());
-                if (ciVo == null) {
-                    throw new CiNotFoundException(type.getName());
-                }
-                ciVoList.add(ciVo);
-            }
+            List<CiVo> ciVoList = ciCrossoverMapper.getCiByIdList(ciIdList);
             ciVoList.sort(Comparator.comparing(CiVo::getLft));
             for (CiVo ciVo : ciVoList) {
                 List<CiVo> ciListTmp = ciCrossoverMapper.getDownwardCiListByLR(ciVo.getLft(), ciVo.getRht());
