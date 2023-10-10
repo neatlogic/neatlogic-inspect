@@ -22,10 +22,8 @@ import neatlogic.framework.cmdb.dto.resourcecenter.ResourceSearchVo;
 import neatlogic.framework.common.constvalue.ApiParamType;
 import neatlogic.framework.crossover.CrossoverServiceFactory;
 import neatlogic.framework.inspect.auth.INSPECT_BASE;
-import neatlogic.framework.restful.annotation.Description;
-import neatlogic.framework.restful.annotation.Input;
-import neatlogic.framework.restful.annotation.Output;
-import neatlogic.framework.restful.annotation.Param;
+import neatlogic.framework.restful.annotation.*;
+import neatlogic.framework.restful.constvalue.OperationTypeEnum;
 import neatlogic.framework.restful.core.privateapi.PrivateApiComponentBase;
 import com.alibaba.fastjson.JSONObject;
 import org.springframework.stereotype.Service;
@@ -36,12 +34,13 @@ import org.springframework.stereotype.Service;
  */
 
 @Service
+@OperationType(type = OperationTypeEnum.SEARCH)
 @AuthAction(action = INSPECT_BASE.class)
 public class ListInspectAppEnvApi extends PrivateApiComponentBase {
 
     @Override
     public String getName() {
-        return "获取发起应用巡检的环境列表";
+        return "nmiar.listinspectappenvapi.getname";
     }
 
     @Override
@@ -55,12 +54,12 @@ public class ListInspectAppEnvApi extends PrivateApiComponentBase {
     }
 
     @Input({
-            @Param(name = "appSystemId", type = ApiParamType.LONG, isRequired = true, desc = "系统id"),
+            @Param(name = "appSystemId", type = ApiParamType.LONG, isRequired = true, desc = "term.cmdb.appsystemid"),
     })
     @Output({
-            @Param(explode = AppEnvVo[].class, desc = "发起应用巡检的环境列表")
+            @Param(explode = AppEnvVo[].class, desc = "common.tbodylist")
     })
-    @Description(desc = "获取发起应用巡检的环境列表")
+    @Description(desc = "nmiar.listinspectappenvapi.getname")
     @Override
     public Object myDoService(JSONObject paramObj) throws Exception {
         ResourceSearchVo searchVo = paramObj.toJavaObject(ResourceSearchVo.class);
