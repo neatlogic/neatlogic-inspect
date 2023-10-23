@@ -16,7 +16,7 @@ limitations under the License.
 
 package neatlogic.module.inspect.api.configfile;
 
-import neatlogic.framework.asynchronization.threadlocal.TenantContext;
+import com.alibaba.fastjson.JSONObject;
 import neatlogic.framework.auth.core.AuthAction;
 import neatlogic.framework.autoexec.dao.mapper.AutoexecJobMapper;
 import neatlogic.framework.autoexec.dto.job.AutoexecJobPhaseNodeVo;
@@ -37,12 +37,14 @@ import neatlogic.framework.restful.constvalue.OperationTypeEnum;
 import neatlogic.framework.restful.core.privateapi.PrivateApiComponentBase;
 import neatlogic.framework.util.TableResultUtil;
 import neatlogic.module.inspect.dao.mapper.InspectConfigFileMapper;
-import com.alibaba.fastjson.JSONObject;
 import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Service
@@ -119,12 +121,13 @@ public class ListInspectConfigFileResourceApi extends PrivateApiComponentBase {
             }
             searchVo.setLft(ciVo.getLft());
             searchVo.setRht(ciVo.getRht());
+            IResourceCenterResourceCrossoverService resourceCenterResourceCrossoverService = CrossoverServiceFactory.getApi(IResourceCenterResourceCrossoverService.class);
+            resourceCenterResourceCrossoverService.handleBatchSearchList(searchVo);
             int count = inspectConfigFileMapper.getInspectResourceCount(searchVo);
             if (count > 0) {
                 searchVo.setRowNum(count);
                 List<Long> idList = inspectConfigFileMapper.getInspectResourceIdList(searchVo);
                 if (CollectionUtils.isNotEmpty(idList)) {
-                    IResourceCenterResourceCrossoverService resourceCenterResourceCrossoverService = CrossoverServiceFactory.getApi(IResourceCenterResourceCrossoverService.class);
                     Map<Long, List<TagVo>> tagMap = resourceCenterResourceCrossoverService.getResourceTagByResourceIdList(idList);
                     List<AutoexecJobPhaseNodeVo> autoexecJobPhaseNodeList = autoexecJobMapper.getAutoexecJobNodeListByResourceIdList(idList);
                     Map<Long, AutoexecJobPhaseNodeVo> autoexecJobPhaseNodeMap = autoexecJobPhaseNodeList.stream().collect(Collectors.toMap(e -> e.getResourceId(), e -> e));
