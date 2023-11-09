@@ -41,6 +41,7 @@
 				</value>
 			</list>
 		</property>
+		<property name="databaseIdProvider" ref="neatLogicDatabaseIdProvider"/>
 	</bean>
 
 
