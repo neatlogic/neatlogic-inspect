@@ -163,10 +163,13 @@
                                             <#assign end = (i+1)*step-1/>
                                             <#if i lt n>
                                                 ${cell[start..end]}<br/>
-                                            <#else>
-                                                ${cell[start..(l-1)]}
                                             </#if>
                                         </#list>
+                                        <!--补充余数-->
+                                        <#assign n1 = (l % step)?int>
+                                        <#if n1 gt 0 >
+                                            ${cell[n*step..(l-1)]}
+                                        </#if>
                                     <#else>
                                         ${cell}
                                     </#if>
