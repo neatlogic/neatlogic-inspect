@@ -15,6 +15,7 @@
  */
 package neatlogic.module.inspect.service;
 
+import neatlogic.framework.asynchronization.threadlocal.UserContext;
 import neatlogic.framework.cmdb.crossover.ICiCrossoverMapper;
 import neatlogic.framework.cmdb.crossover.IResourceCrossoverMapper;
 import neatlogic.framework.cmdb.dto.ci.CiVo;
@@ -118,7 +119,7 @@ public class InspectCollectServiceImpl implements InspectCollectService {
         }
         String lcu = inspectDefJson.getString("lcu");
         if (StringUtils.isNotEmpty(lcu)) {
-            UserVo userVo = userMapper.getUserByUuid(lcu);
+            UserVo userVo = userMapper.getUserByUuidAndEnv(lcu, UserContext.get().getEnv());
             returnObject.put("userVo", userVo);
         }
         return returnObject;

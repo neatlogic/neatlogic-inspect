@@ -15,6 +15,7 @@
  */
 package neatlogic.module.inspect.api.definition;
 
+import neatlogic.framework.asynchronization.threadlocal.UserContext;
 import neatlogic.framework.auth.core.AuthAction;
 import neatlogic.framework.cmdb.crossover.IAppSystemMapper;
 import neatlogic.framework.cmdb.dto.resourcecenter.entity.AppSystemVo;
@@ -163,7 +164,7 @@ public class GetInspectAppCollectFieldsApi extends PrivateApiComponentBase {
                 }
                 String lcu = inspectDefAppJson.getString("lcu");
                 if (StringUtils.isNotEmpty(lcu)) {
-                    UserVo userVo = userMapper.getUserByUuid(lcu);
+                    UserVo userVo = userMapper.getUserByUuidAndEnv(lcu, UserContext.get().getEnv());
                     returnObject.put("userVo", userVo);
                 }
                 returnObject.put("appThresholds", inspectDefAppJson.getJSONArray("thresholds"));
