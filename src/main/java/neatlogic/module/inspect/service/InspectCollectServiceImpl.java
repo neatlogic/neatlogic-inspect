@@ -15,7 +15,11 @@
  */
 package neatlogic.module.inspect.service;
 
-import neatlogic.framework.asynchronization.threadlocal.UserContext;
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONArray;
+import com.alibaba.fastjson.JSONObject;
+import com.mongodb.client.FindIterable;
+import com.mongodb.client.MongoCollection;
 import neatlogic.framework.cmdb.crossover.ICiCrossoverMapper;
 import neatlogic.framework.cmdb.crossover.IResourceCrossoverMapper;
 import neatlogic.framework.cmdb.dto.ci.CiVo;
@@ -25,11 +29,6 @@ import neatlogic.framework.crossover.CrossoverServiceFactory;
 import neatlogic.framework.dao.mapper.UserMapper;
 import neatlogic.framework.dto.UserVo;
 import neatlogic.framework.inspect.exception.*;
-import com.alibaba.fastjson.JSON;
-import com.alibaba.fastjson.JSONArray;
-import com.alibaba.fastjson.JSONObject;
-import com.mongodb.client.FindIterable;
-import com.mongodb.client.MongoCollection;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.bson.Document;
@@ -119,7 +118,7 @@ public class InspectCollectServiceImpl implements InspectCollectService {
         }
         String lcu = inspectDefJson.getString("lcu");
         if (StringUtils.isNotEmpty(lcu)) {
-            UserVo userVo = userMapper.getUserByUuidAndEnv(lcu, UserContext.get().getEnv());
+            UserVo userVo = userMapper.getUserByUuid(lcu);
             returnObject.put("userVo", userVo);
         }
         return returnObject;
