@@ -20,12 +20,9 @@ import com.alibaba.fastjson.JSONObject;
 import neatlogic.framework.auth.core.AuthAction;
 import neatlogic.framework.autoexec.dao.mapper.AutoexecJobMapper;
 import neatlogic.framework.autoexec.dto.job.AutoexecJobPhaseNodeVo;
-import neatlogic.framework.cmdb.crossover.ICiCrossoverMapper;
 import neatlogic.framework.cmdb.crossover.IResourceCenterResourceCrossoverService;
-import neatlogic.framework.cmdb.dto.ci.CiVo;
 import neatlogic.framework.cmdb.dto.resourcecenter.ResourceSearchVo;
 import neatlogic.framework.cmdb.dto.tag.TagVo;
-import neatlogic.framework.cmdb.exception.ci.CiNotFoundException;
 import neatlogic.framework.common.constvalue.ApiParamType;
 import neatlogic.framework.common.dto.BasePageVo;
 import neatlogic.framework.crossover.CrossoverServiceFactory;
@@ -99,7 +96,8 @@ public class ListInspectConfigFileResourceApi extends PrivateApiComponentBase {
     @Override
     public Object myDoService(JSONObject paramObj) throws Exception {
         List<InspectResourceVo> inspectResourceList = new ArrayList<>();
-        ResourceSearchVo searchVo = JSONObject.toJavaObject(paramObj, ResourceSearchVo.class);
+        IResourceCenterResourceCrossoverService resourceCrossoverService = CrossoverServiceFactory.getApi(IResourceCenterResourceCrossoverService.class);
+        ResourceSearchVo searchVo = resourceCrossoverService.assembleResourceSearchVo(paramObj);
         if (CollectionUtils.isNotEmpty(searchVo.getIdList())) {
             List<Long> idList = searchVo.getIdList();
             inspectResourceList = inspectConfigFileMapper.getInspectResourceListByIdList(idList);
@@ -113,14 +111,6 @@ public class ListInspectConfigFileResourceApi extends PrivateApiComponentBase {
                 }
             }
         } else {
-            Long typeId = searchVo.getTypeId();
-            ICiCrossoverMapper ciCrossoverMapper = CrossoverServiceFactory.getApi(ICiCrossoverMapper.class);
-            CiVo ciVo = ciCrossoverMapper.getCiById(typeId);
-            if (ciVo == null) {
-                throw new CiNotFoundException(typeId);
-            }
-            searchVo.setLft(ciVo.getLft());
-            searchVo.setRht(ciVo.getRht());
             IResourceCenterResourceCrossoverService resourceCenterResourceCrossoverService = CrossoverServiceFactory.getApi(IResourceCenterResourceCrossoverService.class);
             resourceCenterResourceCrossoverService.handleBatchSearchList(searchVo);
             int count = inspectConfigFileMapper.getInspectResourceCount(searchVo);

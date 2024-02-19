@@ -16,12 +16,11 @@
 
 package neatlogic.module.inspect.api.report;
 
+import com.alibaba.fastjson.JSONObject;
 import neatlogic.framework.auth.core.AuthAction;
-import neatlogic.framework.cmdb.crossover.ICiCrossoverMapper;
-import neatlogic.framework.cmdb.dto.ci.CiVo;
+import neatlogic.framework.cmdb.crossover.IResourceCenterResourceCrossoverService;
 import neatlogic.framework.cmdb.dto.resourcecenter.ResourceSearchVo;
 import neatlogic.framework.cmdb.dto.resourcecenter.ResourceVo;
-import neatlogic.framework.cmdb.exception.ci.CiNotFoundException;
 import neatlogic.framework.common.constvalue.ApiParamType;
 import neatlogic.framework.common.dto.BasePageVo;
 import neatlogic.framework.crossover.CrossoverServiceFactory;
@@ -31,7 +30,6 @@ import neatlogic.framework.restful.constvalue.OperationTypeEnum;
 import neatlogic.framework.restful.core.privateapi.PrivateApiComponentBase;
 import neatlogic.framework.util.TableResultUtil;
 import neatlogic.module.inspect.service.InspectReportService;
-import com.alibaba.fastjson.JSONObject;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
@@ -82,15 +80,8 @@ public class InspectResourceReportSearchApi extends PrivateApiComponentBase {
     @Description(desc = "获取巡检资产报告接口")
     @Override
     public Object myDoService(JSONObject paramObj) throws Exception {
-        ResourceSearchVo searchVo = JSONObject.toJavaObject(paramObj, ResourceSearchVo.class);
-        Long typeId = searchVo.getTypeId();
-        ICiCrossoverMapper ciCrossoverMapper = CrossoverServiceFactory.getApi(ICiCrossoverMapper.class);
-        CiVo ciVo = ciCrossoverMapper.getCiById(typeId);
-        if (ciVo == null) {
-            throw new CiNotFoundException(typeId);
-        }
-        searchVo.setLft(ciVo.getLft());
-        searchVo.setRht(ciVo.getRht());
+        IResourceCenterResourceCrossoverService resourceCrossoverService = CrossoverServiceFactory.getApi(IResourceCenterResourceCrossoverService.class);
+        ResourceSearchVo searchVo = resourceCrossoverService.assembleResourceSearchVo(paramObj);
         return TableResultUtil.getResult(inspectReportService.getInspectResourceReportList(searchVo), searchVo);
     }
 

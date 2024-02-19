@@ -54,9 +54,87 @@
         left join autoexec_job_phase_node f on f.job_phase_id =e.phase_id AND f.resource_id = a.id
     </sql>
 
+    <sql id="resource_inspect_autoexec_job_from_join_with_auth">
+        FROM @{DATA_SCHEMA}.`scence_ipobject_detail` a
+        left join cmdb_resourcecenter_resource_account b on b.resource_id=a.id
+        left join cmdb_resourcecenter_account c on c.id=b.account_id
+        left join cmdb_resourcecenter_resource_tag d on d.resource_id = a.id
+        left join autoexec_job_resource_inspect e on e.resource_id=a.id
+        left join autoexec_job_phase_node f on f.job_phase_id =e.phase_id AND f.resource_id = a.id
+        <if test="isHasAuth == false">
+            LEFT JOIN cmdb_cientity_group ccg ON ccg.cientity_id = a.id
+            LEFT JOIN cmdb_group_auth cga ON ccg.group_id = cga.group_id
+            <choose>
+                <when test="cmdbGroupType == 'autoexec'">
+                    LEFT JOIN cmdb_group cg ON cga.group_id = cg.id AND cg.type in ('autoexec')
+                </when>
+                <otherwise>
+                    LEFT JOIN cmdb_group cg ON cga.group_id = cg.id AND cg.type in ('readonly','maintain','autoexec')
+                </otherwise>
+            </choose>
+        </if>
+    </sql>
+
     <sql id="resource_inspect_autoexec_job_where">
-        AND a.`type_id` IN
-        ( SELECT a.`id` FROM `cmdb_ci` a WHERE a.lft &gt;= #{lft} AND a.rht &lt;= #{rht})
+        <if test="typeIdList != null and typeIdList.size() > 0">
+            <if test="isHasAuth == true">
+                AND a.`type_id` IN
+                <foreach collection="typeIdList" item="typeId" open="(" separator="," close=")">
+                    #{typeId}
+                </foreach>
+            </if>
+            <if test="isHasAuth == false">
+                AND (
+                <choose>
+                    <when test="authedTypeIdList != null and authedTypeIdList.size() >0">
+                        a.`type_id` IN
+                        <foreach collection="authedTypeIdList" item="authedTypeId" open="(" separator="," close=")">
+                            #{authedTypeId}
+                        </foreach>
+                    </when>
+                    <otherwise>
+                        1 = 0
+                    </otherwise>
+                </choose>
+                or (
+                cg.id  is not null and
+                a.`type_id` IN
+                <foreach collection="typeIdList" item="typeId" open="(" separator="," close=")">
+                    #{typeId}
+                </foreach>
+                and
+                ((cga.auth_type = 'common' AND cga.auth_uuid = 'alluser')
+                <if test="authenticationInfo.userUuid != null and authenticationInfo.userUuid != ''">
+                    OR (
+                    cga.auth_type = 'user'
+                    AND
+                    cga.auth_uuid = #{authenticationInfo.userUuid}
+                    )
+                </if>
+                <if test="authenticationInfo.teamUuidList != null and authenticationInfo.teamUuidList.size() > 0">
+                    OR (
+                    cga.auth_type = 'team'
+                    AND
+                    cga.auth_uuid IN
+                    <foreach collection="authenticationInfo.teamUuidList" item="item" open="(" separator="," close=")">
+                        #{item}
+                    </foreach>
+                    )
+                </if>
+                <if test="authenticationInfo.roleUuidList != null and authenticationInfo.roleUuidList.size() > 0">
+                    OR (
+                    cga.auth_type = 'role'
+                    AND
+                    cga.auth_uuid IN
+                    <foreach collection="authenticationInfo.roleUuidList" item="item" open="(" separator="," close=")">
+                        #{item}
+                    </foreach>)
+                </if>
+                )
+                )
+                )
+            </if>
+        </if>
         <if test="stateIdList != null and stateIdList.size() > 0">
             AND a.`state_id` IN
             <foreach collection="stateIdList" item="stateId" open="(" separator="," close=")">
@@ -131,7 +209,7 @@
 
     <select id="getInspectResourceCount" resultType="int">
         SELECT COUNT(DISTINCT (a.`id`))
-        <include refid="resource_inspect_autoexec_job_from_join"/>
+        <include refid="resource_inspect_autoexec_job_from_join_with_auth"/>
         <where>
             <if test="keyword != null and keyword != ''">
                 AND (a.`name` LIKE CONCAT('%', #{keyword}, '%') OR a.`ip` LIKE CONCAT('%', #{keyword}, '%'))
@@ -143,7 +221,7 @@
     <select id="getInspectResourceIdList" resultType="java.lang.Long">
         SELECT m.`id` FROM (
         SELECT distinct a.`id`, g.`last_change_time`
-        <include refid="resource_inspect_autoexec_job_from_join"/>
+        <include refid="resource_inspect_autoexec_job_from_join_with_auth"/>
         LEFT JOIN `inspect_config_file_last_change_time` g on g.`resource_id` = a.`id`
         <where>
             <if test="keyword != null and keyword != ''">
