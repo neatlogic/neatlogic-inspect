@@ -28,7 +28,7 @@ import neatlogic.framework.autoexec.job.action.core.AutoexecJobActionHandlerFact
 import neatlogic.framework.autoexec.job.action.core.IAutoexecJobActionHandler;
 import neatlogic.framework.cmdb.crossover.ICiCrossoverMapper;
 import neatlogic.framework.cmdb.dto.ci.CiVo;
-import neatlogic.framework.common.constvalue.SystemUser;
+import neatlogic.framework.common.constvalue.systemuser.SystemUser;
 import neatlogic.framework.crossover.CrossoverServiceFactory;
 import neatlogic.framework.dao.mapper.UserMapper;
 import neatlogic.framework.dto.AuthenticationInfoVo;
