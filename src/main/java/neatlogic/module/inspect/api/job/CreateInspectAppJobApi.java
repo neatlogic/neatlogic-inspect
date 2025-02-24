@@ -142,20 +142,22 @@ public class CreateInspectAppJobApi extends PrivateApiComponentBase {
         }
         Map<Long, CiVo> ciMap = new HashMap<>();
         Map<Long, Long> ciIdToCombopIdMap = new HashMap<>();
-        ICiCrossoverMapper ciCrossoverMapper = CrossoverServiceFactory.getApi(ICiCrossoverMapper.class);
-        List<CiVo> ciVoList = ciCrossoverMapper.getCiByIdList(new ArrayList<>(allResourceTypeIdSet));
-        for (CiVo ciVo : ciVoList) {
-            Long ciId = ciVo.getId();
-            Long combopId = inspectMapper.getCombopIdByCiId(ciId);
-            if (combopId == null) {
-                continue;
+        if (CollectionUtils.isNotEmpty(allResourceTypeIdSet)) {
+            ICiCrossoverMapper ciCrossoverMapper = CrossoverServiceFactory.getApi(ICiCrossoverMapper.class);
+            List<CiVo> ciVoList = ciCrossoverMapper.getCiByIdList(new ArrayList<>(allResourceTypeIdSet));
+            for (CiVo ciVo : ciVoList) {
+                Long ciId = ciVo.getId();
+                Long combopId = inspectMapper.getCombopIdByCiId(ciId);
+                if (combopId == null) {
+                    continue;
+                }
+                AutoexecCombopVo combopVo = autoexecCombopMapper.getAutoexecCombopById(combopId);
+                if (combopVo == null) {
+                    continue;
+                }
+                ciMap.put(ciId, ciVo);
+                ciIdToCombopIdMap.put(ciId, combopId);
             }
-            AutoexecCombopVo combopVo = autoexecCombopMapper.getAutoexecCombopById(combopId);
-            if (combopVo == null) {
-                continue;
-            }
-            ciMap.put(ciId, ciVo);
-            ciIdToCombopIdMap.put(ciId, combopId);
         }
         for (ResourceSearchVo searchVo : searchList) {
             if (CollectionUtils.isEmpty(searchVo.getTypeIdList())) {
