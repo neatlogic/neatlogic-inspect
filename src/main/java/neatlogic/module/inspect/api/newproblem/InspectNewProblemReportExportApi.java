@@ -1,9 +1,9 @@
 package neatlogic.module.inspect.api.newproblem;
 
-import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import neatlogic.framework.auth.core.AuthAction;
 import neatlogic.framework.cmdb.crossover.ICiCrossoverMapper;
+import neatlogic.framework.cmdb.crossover.IResourceCenterResourceCrossoverService;
 import neatlogic.framework.cmdb.crossover.IResourceCrossoverMapper;
 import neatlogic.framework.cmdb.dto.ci.CiVo;
 import neatlogic.framework.cmdb.dto.resourcecenter.ResourceSearchVo;
@@ -86,7 +86,8 @@ public class InspectNewProblemReportExportApi extends PrivateBinaryStreamApiComp
     @Description(desc = "导出巡检最报告列表接口")
     @Override
     public Object myDoService(JSONObject paramObj, HttpServletRequest request, HttpServletResponse response) throws Exception {
-        ResourceSearchVo searchVo = JSON.toJavaObject(paramObj, ResourceSearchVo.class);
+        IResourceCenterResourceCrossoverService resourceCrossoverService = CrossoverServiceFactory.getApi(IResourceCenterResourceCrossoverService.class);
+        ResourceSearchVo searchVo = resourceCrossoverService.assembleResourceSearchVo(paramObj);
         Integer isNeedAlertDetail = paramObj.getInteger("isNeedAlertDetail");
         if (isNeedAlertDetail == null) {
             isNeedAlertDetail = 0;
