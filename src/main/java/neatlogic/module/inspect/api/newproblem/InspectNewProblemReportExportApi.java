@@ -121,7 +121,6 @@ public class InspectNewProblemReportExportApi extends PrivateBinaryStreamApiComp
         if (workbook == null) {
             List<String> headerList = new ArrayList<>();
             List<String> columnList = new ArrayList<>();
-//            buildHeaderListAndColumnList(headerList, columnList, isNeedAlertDetail);
 
             ExcelBuilder builder = new ExcelBuilder(SXSSFWorkbook.class);
             SheetBuilder sheetBuilder = builder.withBorderColor(HSSFColor.HSSFColorPredefined.GREY_40_PERCENT)
