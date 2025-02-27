@@ -1,5 +1,7 @@
 package neatlogic.module.inspect.api.newproblem;
 
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONObject;
 import neatlogic.framework.auth.core.AuthAction;
 import neatlogic.framework.cmdb.crossover.ICiCrossoverMapper;
 import neatlogic.framework.cmdb.crossover.IResourceCrossoverMapper;
@@ -15,10 +17,13 @@ import neatlogic.framework.inspect.auth.INSPECT_BASE;
 import neatlogic.framework.restful.annotation.*;
 import neatlogic.framework.restful.constvalue.OperationTypeEnum;
 import neatlogic.framework.restful.core.privateapi.PrivateBinaryStreamApiComponentBase;
+import neatlogic.framework.util.FileUtil;
+import neatlogic.framework.util.excel.ExcelBuilder;
+import neatlogic.framework.util.excel.SheetBuilder;
 import neatlogic.module.inspect.service.InspectReportService;
-import com.alibaba.fastjson.JSON;
-import com.alibaba.fastjson.JSONObject;
+import org.apache.poi.hssf.util.HSSFColor;
 import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.xssf.streaming.SXSSFWorkbook;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -28,8 +33,8 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * @author longrf
@@ -113,20 +118,28 @@ public class InspectNewProblemReportExportApi extends PrivateBinaryStreamApiComp
         } else {
             throw new ParamNotExistsException("typeId", "appSystemId");
         }
-        if (workbook != null) {
-            boolean flag = request.getHeader("User-Agent").indexOf("Gecko") > 0;
-            if (request.getHeader("User-Agent").toLowerCase().indexOf("msie") > 0 || flag) {
-                fileNameEncode = URLEncoder.encode(fileNameEncode, "UTF-8");// IE浏览器
-            } else {
-                fileNameEncode = new String(fileNameEncode.replace(" ", "").getBytes(StandardCharsets.UTF_8), "ISO8859-1");
-            }
-            response.setContentType("application/vnd.ms-excel;charset=utf-8");
-            response.setHeader("Content-Disposition", " attachment; filename=\"" + fileNameEncode + "\"");
-            try (OutputStream os = response.getOutputStream()) {
-                workbook.write(os);
-            } catch (IOException e) {
-                logger.error(e.getMessage(), e);
-            }
+        if (workbook == null) {
+            List<String> headerList = new ArrayList<>();
+            List<String> columnList = new ArrayList<>();
+//            buildHeaderListAndColumnList(headerList, columnList, isNeedAlertDetail);
+
+            ExcelBuilder builder = new ExcelBuilder(SXSSFWorkbook.class);
+            SheetBuilder sheetBuilder = builder.withBorderColor(HSSFColor.HSSFColorPredefined.GREY_40_PERCENT)
+                    .withHeadFontColor(HSSFColor.HSSFColorPredefined.WHITE)
+                    .withHeadBgColor(HSSFColor.HSSFColorPredefined.DARK_BLUE)
+                    .withColumnWidth(30)
+                    .addSheet("数据")
+                    .withHeaderList(headerList)
+                    .withColumnList(columnList);
+            workbook = builder.build();
+        }
+        fileNameEncode = FileUtil.getEncodedFileName(fileNameEncode);
+        response.setContentType("application/vnd.ms-excel;charset=utf-8");
+        response.setHeader("Content-Disposition", " attachment; filename=\"" + fileNameEncode + "\"");
+        try (OutputStream os = response.getOutputStream()) {
+            workbook.write(os);
+        } catch (IOException e) {
+            logger.error(e.getMessage(), e);
         }
         return null;
     }
