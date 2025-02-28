@@ -1,9 +1,11 @@
 package neatlogic.module.inspect.api.newproblem;
 
+import com.alibaba.fastjson.JSONObject;
 import neatlogic.framework.asynchronization.thread.NeatLogicThread;
 import neatlogic.framework.asynchronization.threadpool.CachedThreadPool;
 import neatlogic.framework.auth.core.AuthAction;
 import neatlogic.framework.cmdb.crossover.ICiCrossoverMapper;
+import neatlogic.framework.cmdb.crossover.IResourceCenterResourceCrossoverService;
 import neatlogic.framework.cmdb.crossover.IResourceCrossoverMapper;
 import neatlogic.framework.cmdb.dto.ci.CiVo;
 import neatlogic.framework.cmdb.dto.resourcecenter.ResourceSearchVo;
@@ -22,8 +24,6 @@ import neatlogic.framework.restful.core.privateapi.PrivateApiComponentBase;
 import neatlogic.framework.service.UserService;
 import neatlogic.framework.util.EmailUtil;
 import neatlogic.module.inspect.service.InspectReportService;
-import com.alibaba.fastjson.JSON;
-import com.alibaba.fastjson.JSONObject;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -97,7 +97,8 @@ public class InspectNewProblemReportSendEmailApi extends PrivateApiComponentBase
     @ResubmitInterval(5)
     public Object myDoService(JSONObject paramObj) throws Exception {
         String title = paramObj.getString("title");
-        ResourceSearchVo searchVo = JSON.toJavaObject(paramObj, ResourceSearchVo.class);
+        IResourceCenterResourceCrossoverService resourceCrossoverService = CrossoverServiceFactory.getApi(IResourceCenterResourceCrossoverService.class);
+        ResourceSearchVo searchVo = resourceCrossoverService.assembleResourceSearchVo(paramObj);
         Integer isNeedAlertDetail = paramObj.getInteger("isNeedAlertDetail");
         if (isNeedAlertDetail == null) {
             isNeedAlertDetail = 0;
