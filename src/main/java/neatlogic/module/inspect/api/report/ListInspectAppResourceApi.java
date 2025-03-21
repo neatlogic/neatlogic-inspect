@@ -96,8 +96,13 @@ public class ListInspectAppResourceApi extends PrivateApiComponentBase {
         IResourceCenterDataSource resourceCenterDataSource = ResourceCenterDataSourceFactory.getResourceCenterDataSource();
         JSONArray tableList = resourceCenterDataSource.getAppResourceList(appSystemId, appModuleId, envId, typeIdList, viewName, currentPage, pageSize);
         for (int i = 0; i < tableList.size(); i++) {
-            JSONObject tabelObj = tableList.getJSONObject(i);
-            JSONArray tbodyList = tabelObj.getJSONArray("tbodyList");
+            JSONObject tableObj = tableList.getJSONObject(i);
+            JSONArray theadList = tableObj.getJSONArray("theadList");
+            JSONObject thead = new JSONObject();
+            thead.put("key", "taskStatus");
+            thead.put("title", "巡检作业状态");
+            theadList.add(thead);
+            JSONArray tbodyList = tableObj.getJSONArray("tbodyList");
             list.addAll(tbodyList);
         }
         //补充巡检相关信息
@@ -119,6 +124,10 @@ public class ListInspectAppResourceApi extends PrivateApiComponentBase {
                         AutoexecJobPhaseNodeVo jobPhaseNodeVo = autoexecJobMapper.getJobPhaseNodeInfoByJobPhaseIdAndResourceId(jobResourceInspectVo.getPhaseId(), jobResourceInspectVo.getResourceId());
 //                        resourceVo.setJobPhaseNodeVo(jobPhaseNodeVo);
                         tbodyObj.put("jobPhaseNodeVo", jobPhaseNodeVo);
+                        JSONObject taskStatus = new JSONObject();
+                        taskStatus.put("value", jobPhaseNodeVo.getStatus());
+                        taskStatus.put("text", jobPhaseNodeVo.getStatusName());
+                        tbodyObj.put("taskStatus", taskStatus);
                     }
                 }
             }
