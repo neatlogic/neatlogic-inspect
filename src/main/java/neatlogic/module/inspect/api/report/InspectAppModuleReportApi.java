@@ -30,6 +30,7 @@ import java.util.stream.Collectors;
  * @date 2022/2/17 11:28 上午
  */
 @Service
+@Deprecated
 @AuthAction(action = INSPECT_BASE.class)
 @OperationType(type = OperationTypeEnum.SEARCH)
 public class InspectAppModuleReportApi extends PrivateApiComponentBase {

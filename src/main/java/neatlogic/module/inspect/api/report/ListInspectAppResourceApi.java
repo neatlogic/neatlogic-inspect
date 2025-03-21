@@ -87,14 +87,14 @@ public class ListInspectAppResourceApi extends PrivateApiComponentBase {
         Long envId = paramObj.getLong("envId");
         Integer currentPage = paramObj.getInteger("currentPage");
         Integer pageSize = paramObj.getInteger("pageSize");
-        Long typeId = paramObj.getLong("typeId");
-        List<Long> typeIdList = new ArrayList<>();
-        if (typeId != null) {
-            typeIdList.add(typeId);
-        }
         String viewName = paramObj.getString("viewName");
+        List<String> inspectStatusList = new ArrayList<>();
+        JSONArray inspectStatusArray = paramObj.getJSONArray("inspectStatusList");
+        if (CollectionUtils.isNotEmpty(inspectStatusArray)) {
+            inspectStatusList = inspectStatusArray.toJavaList(String.class);
+        }
         IResourceCenterDataSource resourceCenterDataSource = ResourceCenterDataSourceFactory.getResourceCenterDataSource();
-        JSONArray tableList = resourceCenterDataSource.getAppResourceList(appSystemId, appModuleId, envId, typeIdList, viewName, currentPage, pageSize);
+        JSONArray tableList = resourceCenterDataSource.getAppResourceList(appSystemId, appModuleId, envId, inspectStatusList, viewName, currentPage, pageSize);
         for (int i = 0; i < tableList.size(); i++) {
             JSONObject tableObj = tableList.getJSONObject(i);
             JSONArray theadList = tableObj.getJSONArray("theadList");
@@ -122,7 +122,6 @@ public class ListInspectAppResourceApi extends PrivateApiComponentBase {
                     if (jobResourceInspectVoOptional.isPresent()) {
                         AutoexecJobResourceInspectVo jobResourceInspectVo = jobResourceInspectVoOptional.get();
                         AutoexecJobPhaseNodeVo jobPhaseNodeVo = autoexecJobMapper.getJobPhaseNodeInfoByJobPhaseIdAndResourceId(jobResourceInspectVo.getPhaseId(), jobResourceInspectVo.getResourceId());
-//                        resourceVo.setJobPhaseNodeVo(jobPhaseNodeVo);
                         tbodyObj.put("jobPhaseNodeVo", jobPhaseNodeVo);
                         JSONObject taskStatus = new JSONObject();
                         taskStatus.put("value", jobPhaseNodeVo.getStatus());
