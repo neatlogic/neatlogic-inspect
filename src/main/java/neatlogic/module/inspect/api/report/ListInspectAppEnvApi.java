@@ -63,8 +63,5 @@ public class ListInspectAppEnvApi extends PrivateApiComponentBase {
         Long appSystemId = paramObj.getLong("appSystemId");
         IResourceCenterDataSource resourceCenterDataSource = ResourceCenterDataSourceFactory.getResourceCenterDataSource();
         return resourceCenterDataSource.getAppEnvListByAppSystemId(appSystemId);
-//        ResourceSearchVo searchVo = paramObj.toJavaObject(ResourceSearchVo.class);
-//        IResourceCenterResourceCrossoverService resourceCrossoverService = CrossoverServiceFactory.getApi(IResourceCenterResourceCrossoverService.class);
-//        return resourceCrossoverService.getAppEnvList(searchVo);
     }
 }

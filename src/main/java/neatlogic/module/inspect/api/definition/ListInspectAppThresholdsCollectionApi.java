@@ -87,14 +87,6 @@ public class ListInspectAppThresholdsCollectionApi extends PrivateApiComponentBa
             set.addAll(entry.getValue());
         }
         List<Long> resourceTypeIdList = new ArrayList<>(set);
-//        ResourceSearchVo searchVo = paramObj.toJavaObject(ResourceSearchVo.class);
-//        List<Long> resourceTypeIdList = new ArrayList<>();
-//        IResourceCrossoverMapper iResourceCrossoverMapper = CrossoverServiceFactory.getApi(IResourceCrossoverMapper.class);
-//        Set<Long> resourceTypeIdSet = iResourceCrossoverMapper.getIpObjectResourceTypeIdListByAppSystemIdAndEnvId(searchVo);
-//        if (CollectionUtils.isNotEmpty(resourceTypeIdSet)) {
-//            resourceTypeIdList.addAll(resourceTypeIdSet);
-//            resourceTypeIdList.addAll(iResourceCrossoverMapper.getOsResourceTypeIdListByAppSystemIdAndEnvId(searchVo));
-//        }
 
         if (CollectionUtils.isNotEmpty(resourceTypeIdList)) {
             ICiCrossoverMapper iCiCrossoverMapper = CrossoverServiceFactory.getApi(ICiCrossoverMapper.class);
