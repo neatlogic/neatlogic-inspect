@@ -23,7 +23,6 @@ import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoCollection;
 import neatlogic.framework.cmdb.crossover.ICiCrossoverMapper;
 import neatlogic.framework.cmdb.crossover.IResourceCenterResourceCrossoverService;
-import neatlogic.framework.cmdb.crossover.IResourceCrossoverMapper;
 import neatlogic.framework.cmdb.dto.ci.CiVo;
 import neatlogic.framework.cmdb.dto.resourcecenter.BgVo;
 import neatlogic.framework.cmdb.dto.resourcecenter.IpVo;
@@ -445,19 +444,8 @@ public class InspectReportServiceImpl implements InspectReportService {
 
     @Override
     public Workbook getInspectNewProblemReportWorkbookByAppSystemId(Long appSystemId, Integer isNeedAlertDetail) {
-        List<Long> ipObjectResourceTypeIdList = new ArrayList<>();
-        List<Long> osResourceTypeIdList = new ArrayList<>();
-        IResourceCrossoverMapper resourceCrossoverMapper = CrossoverServiceFactory.getApi(IResourceCrossoverMapper.class);
         ResourceSearchVo searchVo = new ResourceSearchVo();
         searchVo.setAppSystemId(appSystemId);
-//        Set<Long> resourceTypeIdSet = resourceCrossoverMapper.getIpObjectResourceTypeIdListByAppSystemIdAndEnvId(searchVo);
-//        ipObjectResourceTypeIdList.addAll(resourceTypeIdSet);
-//        ipObjectResourceTypeIdList.sort(Long::compare);
-//        if (CollectionUtils.isNotEmpty(resourceTypeIdSet)) {
-//            resourceTypeIdSet = resourceCrossoverMapper.getOsResourceTypeIdListByAppSystemIdAndEnvId(searchVo);
-//            osResourceTypeIdList.addAll(resourceTypeIdSet);
-//            osResourceTypeIdList.sort(Long::compare);
-//        }
 
         List<String> headerList = new ArrayList<>();
         List<String> columnList = new ArrayList<>();
@@ -495,36 +483,6 @@ public class InspectReportServiceImpl implements InspectReportService {
                 }
             }
         }
-//        for (Long resourceTypeId : ipObjectResourceTypeIdList) {
-//            searchVo.setTypeId(resourceTypeId);
-//            int rowNum = resourceCrossoverMapper.getIpObjectResourceCountByAppSystemIdAndAppModuleIdAndEnvIdAndTypeId(searchVo);
-//            if (rowNum > 0) {
-//                searchVo.setRowNum(rowNum);
-//                for (int currentPage = 1; currentPage <= searchVo.getPageCount(); currentPage++) {
-//                    searchVo.setCurrentPage(currentPage);
-//                    List<Long> idList = resourceCrossoverMapper.getIpObjectResourceIdListByAppSystemIdAndAppModuleIdAndEnvIdAndTypeId(searchVo);
-//                    if (CollectionUtils.isNotEmpty(idList)) {
-//                        List<InspectResourceVo> inspectResourceVos = inspectMapper.getInspectResourceListByIdList(idList);
-//                        putCommonDataMap(idList, inspectResourceVos, isNeedAlertDetail, nameList, fieldPathTextMap, sheetBuilder);
-//                    }
-//                }
-//            }
-//        }
-//        for (Long resourceTypeId : osResourceTypeIdList) {
-//            searchVo.setTypeId(resourceTypeId);
-//            int rowNum = resourceCrossoverMapper.getOsResourceCountByAppSystemIdAndAppModuleIdAndEnvIdAndTypeId(searchVo);
-//            if (rowNum > 0) {
-//                searchVo.setRowNum(rowNum);
-//                for (int currentPage = 1; currentPage <= searchVo.getPageCount(); currentPage++) {
-//                    searchVo.setCurrentPage(currentPage);
-//                    List<Long> idList = resourceCrossoverMapper.getOsResourceIdListByAppSystemIdAndAppModuleIdAndEnvIdAndTypeId(searchVo);
-//                    if (CollectionUtils.isNotEmpty(idList)) {
-//                        List<InspectResourceVo> inspectResourceVos = inspectMapper.getInspectResourceListByIdList(idList);
-//                        putCommonDataMap(idList, inspectResourceVos, isNeedAlertDetail, nameList, fieldPathTextMap, sheetBuilder);
-//                    }
-//                }
-//            }
-//        }
         return workbook;
     }
 
