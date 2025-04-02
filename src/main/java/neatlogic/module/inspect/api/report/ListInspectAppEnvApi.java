@@ -16,11 +16,10 @@ package neatlogic.module.inspect.api.report;
 
 import com.alibaba.fastjson.JSONObject;
 import neatlogic.framework.auth.core.AuthAction;
-import neatlogic.framework.cmdb.crossover.IResourceCenterResourceCrossoverService;
 import neatlogic.framework.cmdb.dto.resourcecenter.AppEnvVo;
-import neatlogic.framework.cmdb.dto.resourcecenter.ResourceSearchVo;
+import neatlogic.framework.cmdb.resourcecenter.datasource.core.IResourceCenterDataSource;
+import neatlogic.framework.cmdb.resourcecenter.datasource.core.ResourceCenterDataSourceFactory;
 import neatlogic.framework.common.constvalue.ApiParamType;
-import neatlogic.framework.crossover.CrossoverServiceFactory;
 import neatlogic.framework.inspect.auth.INSPECT_BASE;
 import neatlogic.framework.restful.annotation.*;
 import neatlogic.framework.restful.constvalue.OperationTypeEnum;
@@ -61,8 +60,8 @@ public class ListInspectAppEnvApi extends PrivateApiComponentBase {
     @Description(desc = "nmiar.listinspectappenvapi.getname")
     @Override
     public Object myDoService(JSONObject paramObj) throws Exception {
-        ResourceSearchVo searchVo = paramObj.toJavaObject(ResourceSearchVo.class);
-        IResourceCenterResourceCrossoverService resourceCrossoverService = CrossoverServiceFactory.getApi(IResourceCenterResourceCrossoverService.class);
-        return resourceCrossoverService.getAppEnvList(searchVo);
+        Long appSystemId = paramObj.getLong("appSystemId");
+        IResourceCenterDataSource resourceCenterDataSource = ResourceCenterDataSourceFactory.getResourceCenterDataSource();
+        return resourceCenterDataSource.getAppEnvListByAppSystemId(appSystemId);
     }
 }

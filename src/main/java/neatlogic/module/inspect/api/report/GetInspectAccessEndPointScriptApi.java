@@ -51,7 +51,7 @@ public class GetInspectAccessEndPointScriptApi extends PrivateApiComponentBase {
     public Object myDoService(JSONObject paramObj) throws Exception {
         Long resourceId = paramObj.getLong("resourceId");
         IResourceCrossoverMapper resourceCrossoverMapper = CrossoverServiceFactory.getApi(IResourceCrossoverMapper.class);
-        if (resourceCrossoverMapper.checkResourceIsExists(resourceId) == 0) {
+        if (resourceCrossoverMapper.getResourceIdByResourceId(resourceId) == null) {
             throw new ResourceNotFoundException(resourceId);
         }
         return inspectMapper.getResourceScriptByResourceId(resourceId);

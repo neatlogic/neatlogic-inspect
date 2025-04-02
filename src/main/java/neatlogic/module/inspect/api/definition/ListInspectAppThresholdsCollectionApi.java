@@ -19,11 +19,11 @@ import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoCollection;
 import neatlogic.framework.auth.core.AuthAction;
 import neatlogic.framework.cmdb.crossover.ICiCrossoverMapper;
-import neatlogic.framework.cmdb.crossover.IResourceCrossoverMapper;
 import neatlogic.framework.cmdb.crossover.ISyncCrossoverMapper;
 import neatlogic.framework.cmdb.dto.ci.CiVo;
-import neatlogic.framework.cmdb.dto.resourcecenter.ResourceSearchVo;
 import neatlogic.framework.cmdb.enums.sync.CollectMode;
+import neatlogic.framework.cmdb.resourcecenter.datasource.core.IResourceCenterDataSource;
+import neatlogic.framework.cmdb.resourcecenter.datasource.core.ResourceCenterDataSourceFactory;
 import neatlogic.framework.common.constvalue.ApiParamType;
 import neatlogic.framework.crossover.CrossoverServiceFactory;
 import neatlogic.framework.inspect.auth.INSPECT_BASE;
@@ -37,10 +37,7 @@ import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
@@ -82,15 +79,14 @@ public class ListInspectAppThresholdsCollectionApi extends PrivateApiComponentBa
     @Description(desc = "获取应用巡检阈值设置，需要依赖mongodb")
     @Override
     public Object myDoService(JSONObject paramObj) throws Exception {
-
-        ResourceSearchVo searchVo = paramObj.toJavaObject(ResourceSearchVo.class);
-        List<Long> resourceTypeIdList = new ArrayList<>();
-        IResourceCrossoverMapper iResourceCrossoverMapper = CrossoverServiceFactory.getApi(IResourceCrossoverMapper.class);
-        Set<Long> resourceTypeIdSet = iResourceCrossoverMapper.getIpObjectResourceTypeIdListByAppSystemIdAndEnvId(searchVo);
-        if (CollectionUtils.isNotEmpty(resourceTypeIdSet)) {
-            resourceTypeIdList.addAll(resourceTypeIdSet);
-            resourceTypeIdList.addAll(iResourceCrossoverMapper.getOsResourceTypeIdListByAppSystemIdAndEnvId(searchVo));
+        Long appSystemId = paramObj.getLong("appSystemId");
+        Set<Long> set = new HashSet<>();
+        IResourceCenterDataSource resourceCenterDataSource = ResourceCenterDataSourceFactory.getResourceCenterDataSource();
+        Map<String, List<Long>> viewName2TypeIdListMap = resourceCenterDataSource.getAppResourceTypeIdListByAppSystemId(appSystemId);
+        for (Map.Entry<String, List<Long>> entry : viewName2TypeIdListMap.entrySet()) {
+            set.addAll(entry.getValue());
         }
+        List<Long> resourceTypeIdList = new ArrayList<>(set);
 
         if (CollectionUtils.isNotEmpty(resourceTypeIdList)) {
             ICiCrossoverMapper iCiCrossoverMapper = CrossoverServiceFactory.getApi(ICiCrossoverMapper.class);

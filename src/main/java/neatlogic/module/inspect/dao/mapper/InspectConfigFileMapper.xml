@@ -433,7 +433,7 @@
         SELECT
         COUNT(1)
         FROM `inspect_config_file_path` a
-        LEFT JOIN @{DATA_SCHEMA}.`scence_ipobject_ip_port` b ON b.`id` = a.`resource_id`
+        LEFT JOIN @{DATA_SCHEMA}.`scence_ipobject_detail` b ON b.`id` = a.`resource_id`
         <where>
             <if test="keyword != null and keyword != ''">
                 AND (a.`path` LIKE CONCAT('%', #{keyword}, '%')
@@ -463,7 +463,7 @@
         b.`port`  AS resourcePort,
         b.`type_label`  AS resourceTypeLabel
         FROM `inspect_config_file_path` a
-        JOIN @{DATA_SCHEMA}.`scence_ipobject_ip_port` b ON b.`id` = a.`resource_id`
+        JOIN @{DATA_SCHEMA}.`scence_ipobject_detail` b ON b.`id` = a.`resource_id`
         <where>
             <if test="keyword != null and keyword != ''">
             AND (a.`path` LIKE CONCAT('%', #{keyword}, '%')
@@ -498,7 +498,7 @@
             b.`type_label`  AS resourceTypeLabel,
             c.`id` AS versionId
         FROM `inspect_config_file_path` a
-        JOIN @{DATA_SCHEMA}.`scence_ipobject_ip_port` b ON b.`id` = a.`resource_id`
+        JOIN @{DATA_SCHEMA}.`scence_ipobject_detail` b ON b.`id` = a.`resource_id`
         JOIN `inspect_config_file_version` c ON c.`path_id` = a.`id` AND c.`file_id` = a.`file_id`
         WHERE c.`job_id` = #{value}
     </select>

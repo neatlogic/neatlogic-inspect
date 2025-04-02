@@ -27,10 +27,11 @@ import neatlogic.framework.autoexec.dto.node.AutoexecNodeVo;
 import neatlogic.framework.autoexec.job.action.core.AutoexecJobActionHandlerFactory;
 import neatlogic.framework.autoexec.job.action.core.IAutoexecJobActionHandler;
 import neatlogic.framework.cmdb.crossover.ICiCrossoverMapper;
-import neatlogic.framework.cmdb.crossover.IResourceCrossoverMapper;
 import neatlogic.framework.cmdb.dto.ci.CiVo;
 import neatlogic.framework.cmdb.dto.resourcecenter.ResourceSearchVo;
 import neatlogic.framework.cmdb.dto.resourcecenter.ResourceVo;
+import neatlogic.framework.cmdb.resourcecenter.datasource.core.IResourceCenterDataSource;
+import neatlogic.framework.cmdb.resourcecenter.datasource.core.ResourceCenterDataSourceFactory;
 import neatlogic.framework.common.constvalue.systemuser.SystemUser;
 import neatlogic.framework.crossover.CrossoverServiceFactory;
 import neatlogic.framework.dao.mapper.UserMapper;
@@ -44,7 +45,6 @@ import neatlogic.framework.inspect.dto.InspectAppSystemScheduleVo;
 import neatlogic.framework.scheduler.core.JobBase;
 import neatlogic.framework.scheduler.dto.JobObject;
 import neatlogic.framework.service.AuthenticationInfoService;
-import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.quartz.DisallowConcurrentExecution;
 import org.quartz.JobExecutionContext;
@@ -53,10 +53,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 
 /**
  * @author laiwt
@@ -144,20 +141,27 @@ public class InspectAppSystemScheduleJob extends JobBase {
             return;
         }
         String userUuid = scheduleVo.getFcu();
-        List<Long> ipObjectResourceTypeIdList = new ArrayList<>();
-        List<Long> osResourceTypeIdList = new ArrayList<>();
-        IResourceCrossoverMapper resourceCrossoverMapper = CrossoverServiceFactory.getApi(IResourceCrossoverMapper.class);
+        Long appSystemId = scheduleVo.getAppSystemId();
+        Map<Long, List<AutoexecNodeVo>> typeId2NodeListMap = new HashMap<>();
         ResourceSearchVo searchVo = new ResourceSearchVo();
-        searchVo.setAppSystemId(scheduleVo.getAppSystemId());
-        Set<Long> resourceTypeIdSet = resourceCrossoverMapper.getIpObjectResourceTypeIdListByAppSystemIdAndEnvId(searchVo);
-        ipObjectResourceTypeIdList.addAll(resourceTypeIdSet);
-        ipObjectResourceTypeIdList.sort(Long::compare);
-        if (CollectionUtils.isNotEmpty(resourceTypeIdSet)) {
-            resourceTypeIdSet = resourceCrossoverMapper.getOsResourceTypeIdListByAppSystemIdAndEnvId(searchVo);
-            osResourceTypeIdList.addAll(resourceTypeIdSet);
-            osResourceTypeIdList.sort(Long::compare);
+        searchVo.setAppSystemId(appSystemId);
+        IResourceCenterDataSource resourceCenterDataSource = ResourceCenterDataSourceFactory.getResourceCenterDataSource();
+        Map<String, List<Long>> viewName2TypeIdListMap = resourceCenterDataSource.getAppResourceTypeIdListByAppSystemId(appSystemId);
+        for (Map.Entry<String, List<Long>> entry : viewName2TypeIdListMap.entrySet()) {
+            String viewName = entry.getKey();
+            searchVo.setViewName(viewName);
+            List<Long> typeIdList = entry.getValue();
+            for (Long typeId : typeIdList) {
+                searchVo.setTypeId(typeId);
+                List<ResourceVo> resourceList = resourceCenterDataSource.getAppResourceList(searchVo, false);
+                for (ResourceVo resourceVo : resourceList) {
+                    typeId2NodeListMap.computeIfAbsent(typeId, key -> new ArrayList<>()).add(new AutoexecNodeVo(resourceVo));
+                }
+            }
         }
-        for (Long typeId : ipObjectResourceTypeIdList) {
+        for (Map.Entry<Long, List<AutoexecNodeVo>> entry : typeId2NodeListMap.entrySet()) {
+            Long typeId = entry.getKey();
+            List<AutoexecNodeVo> selectNodeList = entry.getValue();
             Long combopId = inspectMapper.getCombopIdByCiId(typeId);
             if (combopId == null) {
                 continue;
@@ -168,62 +172,12 @@ public class InspectAppSystemScheduleJob extends JobBase {
                 continue;
             }
             String name = ci.getLabel() + (ci.getName() != null ? "(" + ci.getName() + ")" : StringUtils.EMPTY) + " 巡检";
-            List<AutoexecNodeVo> selectNodeList = new ArrayList<>();
-            searchVo.setTypeId(typeId);
-            int rowNum = resourceCrossoverMapper.getIpObjectResourceCountByAppSystemIdAndAppModuleIdAndEnvIdAndTypeId(searchVo);
-            if (rowNum > 0) {
-                searchVo.setRowNum(rowNum);
-                for (int currentPage = 1; currentPage <= searchVo.getPageCount(); currentPage++) {
-                    searchVo.setCurrentPage(currentPage);
-                    List<Long> idList = resourceCrossoverMapper.getIpObjectResourceIdListByAppSystemIdAndAppModuleIdAndEnvIdAndTypeId(searchVo);
-                    if (CollectionUtils.isNotEmpty(idList)) {
-                        List<ResourceVo> resourceList = resourceCrossoverMapper.getResourceByIdList(idList);
-                        for (ResourceVo resourceVo : resourceList) {
-                            selectNodeList.add(new AutoexecNodeVo(resourceVo));
-                        }
-                    }
-                }
-                try {
-                    createAndFireJob(combopId, id, name, userUuid, selectNodeList);
-                } catch (Exception e) {
-                    logger.error(e.getMessage(), e);
-                }
+            try {
+                createAndFireJob(combopId, id, name, userUuid, selectNodeList);
+            } catch (Exception e) {
+                logger.error(e.getMessage(), e);
             }
         }
-        for (Long typeId : osResourceTypeIdList) {
-            Long combopId = inspectMapper.getCombopIdByCiId(typeId);
-            if (combopId == null) {
-                continue;
-            }
-            ICiCrossoverMapper ciCrossoverMapper = CrossoverServiceFactory.getApi(ICiCrossoverMapper.class);
-            CiVo ci = ciCrossoverMapper.getCiById(typeId);
-            if (ci == null) {
-                continue;
-            }
-            String name = ci.getLabel() + (ci.getName() != null ? "(" + ci.getName() + ")" : StringUtils.EMPTY) + " 巡检";
-            List<AutoexecNodeVo> selectNodeList = new ArrayList<>();
-            searchVo.setTypeId(typeId);
-            int rowNum = resourceCrossoverMapper.getOsResourceCountByAppSystemIdAndAppModuleIdAndEnvIdAndTypeId(searchVo);
-            if (rowNum > 0) {
-                searchVo.setRowNum(rowNum);
-                for (int currentPage = 1; currentPage <= searchVo.getPageCount(); currentPage++) {
-                    searchVo.setCurrentPage(currentPage);
-                    List<Long> idList = resourceCrossoverMapper.getOsResourceIdListByAppSystemIdAndAppModuleIdAndEnvIdAndTypeId(searchVo);
-                    if (CollectionUtils.isNotEmpty(idList)) {
-                        List<ResourceVo> resourceList = resourceCrossoverMapper.getResourceByIdList(idList);
-                        for (ResourceVo resourceVo : resourceList) {
-                            selectNodeList.add(new AutoexecNodeVo(resourceVo));
-                        }
-                    }
-                }
-                try {
-                    createAndFireJob(combopId, id, name, userUuid, selectNodeList);
-                } catch (Exception e) {
-                    logger.error(e.getMessage(), e);
-                }
-            }
-        }
-
     }
 
     private void createAndFireJob(Long combopId, Long invokeId, String name, String userUuid, List<AutoexecNodeVo> selectNodeList) throws Exception {

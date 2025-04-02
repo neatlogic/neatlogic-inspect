@@ -19,12 +19,8 @@ import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoCollection;
-import neatlogic.framework.cmdb.crossover.ICiCrossoverMapper;
-import neatlogic.framework.cmdb.crossover.IResourceCrossoverMapper;
-import neatlogic.framework.cmdb.dto.ci.CiVo;
-import neatlogic.framework.cmdb.dto.resourcecenter.ResourceVo;
-import neatlogic.framework.cmdb.exception.resourcecenter.ResourceNotFoundException;
-import neatlogic.framework.crossover.CrossoverServiceFactory;
+import neatlogic.framework.cmdb.resourcecenter.datasource.core.IResourceCenterDataSource;
+import neatlogic.framework.cmdb.resourcecenter.datasource.core.ResourceCenterDataSourceFactory;
 import neatlogic.framework.dao.mapper.UserMapper;
 import neatlogic.framework.dto.UserVo;
 import neatlogic.framework.inspect.exception.*;
@@ -40,7 +36,6 @@ import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
 import java.util.*;
-import java.util.stream.Collectors;
 
 /**
  * @author longrf
@@ -196,45 +191,19 @@ public class InspectCollectServiceImpl implements InspectCollectService {
     @Override
     public List<Long> getCollectionThresholdsAppSystemIdListByResourceId(Long resourceId) {
         List<Long> returnAppSystemIdList = new ArrayList<>();
-        IResourceCrossoverMapper iResourceCrossoverMapper = CrossoverServiceFactory.getApi(IResourceCrossoverMapper.class);
-        ResourceVo resourceVo = iResourceCrossoverMapper.getResourceById(resourceId);
-        if (resourceVo == null) {
-            throw new ResourceNotFoundException(resourceId);
-        }
-        ICiCrossoverMapper iCiCrossoverMapper = CrossoverServiceFactory.getApi(ICiCrossoverMapper.class);
-        CiVo ciVo = iCiCrossoverMapper.getCiById(resourceVo.getTypeId());
-        List<CiVo> parentCiList = iCiCrossoverMapper.getUpwardCiListByLR(ciVo.getLft(), ciVo.getRht());
-        if (CollectionUtils.isEmpty(parentCiList)) {
-            return null;
-        }
-
-        List<String> parentCiNameList = parentCiList.stream().map(CiVo::getName).collect(Collectors.toList());
         MongoCollection<Document> collection = mongoTemplate.getCollection("_inspectdef_app");
         Document searchDoc = new Document();
-
-        //只有OS类型的会关联多个应用实例，因此会有多个系统id
-        if (parentCiNameList.contains("OS")) {
-            Set<Long> resourceAppSystemIdList = iResourceCrossoverMapper.getResourceAppSystemIdListByResourceId(resourceId);
-            if (CollectionUtils.isNotEmpty(resourceAppSystemIdList)) {
-                searchDoc.put("appSystemId", new Document().append("$in", resourceAppSystemIdList));
-            }
-            FindIterable<Document> collectionList = collection.find(searchDoc);
-            if (collectionList.first() != null) {
-                JSONArray defAppArray = collectionList.into(new JSONArray());
-                for (Object object : defAppArray) {
-                    JSONObject dbObject = (JSONObject) JSON.toJSON(object);
-                    returnAppSystemIdList.add(dbObject.getLong("appSystemId"));
-                }
-            }
-        } else {
-            Long resourceAppSystemId = iResourceCrossoverMapper.getAppSystemIdByResourceId(resourceId);
-            if (resourceAppSystemId != null) {
-                searchDoc.put("appSystemId", resourceAppSystemId);
-            }
-            FindIterable<Document> collectionList = collection.find(searchDoc);
-            if (collectionList.first() != null) {
-                JSONObject defAppJson = JSONObject.parseObject(Objects.requireNonNull(collectionList.first()).toJson());
-                returnAppSystemIdList.add(defAppJson.getLong("appSystemId"));
+        IResourceCenterDataSource resourceCenterDataSource = ResourceCenterDataSourceFactory.getResourceCenterDataSource();
+        List<Long> appSystemIdList = resourceCenterDataSource.getAppSystemIdListById(resourceId);
+        if (CollectionUtils.isNotEmpty(appSystemIdList)) {
+            searchDoc.put("appSystemId", new Document().append("$in", appSystemIdList));
+        }
+        FindIterable<Document> collectionList = collection.find(searchDoc);
+        if (collectionList.first() != null) {
+            JSONArray defAppArray = collectionList.into(new JSONArray());
+            for (Object object : defAppArray) {
+                JSONObject dbObject = (JSONObject) JSON.toJSON(object);
+                returnAppSystemIdList.add(dbObject.getLong("appSystemId"));
             }
         }
         return returnAppSystemIdList;

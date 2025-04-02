@@ -66,7 +66,7 @@ public class SaveInspectAccessEndPointScriptApi extends PrivateApiComponentBase 
         Long resourceId = paramObj.getLong("resourceId");
         JSONObject paramConfig = paramObj.getJSONObject("config");
         IResourceCrossoverMapper resourceCrossoverMapper = CrossoverServiceFactory.getApi(IResourceCrossoverMapper.class);
-        if (resourceCrossoverMapper.checkResourceIsExists(resourceId) == 0) {
+        if (resourceCrossoverMapper.getResourceIdByResourceId(resourceId) == null) {
             throw new ResourceNotFoundException(resourceId);
         }
         inspectMapper.deleteResourceScriptByResourceId(resourceId);
