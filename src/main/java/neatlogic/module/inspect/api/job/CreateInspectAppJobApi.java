@@ -184,7 +184,7 @@ public class CreateInspectAppJobApi extends PrivateApiComponentBase {
                 filter.put("appModuleId", searchVo.getAppModuleId());
                 filter.put("appSystemId", searchVo.getAppSystemId());
                 filter.put("inspectStatusList", inspectStatusList);
-                executeNodeConfig.setInspectFilter(filter);
+                executeNodeConfig.setOtherFilter(filter);
                 executeConfig.setExecuteNodeConfig(executeNodeConfig);
                 jobVo.setExecuteConfig(executeConfig);
                 autoexecJobList.add(jobVo);
