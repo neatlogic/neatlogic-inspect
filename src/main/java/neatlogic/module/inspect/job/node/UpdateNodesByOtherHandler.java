@@ -36,7 +36,7 @@ import org.springframework.stereotype.Component;
 import java.util.List;
 
 @Component
-public class UpdateNodesByInspectFilterHandler implements IUpdateNodes {
+public class UpdateNodesByOtherHandler implements IUpdateNodes {
 
     @Override
     public boolean update(AutoexecCombopExecuteNodeConfigVo executeNodeConfigVo, AutoexecJobVo jobVo, String userName, Long protocolId) {
