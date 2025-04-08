@@ -25,7 +25,6 @@ import neatlogic.framework.autoexec.crossover.IAutoexecJobActionCrossoverService
 import neatlogic.framework.autoexec.dao.mapper.AutoexecCombopMapper;
 import neatlogic.framework.autoexec.dto.combop.AutoexecCombopExecuteConfigVo;
 import neatlogic.framework.autoexec.dto.combop.AutoexecCombopExecuteNodeConfigVo;
-import neatlogic.framework.autoexec.dto.combop.AutoexecCombopVo;
 import neatlogic.framework.autoexec.dto.job.AutoexecJobVo;
 import neatlogic.framework.autoexec.job.action.core.AutoexecJobActionHandlerFactory;
 import neatlogic.framework.autoexec.job.action.core.IAutoexecJobActionHandler;
@@ -36,10 +35,14 @@ import neatlogic.framework.cmdb.dto.ci.CiVo;
 import neatlogic.framework.cmdb.dto.resourcecenter.ResourceSearchVo;
 import neatlogic.framework.cmdb.dto.resourcecenter.ResourceVo;
 import neatlogic.framework.cmdb.exception.resourcecenter.AppSystemNotFoundException;
+import neatlogic.framework.cmdb.resourcecenter.datasource.core.IResourceCenterDataSource;
+import neatlogic.framework.cmdb.resourcecenter.datasource.core.ResourceCenterDataSourceFactory;
 import neatlogic.framework.common.constvalue.ApiParamType;
 import neatlogic.framework.crossover.CrossoverServiceFactory;
+import neatlogic.framework.exception.core.ApiRuntimeException;
 import neatlogic.framework.inspect.constvalue.JobSource;
 import neatlogic.framework.inspect.dao.mapper.InspectMapper;
+import neatlogic.framework.inspect.dto.InspectCiCombopVo;
 import neatlogic.framework.restful.annotation.*;
 import neatlogic.framework.restful.constvalue.OperationTypeEnum;
 import neatlogic.framework.restful.core.privateapi.PrivateApiComponentBase;
@@ -52,6 +55,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
 import java.util.*;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.stream.Collectors;
 
 @Transactional
 @Service
@@ -90,9 +95,13 @@ public class CreateInspectAppJobApi extends PrivateApiComponentBase {
         if (appSystemVo == null) {
             throw new AppSystemNotFoundException(appSystemId);
         }
+        List<String> inspectStatusList = new ArrayList<>();
+        inspectStatusList.add("warn");
+        inspectStatusList.add("critical");
+        inspectStatusList.add("fatal");
+        Set<Long> allResourceTypeIdSet = new HashSet<>();
+        IResourceCenterDataSource resourceCenterDataSource = ResourceCenterDataSourceFactory.getResourceCenterDataSource();
         List<ResourceSearchVo> searchList = new ArrayList<>();
-        List<Long> allEnvIdList = new ArrayList<>();
-        Set<Long> allAppModuleIdSet = new HashSet<>();
         JSONArray envList = paramObj.getJSONArray("envList");
         for (int i = 0; i < envList.size(); i++) {
             JSONObject envObj = envList.getJSONObject(i);
@@ -103,7 +112,6 @@ public class CreateInspectAppJobApi extends PrivateApiComponentBase {
             if (envId == null) {
                 continue;
             }
-            allEnvIdList.add(envId);
             JSONArray appModuleIdArray = envObj.getJSONArray("appModuleIdList");
             if (CollectionUtils.isEmpty(appModuleIdArray)) {
                 continue;
@@ -113,11 +121,17 @@ public class CreateInspectAppJobApi extends PrivateApiComponentBase {
                 if (appModuleId == null) {
                     continue;
                 }
-                allAppModuleIdSet.add(appModuleId);
+                Set<Long> typeIdSet = new HashSet<>();
+                Map<String, List<Long>> viewName2TypeIdListMap = resourceCenterDataSource.getAppResourceTypeIdListByAppSystemIdAndAppModuleIdAndEnvIdAndInspectStatusList(appSystemId, appModuleId, envId, inspectStatusList);
+                for (Map.Entry<String, List<Long>> entry : viewName2TypeIdListMap.entrySet()) {
+                    typeIdSet.addAll(entry.getValue());
+                    allResourceTypeIdSet.addAll(entry.getValue());
+                }
                 ResourceSearchVo searchVo = new ResourceSearchVo();
                 searchVo.setAppSystemId(appSystemId);
                 searchVo.setAppModuleId(appModuleId);
                 searchVo.setEnvId(envId);
+                searchVo.setTypeIdList(new ArrayList<>(typeIdSet));
                 searchList.add(searchVo);
             }
         }
@@ -125,39 +139,17 @@ public class CreateInspectAppJobApi extends PrivateApiComponentBase {
             return null;
         }
         List<AutoexecJobVo> autoexecJobList = new ArrayList<>();
-        List<String> inspectStatusList = new ArrayList<>();
-        Set<Long> allResourceTypeIdSet = new HashSet<>();
-        inspectStatusList.add("warn");
-        inspectStatusList.add("critical");
-        inspectStatusList.add("fatal");
-        for (ResourceSearchVo searchVo : searchList) {
-            searchVo.setInspectStatusList(inspectStatusList);
-            Set<Long> resourceTypeIdSet = resourceCrossoverMapper.getResourceTypeIdListByAppSystemIdAndModuleIdAndEnvIdAndInspectStatusList(searchVo);
-            if (CollectionUtils.isEmpty(resourceTypeIdSet)) {
-                continue;
-            }
-            allResourceTypeIdSet.addAll(resourceTypeIdSet);
-            List<Long> resourceTypeIdList = new ArrayList<>(resourceTypeIdSet);
-            searchVo.setTypeIdList(resourceTypeIdList);
-        }
         Map<Long, CiVo> ciMap = new HashMap<>();
         Map<Long, Long> ciIdToCombopIdMap = new HashMap<>();
+        List<Long> combopIdList = new ArrayList<>();
         if (CollectionUtils.isNotEmpty(allResourceTypeIdSet)) {
             ICiCrossoverMapper ciCrossoverMapper = CrossoverServiceFactory.getApi(ICiCrossoverMapper.class);
             List<CiVo> ciVoList = ciCrossoverMapper.getCiByIdList(new ArrayList<>(allResourceTypeIdSet));
-            for (CiVo ciVo : ciVoList) {
-                Long ciId = ciVo.getId();
-                Long combopId = inspectMapper.getCombopIdByCiId(ciId);
-                if (combopId == null) {
-                    continue;
-                }
-                AutoexecCombopVo combopVo = autoexecCombopMapper.getAutoexecCombopById(combopId);
-                if (combopVo == null) {
-                    continue;
-                }
-                ciMap.put(ciId, ciVo);
-                ciIdToCombopIdMap.put(ciId, combopId);
-            }
+            ciMap = ciVoList.stream().filter(Objects::nonNull).collect(Collectors.toMap(CiVo::getId, e -> e));
+            List<InspectCiCombopVo> ciCombopList = inspectMapper.searchInspectCiCombopListByCiIdList(new ArrayList<>(allResourceTypeIdSet));
+            ciIdToCombopIdMap = ciCombopList.stream().filter(Objects::nonNull).collect(Collectors.toMap(InspectCiCombopVo::getId, InspectCiCombopVo::getCombopId));
+            combopIdList = ciCombopList.stream().filter(Objects::nonNull).map(InspectCiCombopVo::getCombopId).filter(Objects::nonNull).collect(Collectors.toList());
+            combopIdList = autoexecCombopMapper.checkAutoexecCombopIdListIsExists(combopIdList);
         }
         for (ResourceSearchVo searchVo : searchList) {
             if (CollectionUtils.isEmpty(searchVo.getTypeIdList())) {
@@ -168,7 +160,13 @@ public class CreateInspectAppJobApi extends PrivateApiComponentBase {
                 if (combopId == null) {
                     continue;
                 }
+                if (!combopIdList.contains(combopId)) {
+                    continue;
+                }
                 CiVo ciVo = ciMap.get(ciId);
+                if (ciVo == null) {
+                    continue;
+                }
                 AutoexecJobVo jobVo = new AutoexecJobVo();
                 jobVo.setRoundCount(64);
                 jobVo.setOperationId(combopId);
@@ -180,23 +178,13 @@ public class CreateInspectAppJobApi extends PrivateApiComponentBase {
                 jobVo.setRouteId(appSystemId.toString());
                 AutoexecCombopExecuteConfigVo executeConfig = new AutoexecCombopExecuteConfigVo();
                 AutoexecCombopExecuteNodeConfigVo executeNodeConfig = new AutoexecCombopExecuteNodeConfigVo();
-                JSONObject filter = paramObj.getJSONObject("filter");
-                if (filter == null) {
-                    filter = new JSONObject();
-                }
-                List<Long> typeIdList = new ArrayList<>();
-                typeIdList.add(ciId);
-                filter.put("typeIdList", typeIdList);
-                List<Long> envIdList = new ArrayList<>();
-                envIdList.add(searchVo.getEnvId());
-                filter.put("envIdList", envIdList);
-                List<Long> appModuleIdList = new ArrayList<>();
-                appModuleIdList.add(searchVo.getAppModuleId());
-                filter.put("appModuleIdList", appModuleIdList);
-                List<Long> appSystemIdList = new ArrayList<>();
-                appSystemIdList.add(searchVo.getAppSystemId());
-                filter.put("appSystemIdList", appSystemIdList);
-                executeNodeConfig.setFilter(filter);
+                JSONObject filter = new JSONObject();
+                filter.put("typeId", ciId);
+                filter.put("envId", searchVo.getEnvId());
+                filter.put("appModuleId", searchVo.getAppModuleId());
+                filter.put("appSystemId", searchVo.getAppSystemId());
+                filter.put("inspectStatusList", inspectStatusList);
+                executeNodeConfig.setOtherFilter(filter);
                 executeConfig.setExecuteNodeConfig(executeNodeConfig);
                 jobVo.setExecuteConfig(executeConfig);
                 autoexecJobList.add(jobVo);
@@ -205,9 +193,10 @@ public class CreateInspectAppJobApi extends PrivateApiComponentBase {
         if (CollectionUtils.isEmpty(autoexecJobList)) {
             return null;
         }
-
+        Queue<Long> jobIdQueue = new ConcurrentLinkedQueue<>();
+        Queue<String> exceptionMessageQueue = new ConcurrentLinkedQueue<>();
         BatchRunner<AutoexecJobVo> runner = new BatchRunner<>();
-        runner.execute(autoexecJobList, 3, (threadIndex, dataIndex, jobVo) -> {
+        runner.execute(autoexecJobList, 1, (threadIndex, dataIndex, jobVo) -> {
             try {
                 IAutoexecJobActionCrossoverService autoexecJobActionCrossoverService = CrossoverServiceFactory.getApi(IAutoexecJobActionCrossoverService.class);
                 autoexecJobActionCrossoverService.validateAndCreateJobFromCombop(jobVo);
@@ -215,11 +204,18 @@ public class CreateInspectAppJobApi extends PrivateApiComponentBase {
                 jobVo.setAction(JobAction.FIRE.getValue());
                 jobVo.setIsFirstFire(1);
                 fireAction.doService(jobVo);
+                jobIdQueue.add(jobVo.getId());
             } catch (Exception e) {
                 logger.error(e.getMessage(), e);
+                exceptionMessageQueue.add(e.getMessage());
             }
         }, "INSPECT-APP-JOB-MULTI-CREATE");
-        return null;
+        if (CollectionUtils.isNotEmpty(exceptionMessageQueue)) {
+            throw new ApiRuntimeException(String.join(", ", exceptionMessageQueue));
+        }
+        JSONObject resultObj = new JSONObject();
+        resultObj.put("jobIdList", jobIdQueue);
+        return resultObj;
     }
 
     @Override
