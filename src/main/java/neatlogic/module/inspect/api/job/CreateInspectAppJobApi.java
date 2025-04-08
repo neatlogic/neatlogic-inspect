@@ -64,7 +64,7 @@ import java.util.stream.Collectors;
 @OperationType(type = OperationTypeEnum.CREATE)
 public class CreateInspectAppJobApi extends PrivateApiComponentBase {
 
-    private final static Logger logger = LoggerFactory.getLogger(CreateInspectAppJobApi.class);
+    private static final Logger logger = LoggerFactory.getLogger(CreateInspectAppJobApi.class);
     @Resource
     AutoexecCombopMapper autoexecCombopMapper;
     @Resource
