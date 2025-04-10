@@ -179,7 +179,7 @@ public class InspectNewProblemReportSendEmailApi extends PrivateApiComponentBase
                             InputStream is = new ByteArrayInputStream(os.toByteArray());
                             Map<String, InputStream> attachmentMap = new HashMap<>();
                             attachmentMap.put(title + ".xlsx", is);
-                            EmailUtil.sendEmailWithFile(title, title, String.join(",", finalEmailList), null, attachmentMap);
+                            EmailUtil.sendEmailWithFile(title, title, new ArrayList<>(finalEmailList), null, attachmentMap);
                             is.close();
                         }
                     } catch (Exception ex) {

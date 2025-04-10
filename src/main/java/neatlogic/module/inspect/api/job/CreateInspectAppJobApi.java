@@ -25,21 +25,25 @@ import neatlogic.framework.autoexec.crossover.IAutoexecJobActionCrossoverService
 import neatlogic.framework.autoexec.dao.mapper.AutoexecCombopMapper;
 import neatlogic.framework.autoexec.dto.combop.AutoexecCombopExecuteConfigVo;
 import neatlogic.framework.autoexec.dto.combop.AutoexecCombopExecuteNodeConfigVo;
+import neatlogic.framework.autoexec.dto.combop.AutoexecCombopVo;
 import neatlogic.framework.autoexec.dto.job.AutoexecJobVo;
+import neatlogic.framework.autoexec.dto.node.AutoexecNodeVo;
 import neatlogic.framework.autoexec.job.action.core.AutoexecJobActionHandlerFactory;
 import neatlogic.framework.autoexec.job.action.core.IAutoexecJobActionHandler;
 import neatlogic.framework.batch.BatchRunner;
 import neatlogic.framework.cmdb.crossover.ICiCrossoverMapper;
 import neatlogic.framework.cmdb.crossover.IResourceCrossoverMapper;
 import neatlogic.framework.cmdb.dto.ci.CiVo;
+import neatlogic.framework.cmdb.dto.resourcecenter.AppModuleVo;
 import neatlogic.framework.cmdb.dto.resourcecenter.ResourceSearchVo;
 import neatlogic.framework.cmdb.dto.resourcecenter.ResourceVo;
+import neatlogic.framework.cmdb.dto.resourcecenter.config.ResourceEntityVo;
 import neatlogic.framework.cmdb.exception.resourcecenter.AppSystemNotFoundException;
 import neatlogic.framework.cmdb.resourcecenter.datasource.core.IResourceCenterDataSource;
 import neatlogic.framework.cmdb.resourcecenter.datasource.core.ResourceCenterDataSourceFactory;
 import neatlogic.framework.common.constvalue.ApiParamType;
+import neatlogic.framework.common.dto.BasePageVo;
 import neatlogic.framework.crossover.CrossoverServiceFactory;
-import neatlogic.framework.exception.core.ApiRuntimeException;
 import neatlogic.framework.inspect.constvalue.JobSource;
 import neatlogic.framework.inspect.dao.mapper.InspectMapper;
 import neatlogic.framework.inspect.dto.InspectCiCombopVo;
@@ -48,6 +52,7 @@ import neatlogic.framework.restful.constvalue.OperationTypeEnum;
 import neatlogic.framework.restful.core.privateapi.PrivateApiComponentBase;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.MapUtils;
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -55,7 +60,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
 import java.util.*;
-import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.stream.Collectors;
 
 @Transactional
@@ -135,86 +141,140 @@ public class CreateInspectAppJobApi extends PrivateApiComponentBase {
                 searchList.add(searchVo);
             }
         }
-        if (CollectionUtils.isEmpty(searchList)) {
-            return null;
-        }
+        JSONArray resultList = new JSONArray();
+        Map<Long, AppModuleVo> appModuleMap = new HashMap<>();
+        Map<Long, String> appEnvId2NameMap = new HashMap<>();
         List<AutoexecJobVo> autoexecJobList = new ArrayList<>();
         Map<Long, CiVo> ciMap = new HashMap<>();
         Map<Long, Long> ciIdToCombopIdMap = new HashMap<>();
-        List<Long> combopIdList = new ArrayList<>();
+        Map<Long, AutoexecCombopVo> autoexecCombopMap = new HashMap<>();
         if (CollectionUtils.isNotEmpty(allResourceTypeIdSet)) {
             ICiCrossoverMapper ciCrossoverMapper = CrossoverServiceFactory.getApi(ICiCrossoverMapper.class);
             List<CiVo> ciVoList = ciCrossoverMapper.getCiByIdList(new ArrayList<>(allResourceTypeIdSet));
             ciMap = ciVoList.stream().filter(Objects::nonNull).collect(Collectors.toMap(CiVo::getId, e -> e));
             List<InspectCiCombopVo> ciCombopList = inspectMapper.searchInspectCiCombopListByCiIdList(new ArrayList<>(allResourceTypeIdSet));
             ciIdToCombopIdMap = ciCombopList.stream().filter(Objects::nonNull).collect(Collectors.toMap(InspectCiCombopVo::getId, InspectCiCombopVo::getCombopId));
-            combopIdList = ciCombopList.stream().filter(Objects::nonNull).map(InspectCiCombopVo::getCombopId).filter(Objects::nonNull).collect(Collectors.toList());
-            combopIdList = autoexecCombopMapper.checkAutoexecCombopIdListIsExists(combopIdList);
+            List<Long> combopIdList = ciCombopList.stream().filter(Objects::nonNull).map(InspectCiCombopVo::getCombopId).filter(Objects::nonNull).collect(Collectors.toList());
+            List<AutoexecCombopVo> autoexecCombopList = autoexecCombopMapper.getAutoexecCombopByIdList(combopIdList);
+            autoexecCombopMap = autoexecCombopList.stream().filter(Objects::nonNull).collect(Collectors.toMap(AutoexecCombopVo::getId, e -> e));
+            List<AppModuleVo> appModuleList = resourceCenterDataSource.getAppModuleListForTree(appSystemId);
+            appModuleMap = appModuleList.stream().filter(Objects::nonNull).collect(Collectors.toMap(AppModuleVo::getId, e -> e));
+            BasePageVo basePageVo = new BasePageVo();
+            List<ResourceVo> appEnvList = resourceCenterDataSource.getAppEnvListForSelect(basePageVo, false);
+            appEnvId2NameMap = appEnvList.stream().filter(Objects::nonNull).collect(Collectors.toMap(ResourceVo::getId, ResourceVo::getName));
+            appEnvId2NameMap.put(-2L, "未配置环境");
         }
         for (ResourceSearchVo searchVo : searchList) {
-            if (CollectionUtils.isEmpty(searchVo.getTypeIdList())) {
-                continue;
-            }
-            for (Long ciId : searchVo.getTypeIdList()) {
-                Long combopId = ciIdToCombopIdMap.get(ciId);
-                if (combopId == null) {
-                    continue;
+            AppModuleVo appModuleVo = appModuleMap.get(searchVo.getAppModuleId());
+            String envName = appEnvId2NameMap.get(searchVo.getEnvId());
+            if (CollectionUtils.isNotEmpty(searchVo.getTypeIdList())) {
+                for (Long typeId : searchVo.getTypeIdList()) {
+                    JSONObject jsonObj = new JSONObject(new LinkedHashMap<>());
+                    jsonObj.put("appSystemId", searchVo.getAppSystemId());
+                    jsonObj.put("appSystemName", appSystemVo.getName());
+                    jsonObj.put("appSystemAbbrName", appSystemVo.getAbbrName());
+                    jsonObj.put("appModuleId", searchVo.getAppModuleId());
+                    if (appModuleVo != null) {
+                        jsonObj.put("appModuleName", appModuleVo.getName());
+                        jsonObj.put("appModuleAbbrName", appModuleVo.getAbbrName());
+                    }
+                    jsonObj.put("envId", searchVo.getEnvId());
+                    jsonObj.put("envName", envName);
+                    jsonObj.put("typeId", typeId);
+                    CiVo ciVo = ciMap.get(typeId);
+                    if (ciVo != null) {
+                        jsonObj.put("typeName", ciVo.getName());
+                        jsonObj.put("typeLabel", ciVo.getLabel());
+                        Long combopId = ciIdToCombopIdMap.get(typeId);
+                        if (combopId != null) {
+                            jsonObj.put("combopId", combopId);
+                            AutoexecCombopVo autoexecCombopVo = autoexecCombopMap.get(combopId);
+                            if (autoexecCombopVo != null) {
+                                jsonObj.put("combopName", autoexecCombopVo.getName());
+                                AutoexecJobVo jobVo = new AutoexecJobVo();
+                                jobVo.setRoundCount(64);
+                                jobVo.setOperationId(combopId);
+                                jobVo.setOperationType(CombopOperationType.COMBOP.getValue());
+                                jobVo.setSource(JobSource.INSPECT_APP.getValue());
+                                jobVo.setParam(new JSONObject());
+                                jobVo.setName(ciVo.getLabel() + "(" + ciVo.getName() + ")");
+                                jobVo.setInvokeId(typeId);
+                                jobVo.setRouteId(appSystemId.toString());
+                                AutoexecCombopExecuteConfigVo executeConfig = new AutoexecCombopExecuteConfigVo();
+                                AutoexecCombopExecuteNodeConfigVo executeNodeConfig = new AutoexecCombopExecuteNodeConfigVo();
+                                JSONObject filter = new JSONObject();
+                                filter.put("typeId", typeId);
+                                filter.put("envId", searchVo.getEnvId());
+                                filter.put("appModuleId", searchVo.getAppModuleId());
+                                filter.put("appSystemId", searchVo.getAppSystemId());
+                                filter.put("inspectStatusList", inspectStatusList);
+                                List<AutoexecNodeVo> autoexecNodeList = getAutoexecNodeList(filter);
+                                jsonObj.put("执行目标列表", autoexecNodeList);
+                                executeNodeConfig.setOtherFilter(filter);
+                                executeConfig.setExecuteNodeConfig(executeNodeConfig);
+                                jobVo.setExecuteConfig(executeConfig);
+                                autoexecJobList.add(jobVo);
+                                jsonObj.put("jobId", jobVo.getId());
+                                jsonObj.put("jobName", jobVo.getName());
+                            } else {
+                                jsonObj.put("message", "combopId找不到对应的组合工具，请重新设置组合工具，不发起作业");
+                            }
+                        } else {
+                            jsonObj.put("message", "对应的模型设置组合工具，不发起作业");
+                        }
+                    } else {
+                        jsonObj.put("message", "typeId找不到对应的模型，不发起作业");
+                    }
+                    resultList.add(jsonObj);
                 }
-                if (!combopIdList.contains(combopId)) {
-                    continue;
+            } else {
+                JSONObject jsonObj = new JSONObject(new LinkedHashMap<>());
+                jsonObj.put("appSystemId", searchVo.getAppSystemId());
+                jsonObj.put("appSystemName", appSystemVo.getName());
+                jsonObj.put("appSystemAbbrName", appSystemVo.getAbbrName());
+                jsonObj.put("appModuleId", searchVo.getAppModuleId());
+                if (appModuleVo != null) {
+                    jsonObj.put("appModuleName", appModuleVo.getName());
+                    jsonObj.put("appModuleAbbrName", appModuleVo.getAbbrName());
                 }
-                CiVo ciVo = ciMap.get(ciId);
-                if (ciVo == null) {
-                    continue;
-                }
-                AutoexecJobVo jobVo = new AutoexecJobVo();
-                jobVo.setRoundCount(64);
-                jobVo.setOperationId(combopId);
-                jobVo.setOperationType(CombopOperationType.COMBOP.getValue());
-                jobVo.setSource(JobSource.INSPECT_APP.getValue());
-                jobVo.setParam(new JSONObject());
-                jobVo.setName(ciVo.getLabel() + "(" + ciVo.getName() + ")");
-                jobVo.setInvokeId(ciId);
-                jobVo.setRouteId(appSystemId.toString());
-                AutoexecCombopExecuteConfigVo executeConfig = new AutoexecCombopExecuteConfigVo();
-                AutoexecCombopExecuteNodeConfigVo executeNodeConfig = new AutoexecCombopExecuteNodeConfigVo();
-                JSONObject filter = new JSONObject();
-                filter.put("typeId", ciId);
-                filter.put("envId", searchVo.getEnvId());
-                filter.put("appModuleId", searchVo.getAppModuleId());
-                filter.put("appSystemId", searchVo.getAppSystemId());
-                filter.put("inspectStatusList", inspectStatusList);
-                executeNodeConfig.setOtherFilter(filter);
-                executeConfig.setExecuteNodeConfig(executeNodeConfig);
-                jobVo.setExecuteConfig(executeConfig);
-                autoexecJobList.add(jobVo);
+                jsonObj.put("envId", searchVo.getEnvId());
+                jsonObj.put("envName", envName);
+                jsonObj.put("message", "typeIdList为空，找不到数据，不发起作业");
+                resultList.add(jsonObj);
             }
-        }
-        if (CollectionUtils.isEmpty(autoexecJobList)) {
-            return null;
-        }
-        Queue<Long> jobIdQueue = new ConcurrentLinkedQueue<>();
-        Queue<String> exceptionMessageQueue = new ConcurrentLinkedQueue<>();
-        BatchRunner<AutoexecJobVo> runner = new BatchRunner<>();
-        runner.execute(autoexecJobList, 1, (threadIndex, dataIndex, jobVo) -> {
-            try {
-                IAutoexecJobActionCrossoverService autoexecJobActionCrossoverService = CrossoverServiceFactory.getApi(IAutoexecJobActionCrossoverService.class);
-                autoexecJobActionCrossoverService.validateAndCreateJobFromCombop(jobVo);
-                IAutoexecJobActionHandler fireAction = AutoexecJobActionHandlerFactory.getAction(JobAction.FIRE.getValue());
-                jobVo.setAction(JobAction.FIRE.getValue());
-                jobVo.setIsFirstFire(1);
-                fireAction.doService(jobVo);
-                jobIdQueue.add(jobVo.getId());
-            } catch (Exception e) {
-                logger.error(e.getMessage(), e);
-                exceptionMessageQueue.add(e.getMessage());
-            }
-        }, "INSPECT-APP-JOB-MULTI-CREATE");
-        if (CollectionUtils.isNotEmpty(exceptionMessageQueue)) {
-            throw new ApiRuntimeException(String.join(", ", exceptionMessageQueue));
         }
         JSONObject resultObj = new JSONObject();
-        resultObj.put("jobIdList", jobIdQueue);
+        if (CollectionUtils.isNotEmpty(autoexecJobList)) {
+            ConcurrentMap<Long, Object> concurrentMap = new ConcurrentHashMap<>();
+            BatchRunner<AutoexecJobVo> runner = new BatchRunner<>();
+            runner.execute(autoexecJobList, 1, (threadIndex, dataIndex, jobVo) -> {
+                try {
+                    IAutoexecJobActionCrossoverService autoexecJobActionCrossoverService = CrossoverServiceFactory.getApi(IAutoexecJobActionCrossoverService.class);
+                    autoexecJobActionCrossoverService.validateAndCreateJobFromCombop(jobVo);
+                    IAutoexecJobActionHandler fireAction = AutoexecJobActionHandlerFactory.getAction(JobAction.FIRE.getValue());
+                    jobVo.setAction(JobAction.FIRE.getValue());
+                    jobVo.setIsFirstFire(1);
+                    fireAction.doService(jobVo);
+                } catch (Exception e) {
+                    logger.error(e.getMessage(), e);
+                    concurrentMap.put(jobVo.getId(), ExceptionUtils.getStackFrames(e));
+                }
+            }, "INSPECT-APP-JOB-MULTI-CREATE");
+            if (MapUtils.isNotEmpty(concurrentMap)) {
+                for (Map.Entry<Long, Object> entry : concurrentMap.entrySet()) {
+                    for (int i = 0; i < resultList.size(); i++) {
+                        JSONObject jsonObj = resultList.getJSONObject(i);
+                        Long jobId = jsonObj.getLong("jobId");
+                        if (Objects.equals(jobId, entry.getKey())) {
+                            jsonObj.put("message", "创建作业失败");
+                            jsonObj.put("stackTrace", entry.getValue());
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+        resultObj.put("tbodyList", resultList);
         return resultObj;
     }
 
@@ -222,4 +282,34 @@ public class CreateInspectAppJobApi extends PrivateApiComponentBase {
     public String getToken() {
         return "inspect/app/job/create";
     }
+
+    private List<AutoexecNodeVo> getAutoexecNodeList(JSONObject otherFilter) {
+        List<AutoexecNodeVo> resultList = new ArrayList<>();
+        Long appSystemId = otherFilter.getLong("appSystemId");
+        Long appModuleId = otherFilter.getLong("appModuleId");
+        Long envId = otherFilter.getLong("envId");
+        Long typeId = otherFilter.getLong("typeId");
+        JSONArray inspectStatusList = otherFilter.getJSONArray("inspectStatusList");
+        ResourceSearchVo searchVo = new ResourceSearchVo();
+        searchVo.setAppSystemId(appSystemId);
+        searchVo.setAppModuleId(appModuleId);
+        searchVo.setEnvId(envId);
+        searchVo.setTypeId(typeId);
+        searchVo.setInspectStatusList(inspectStatusList.toJavaList(String.class));
+        IResourceCenterDataSource resourceCenterDataSource = ResourceCenterDataSourceFactory.getResourceCenterDataSource();
+        List<ResourceEntityVo> appViewList = resourceCenterDataSource.getAppViewList();
+        if (CollectionUtils.isNotEmpty(appViewList)) {
+            for (ResourceEntityVo resourceEntityVo : appViewList) {
+                searchVo.setViewName(resourceEntityVo.getName());
+                searchVo.setCurrentPage(1);
+                searchVo.setPageSize(100);
+                List<ResourceVo> resourceList = resourceCenterDataSource.getAppResourceList(searchVo, false);
+                for (ResourceVo resourceVo : resourceList) {
+                    resultList.add(new AutoexecNodeVo(resourceVo));
+                }
+            }
+        }
+        return resultList;
+    }
+
 }

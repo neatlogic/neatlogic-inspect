@@ -26,6 +26,9 @@ import neatlogic.framework.restful.constvalue.OperationTypeEnum;
 import neatlogic.framework.restful.core.privateapi.PrivateApiComponentBase;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * @author longrf
  * @date 2022/11/30 18:27
@@ -61,7 +64,11 @@ public class ListInspectAppEnvApi extends PrivateApiComponentBase {
     @Override
     public Object myDoService(JSONObject paramObj) throws Exception {
         Long appSystemId = paramObj.getLong("appSystemId");
+        List<String> inspectStatusList = new ArrayList<>();
+        inspectStatusList.add("warn");
+        inspectStatusList.add("critical");
+        inspectStatusList.add("fatal");
         IResourceCenterDataSource resourceCenterDataSource = ResourceCenterDataSourceFactory.getResourceCenterDataSource();
-        return resourceCenterDataSource.getAppEnvListByAppSystemId(appSystemId);
+        return resourceCenterDataSource.getAppEnvListByAppSystemIdAndInspectStatusList(appSystemId, inspectStatusList);
     }
 }
