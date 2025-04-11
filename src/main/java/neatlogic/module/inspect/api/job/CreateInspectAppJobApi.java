@@ -88,7 +88,8 @@ public class CreateInspectAppJobApi extends PrivateApiComponentBase {
 
     @Input({
             @Param(name = "appSystemId", type = ApiParamType.LONG, isRequired = true, desc = "组合工具ID"),
-            @Param(name = "envList", type = ApiParamType.JSONARRAY, isRequired = true, minSize = 1, desc = "环境列表")
+            @Param(name = "envList", type = ApiParamType.JSONARRAY, isRequired = true, minSize = 1, desc = "环境列表"),
+            @Param(name = "inspectStatusList", type = ApiParamType.JSONARRAY, desc = "巡检状态列表")
     })
     @Output({})
     @Description(desc = "创建应用巡检作业")
@@ -102,9 +103,13 @@ public class CreateInspectAppJobApi extends PrivateApiComponentBase {
             throw new AppSystemNotFoundException(appSystemId);
         }
         List<String> inspectStatusList = new ArrayList<>();
-        inspectStatusList.add("warn");
-        inspectStatusList.add("critical");
-        inspectStatusList.add("fatal");
+        JSONArray inspectStatusArray = paramObj.getJSONArray("inspectStatusList");
+        if (CollectionUtils.isNotEmpty(inspectStatusArray)) {
+            inspectStatusList = inspectStatusArray.toJavaList(String.class);
+        }
+//        inspectStatusList.add("warn");
+//        inspectStatusList.add("critical");
+//        inspectStatusList.add("fatal");
         Set<Long> allResourceTypeIdSet = new HashSet<>();
         IResourceCenterDataSource resourceCenterDataSource = ResourceCenterDataSourceFactory.getResourceCenterDataSource();
         List<ResourceSearchVo> searchList = new ArrayList<>();
