@@ -14,6 +14,7 @@ You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.*/
 package neatlogic.module.inspect.api.report;
 
+import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import neatlogic.framework.auth.core.AuthAction;
 import neatlogic.framework.cmdb.dto.resourcecenter.AppEnvVo;
@@ -24,6 +25,7 @@ import neatlogic.framework.inspect.auth.INSPECT_BASE;
 import neatlogic.framework.restful.annotation.*;
 import neatlogic.framework.restful.constvalue.OperationTypeEnum;
 import neatlogic.framework.restful.core.privateapi.PrivateApiComponentBase;
+import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -56,6 +58,7 @@ public class ListInspectAppEnvApi extends PrivateApiComponentBase {
 
     @Input({
             @Param(name = "appSystemId", type = ApiParamType.LONG, isRequired = true, desc = "term.cmdb.appsystemid"),
+            @Param(name = "inspectStatusList", type = ApiParamType.JSONARRAY, desc = "巡检状态列表")
     })
     @Output({
             @Param(explode = AppEnvVo[].class, desc = "common.tbodylist")
@@ -65,10 +68,14 @@ public class ListInspectAppEnvApi extends PrivateApiComponentBase {
     public Object myDoService(JSONObject paramObj) throws Exception {
         Long appSystemId = paramObj.getLong("appSystemId");
         List<String> inspectStatusList = new ArrayList<>();
-        inspectStatusList.add("warn");
-        inspectStatusList.add("critical");
-        inspectStatusList.add("fatal");
+        JSONArray inspectStatusArray = paramObj.getJSONArray("inspectStatusList");
+        if (CollectionUtils.isNotEmpty(inspectStatusArray)) {
+            inspectStatusList = inspectStatusArray.toJavaList(String.class);
+        }
+//        inspectStatusList.add("warn");
+//        inspectStatusList.add("critical");
+//        inspectStatusList.add("fatal");
         IResourceCenterDataSource resourceCenterDataSource = ResourceCenterDataSourceFactory.getResourceCenterDataSource();
-        return resourceCenterDataSource.getAppEnvListByAppSystemIdAndInspectStatusList(appSystemId, inspectStatusList);
+        return resourceCenterDataSource.getAppEnvListByAppSystemIdAndAppModuleIdAndInspectStatusList(appSystemId, null, inspectStatusList);
     }
 }
