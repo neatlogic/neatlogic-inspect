@@ -34,10 +34,6 @@ import org.springframework.stereotype.Service;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * @author longrf
- * @date 2022/3/2 4:10 下午
- */
 @Service
 @AuthAction(action = CMDB.class)
 @OperationType(type = OperationTypeEnum.SEARCH)
