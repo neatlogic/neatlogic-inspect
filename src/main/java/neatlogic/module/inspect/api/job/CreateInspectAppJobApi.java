@@ -158,7 +158,7 @@ public class CreateInspectAppJobApi extends PrivateApiComponentBase {
             List<CiVo> ciVoList = ciCrossoverMapper.getCiByIdList(new ArrayList<>(allResourceTypeIdSet));
             ciMap = ciVoList.stream().filter(Objects::nonNull).collect(Collectors.toMap(CiVo::getId, e -> e));
             List<InspectCiCombopVo> ciCombopList = inspectMapper.searchInspectCiCombopListByCiIdList(new ArrayList<>(allResourceTypeIdSet));
-            ciIdToCombopIdMap = ciCombopList.stream().filter(Objects::nonNull).collect(Collectors.toMap(InspectCiCombopVo::getId, InspectCiCombopVo::getCombopId));
+            ciIdToCombopIdMap = ciCombopList.stream().filter(Objects::nonNull).filter(e -> e.getCombopId() != null && e.getId() != null).collect(Collectors.toMap(InspectCiCombopVo::getId, InspectCiCombopVo::getCombopId));
             List<Long> combopIdList = ciCombopList.stream().filter(Objects::nonNull).map(InspectCiCombopVo::getCombopId).filter(Objects::nonNull).collect(Collectors.toList());
             List<AutoexecCombopVo> autoexecCombopList = autoexecCombopMapper.getAutoexecCombopByIdList(combopIdList);
             autoexecCombopMap = autoexecCombopList.stream().filter(Objects::nonNull).collect(Collectors.toMap(AutoexecCombopVo::getId, e -> e));
