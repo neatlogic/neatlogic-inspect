@@ -258,7 +258,6 @@ public class CreateInspectAppJobApi extends PrivateApiComponentBase {
                     autoexecJobActionCrossoverService.validateAndCreateJobFromCombop(jobVo);
                     IAutoexecJobActionHandler fireAction = AutoexecJobActionHandlerFactory.getAction(JobAction.FIRE.getValue());
                     jobVo.setAction(JobAction.FIRE.getValue());
-                    jobVo.setIsFirstFire(1);
                     fireAction.doService(jobVo);
                 } catch (Exception e) {
                     logger.error(e.getMessage(), e);

@@ -127,7 +127,6 @@ public class InspectScheduleJob extends JobBase {
             jobVo.setSource(JobSource.SCHEDULE_INSPECT.getValue());
             jobVo.setInvokeId(inspectScheduleVo.getId());
             jobVo.setRouteId(inspectScheduleVo.getId().toString());
-            jobVo.setIsFirstFire(1);
             jobVo.setOperationType(CombopOperationType.COMBOP.getValue());
             jobVo.setName(ci.getLabel() + (ci.getName() != null ? "(" + ci.getName() + ")" : StringUtils.EMPTY) + " 巡检");
             AutoexecCombopExecuteConfigVo executeConfig = new AutoexecCombopExecuteConfigVo();

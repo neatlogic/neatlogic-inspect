@@ -121,7 +121,6 @@ public class CreateInspectResourceEntityJobApi extends PrivateApiComponentBase {
         autoexecJobActionCrossoverService.validateAndCreateJobFromCombop(jobVo);
         IAutoexecJobActionHandler fireAction = AutoexecJobActionHandlerFactory.getAction(JobAction.FIRE.getValue());
         jobVo.setAction(JobAction.FIRE.getValue());
-        jobVo.setIsFirstFire(1);
         fireAction.doService(jobVo);
         JSONObject resultObj = new JSONObject();
         resultObj.put("jobId", jobVo.getId());

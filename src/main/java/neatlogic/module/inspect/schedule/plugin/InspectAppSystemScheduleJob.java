@@ -186,7 +186,6 @@ public class InspectAppSystemScheduleJob extends JobBase {
         jobVo.setSource(JobSource.SCHEDULE_INSPECT_APP.getValue());
         jobVo.setInvokeId(invokeId);
         jobVo.setRouteId(invokeId.toString());
-        jobVo.setIsFirstFire(1);
         jobVo.setOperationType(CombopOperationType.COMBOP.getValue());
         jobVo.setName(name);
         AutoexecCombopExecuteNodeConfigVo executeNodeConfig = new AutoexecCombopExecuteNodeConfigVo();
