@@ -33,7 +33,9 @@ import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.MapUtils;
 import org.springframework.stereotype.Component;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Component
 public class UpdateNodesByOtherHandler implements IUpdateNodes {
@@ -61,19 +63,49 @@ public class UpdateNodesByOtherHandler implements IUpdateNodes {
             IResourceCenterDataSource resourceCenterDataSource = ResourceCenterDataSourceFactory.getResourceCenterDataSource();
             List<ResourceEntityVo> appViewList = resourceCenterDataSource.getAppViewList();
             if (CollectionUtils.isNotEmpty(appViewList)) {
+                Set<Long> resourceIdSet = new HashSet<>();
                 for (ResourceEntityVo resourceEntityVo : appViewList) {
                     searchVo.setViewName(resourceEntityVo.getName());
                     searchVo.setCurrentPage(1);
                     searchVo.setPageSize(100);
                     List<ResourceVo> resourceList = resourceCenterDataSource.getAppResourceList(searchVo, true);
                     if (CollectionUtils.isNotEmpty(resourceList)) {
-                        autoexecJobCrossoverService.updateJobPhaseNode(jobVo, resourceList, userName, protocolId);
-                        isHasNode = true;
+                        for (int i = resourceList.size() - 1; i >= 0; i--) {
+                            ResourceVo resourceVo = resourceList.get(i);
+                            if (resourceVo == null) {
+                                resourceList.remove(i);
+                                continue;
+                            }
+                            if (resourceIdSet.contains(resourceVo.getId())) {
+                                resourceList.remove(i);
+                                continue;
+                            }
+                            resourceIdSet.add(resourceVo.getId());
+                        }
+                        if (CollectionUtils.isNotEmpty(resourceList)) {
+                            autoexecJobCrossoverService.updateJobPhaseNode(jobVo, resourceList, userName, protocolId);
+                            isHasNode = true;
+                        }
                         for (int currentPage = 2; currentPage <= searchVo.getPageCount(); currentPage++) {
                             searchVo.setCurrentPage(currentPage);
                             resourceList = resourceCenterDataSource.getAppResourceList(searchVo, true);
                             if (CollectionUtils.isNotEmpty(resourceList)) {
-                                autoexecJobCrossoverService.updateJobPhaseNode(jobVo, resourceList, userName, protocolId);
+                                for (int i = resourceList.size() - 1; i >= 0; i--) {
+                                    ResourceVo resourceVo = resourceList.get(i);
+                                    if (resourceVo == null) {
+                                        resourceList.remove(i);
+                                        continue;
+                                    }
+                                    if (resourceIdSet.contains(resourceVo.getId())) {
+                                        resourceList.remove(i);
+                                        continue;
+                                    }
+                                    resourceIdSet.add(resourceVo.getId());
+                                }
+                                if (CollectionUtils.isNotEmpty(resourceList)) {
+                                    autoexecJobCrossoverService.updateJobPhaseNode(jobVo, resourceList, userName, protocolId);
+                                    isHasNode = true;
+                                }
                             }
                         }
                     }
