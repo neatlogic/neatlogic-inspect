@@ -155,7 +155,17 @@ public class InspectAppSystemScheduleJob extends JobBase {
                 searchVo.setTypeId(typeId);
                 List<ResourceVo> resourceList = resourceCenterDataSource.getAppResourceList(searchVo, false);
                 for (ResourceVo resourceVo : resourceList) {
-                    typeId2NodeListMap.computeIfAbsent(typeId, key -> new ArrayList<>()).add(new AutoexecNodeVo(resourceVo));
+                    boolean flag = false;
+                    List<AutoexecNodeVo> autoexecNodeList = typeId2NodeListMap.computeIfAbsent(typeId, key -> new ArrayList<>());
+                    for (AutoexecNodeVo autoexecNodeVo : autoexecNodeList) {
+                        if (Objects.equals(autoexecNodeVo.getId(), resourceVo.getId())) {
+                            flag = true;
+                            break;
+                        }
+                    }
+                    if (!flag) {
+                        autoexecNodeList.add(new AutoexecNodeVo(resourceVo));
+                    }
                 }
             }
         }

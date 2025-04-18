@@ -303,13 +303,17 @@ public class CreateInspectAppJobApi extends PrivateApiComponentBase {
         IResourceCenterDataSource resourceCenterDataSource = ResourceCenterDataSourceFactory.getResourceCenterDataSource();
         List<ResourceEntityVo> appViewList = resourceCenterDataSource.getAppViewList();
         if (CollectionUtils.isNotEmpty(appViewList)) {
+            Set<Long> resourceIdSet = new HashSet<>();
             for (ResourceEntityVo resourceEntityVo : appViewList) {
                 searchVo.setViewName(resourceEntityVo.getName());
                 searchVo.setCurrentPage(1);
                 searchVo.setPageSize(100);
                 List<ResourceVo> resourceList = resourceCenterDataSource.getAppResourceList(searchVo, false);
                 for (ResourceVo resourceVo : resourceList) {
-                    resultList.add(new AutoexecNodeVo(resourceVo));
+                    if (!resourceIdSet.contains(resourceVo.getId())) {
+                        resourceIdSet.add(resourceVo.getId());
+                        resultList.add(new AutoexecNodeVo(resourceVo));
+                    }
                 }
             }
         }
