@@ -431,9 +431,9 @@
 
     <select id="getInspectConfigFilePathCount" parameterType="neatlogic.framework.inspect.dto.InspectConfigFilePathSearchVo" resultType="int">
         SELECT
-        COUNT(1)
+        COUNT(DISTINCT a.`id`)
         FROM `inspect_config_file_path` a
-        LEFT JOIN @{DATA_SCHEMA}.`scence_ipobject_detail` b ON b.`id` = a.`resource_id`
+        JOIN @{DATA_SCHEMA}.`scence_ipobject_detail` b ON b.`id` = a.`resource_id`
         <where>
             <if test="keyword != null and keyword != ''">
                 AND (a.`path` LIKE CONCAT('%', #{keyword}, '%')
@@ -452,23 +452,16 @@
         </where>
     </select>
 
-    <select id="getInspectConfigFilePathList" parameterType="neatlogic.framework.inspect.dto.InspectConfigFilePathSearchVo" resultType="neatlogic.framework.inspect.dto.InspectConfigFilePathVo">
+    <select id="getInspectConfigFilePathIdList" parameterType="neatlogic.framework.inspect.dto.InspectConfigFilePathSearchVo" resultType="java.lang.Long">
         SELECT
-        a.`id`,
-        a.`resource_id` AS resourceId,
-        a.`path`,
-        a.`inspect_time` AS inspectTime,
-        b.`name` AS resourceName,
-        b.`ip` AS resourceIP,
-        b.`port`  AS resourcePort,
-        b.`type_label`  AS resourceTypeLabel
+        a.`id`
         FROM `inspect_config_file_path` a
         JOIN @{DATA_SCHEMA}.`scence_ipobject_detail` b ON b.`id` = a.`resource_id`
         <where>
             <if test="keyword != null and keyword != ''">
-            AND (a.`path` LIKE CONCAT('%', #{keyword}, '%')
-                     OR b.`name` LIKE CONCAT('%', #{keyword}, '%')
-                     OR b.`ip` LIKE CONCAT('%', #{keyword}, '%')
+                AND (a.`path` LIKE CONCAT('%', #{keyword}, '%')
+                OR b.`name` LIKE CONCAT('%', #{keyword}, '%')
+                OR b.`ip` LIKE CONCAT('%', #{keyword}, '%')
                 )
             </if>
             <if test="timeRange != null">
@@ -480,8 +473,28 @@
                 </if>
             </if>
         </where>
-        ORDER BY a.`inspect_time` desc
+        GROUP BY a.`id`
+        ORDER BY MAX(a.`inspect_time`) desc
         LIMIT #{startNum}, #{pageSize}
+    </select>
+
+    <select id="getInspectConfigFilePathList" parameterType="java.lang.Long" resultType="neatlogic.framework.inspect.dto.InspectConfigFilePathVo">
+        SELECT
+        DISTINCT
+        a.`id`,
+        a.`resource_id` AS resourceId,
+        a.`path`,
+        a.`inspect_time` AS inspectTime,
+        b.`name` AS resourceName,
+        b.`ip` AS resourceIP,
+        b.`port`  AS resourcePort,
+        b.`type_label`  AS resourceTypeLabel
+        FROM `inspect_config_file_path` a
+        JOIN @{DATA_SCHEMA}.`scence_ipobject_detail` b ON b.`id` = a.`resource_id`
+        WHERE a.`id` IN
+        <foreach collection="list" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
     </select>
 
     <select id="getInspectConfigFilePathListByJobId" parameterType="java.lang.Long" resultType="neatlogic.framework.inspect.dto.InspectConfigFilePathVo">
