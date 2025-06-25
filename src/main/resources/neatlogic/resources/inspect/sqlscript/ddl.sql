@@ -15,11 +15,11 @@ CREATE TABLE IF NOT EXISTS `inspect_alert_everyday`  (
   `report_time` date NOT NULL COMMENT '巡检时间',
   `resource_id` bigint NOT NULL COMMENT '资产ID',
   `alert_level` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '告警等级',
-  `alert_object` varchar(750) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '告警对象',
+  `alert_object` text COLLATE utf8mb4_general_ci NOT NULL COMMENT '告警对象',
   `alert_rule` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '告警规则',
   `alert_tips` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '告警提示',
   `alert_value` varchar(200) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '告警值',
-  PRIMARY KEY (`resource_id`, `report_time`, `alert_object`) USING BTREE,
+  PRIMARY KEY (`resource_id`, `report_time`, `alert_object`(500)) USING BTREE,
   INDEX `idx_alertlevel`(`alert_level`) USING BTREE
 ) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '巡检告警统计表';
 

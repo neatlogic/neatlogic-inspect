@@ -1,0 +1,10 @@
+{
+  "content":[
+    {
+      "type":"新增功能",
+      "detail":[
+        {"msg":"inspect_alert_everyday表的alert_object字段改成text类型"}
+      ]
+    }
+  ]
+}
