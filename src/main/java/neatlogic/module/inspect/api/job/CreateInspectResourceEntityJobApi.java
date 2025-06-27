@@ -100,7 +100,6 @@ public class CreateInspectResourceEntityJobApi extends PrivateApiComponentBase {
             throw new AutoexecCombopNotFoundException(combopId);
         }
         AutoexecJobVo jobVo = new AutoexecJobVo();
-        jobVo.setRoundCount(64);
         jobVo.setOperationId(combopId);
         jobVo.setOperationType(CombopOperationType.COMBOP.getValue());
         jobVo.setSource(JobSource.INSPECT.getValue());

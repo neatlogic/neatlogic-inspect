@@ -197,7 +197,6 @@ public class CreateInspectAppJobApi extends PrivateApiComponentBase {
                             if (autoexecCombopVo != null) {
                                 jsonObj.put("combopName", autoexecCombopVo.getName());
                                 AutoexecJobVo jobVo = new AutoexecJobVo();
-                                jobVo.setRoundCount(64);
                                 jobVo.setOperationId(combopId);
                                 jobVo.setOperationType(CombopOperationType.COMBOP.getValue());
                                 jobVo.setSource(JobSource.INSPECT_APP.getValue());
