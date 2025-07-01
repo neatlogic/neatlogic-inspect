@@ -29,6 +29,7 @@ import javax.annotation.Resource;
  * @since 2022/10/28 17:42
  **/
 //@Component
+@Deprecated
 @DisallowConcurrentExecution
 public class InspectReportAlertScheduleJob extends JobBase {
     private static final String CRON_EXPRESSION = "0 0 0 * * ?";//每天凌晨0点跑
