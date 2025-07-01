@@ -21,7 +21,6 @@ import neatlogic.framework.scheduler.dto.JobObject;
 import neatlogic.module.inspect.service.InspectReportService;
 import org.quartz.DisallowConcurrentExecution;
 import org.quartz.JobExecutionContext;
-import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
 
@@ -29,7 +28,8 @@ import javax.annotation.Resource;
  * @author lvzk
  * @since 2022/10/28 17:42
  **/
-@Component
+//@Component
+@Deprecated
 @DisallowConcurrentExecution
 public class InspectReportAlertScheduleJob extends JobBase {
     private static final String CRON_EXPRESSION = "0 0 0 * * ?";//每天凌晨0点跑
