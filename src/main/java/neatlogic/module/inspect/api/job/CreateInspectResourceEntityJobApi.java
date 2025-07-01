@@ -45,13 +45,11 @@ import neatlogic.framework.restful.annotation.*;
 import neatlogic.framework.restful.constvalue.OperationTypeEnum;
 import neatlogic.framework.restful.core.privateapi.PrivateApiComponentBase;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
 import java.util.ArrayList;
 import java.util.List;
 
-@Transactional
 @Service
 @AuthAction(action = AUTOEXEC_BASE.class)
 @OperationType(type = OperationTypeEnum.CREATE)
@@ -102,7 +100,6 @@ public class CreateInspectResourceEntityJobApi extends PrivateApiComponentBase {
             throw new AutoexecCombopNotFoundException(combopId);
         }
         AutoexecJobVo jobVo = new AutoexecJobVo();
-        jobVo.setRoundCount(64);
         jobVo.setOperationId(combopId);
         jobVo.setOperationType(CombopOperationType.COMBOP.getValue());
         jobVo.setSource(JobSource.INSPECT.getValue());

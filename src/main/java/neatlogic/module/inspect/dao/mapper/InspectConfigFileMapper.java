@@ -58,7 +58,9 @@ public interface InspectConfigFileMapper {
 
     int getInspectConfigFilePathCount(InspectConfigFilePathSearchVo searchVo);
 
-    List<InspectConfigFilePathVo> getInspectConfigFilePathList(InspectConfigFilePathSearchVo searchVo);
+    List<Long> getInspectConfigFilePathIdList(InspectConfigFilePathSearchVo searchVo);
+
+    List<InspectConfigFilePathVo> getInspectConfigFilePathList(List<Long> idList);
 
     List<InspectConfigFilePathVo> getInspectConfigFilePathListByJobId(Long jobId);
 

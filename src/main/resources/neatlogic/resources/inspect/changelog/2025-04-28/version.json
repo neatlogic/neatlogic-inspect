@@ -1,0 +1,10 @@
+{
+  "content":[
+    {
+      "type":"新增功能",
+      "detail":[
+        {"msg":"inspect_alert_everyday表的alert_rule和alert_tips字段改成varchar(255)类型"}
+      ]
+    }
+  ]
+}

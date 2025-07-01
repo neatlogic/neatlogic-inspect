@@ -26,6 +26,7 @@ import neatlogic.framework.restful.constvalue.OperationTypeEnum;
 import neatlogic.framework.restful.core.privateapi.PrivateApiComponentBase;
 import neatlogic.framework.util.TableResultUtil;
 import neatlogic.module.inspect.dao.mapper.InspectConfigFileMapper;
+import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
@@ -74,17 +75,24 @@ public class ListInspectConfigFilePathApi extends PrivateApiComponentBase {
         int rowNum = inspectConfigFileMapper.getInspectConfigFilePathCount(searchVo);
         if (rowNum > 0) {
             searchVo.setRowNum(rowNum);
-            List<InspectConfigFilePathVo> inspectResourceConfigFilePathList = inspectConfigFileMapper.getInspectConfigFilePathList(searchVo);
-            List<Long> idList = inspectResourceConfigFilePathList.stream().map(InspectConfigFilePathVo::getId).collect(Collectors.toList());
-            List<InspectConfigFilePathVo> inspectResourceConfigFileVersionCountList = inspectConfigFileMapper.getInspectConfigFileVersionCountByPathIdList(idList);
-            Map<Long, Integer> versionCountMap = inspectResourceConfigFileVersionCountList.stream().collect(Collectors.toMap(InspectConfigFilePathVo::getId, InspectConfigFilePathVo::getVersionCount));
-            for (InspectConfigFilePathVo pathVo : inspectResourceConfigFilePathList) {
-                Integer versionCount = versionCountMap.get(pathVo.getId());
-                if (versionCount != null) {
-                    pathVo.setVersionCount(versionCount);
+            List<Long> idList = inspectConfigFileMapper.getInspectConfigFilePathIdList(searchVo);
+            if (CollectionUtils.isNotEmpty(idList)) {
+                List<InspectConfigFilePathVo> tbodyList = new ArrayList<>();
+                List<InspectConfigFilePathVo> inspectResourceConfigFilePathList = inspectConfigFileMapper.getInspectConfigFilePathList(idList);
+                Map<Long, InspectConfigFilePathVo> map = inspectResourceConfigFilePathList.stream().collect(Collectors.toMap(InspectConfigFilePathVo::getId, e -> e));
+                List<InspectConfigFilePathVo> inspectResourceConfigFileVersionCountList = inspectConfigFileMapper.getInspectConfigFileVersionCountByPathIdList(idList);
+                Map<Long, Integer> versionCountMap = inspectResourceConfigFileVersionCountList.stream().collect(Collectors.toMap(InspectConfigFilePathVo::getId, InspectConfigFilePathVo::getVersionCount));
+                for (Long id : idList) {
+                    InspectConfigFilePathVo pathVo = map.get(id);
+                    Integer versionCount = versionCountMap.get(pathVo.getId());
+                    if (versionCount != null) {
+                        pathVo.setVersionCount(versionCount);
+                    }
+                    tbodyList.add(pathVo);
                 }
+                return TableResultUtil.getResult(tbodyList, searchVo);
             }
-            return TableResultUtil.getResult(inspectResourceConfigFilePathList, searchVo);
+
         }
         return TableResultUtil.getResult(new ArrayList<>(), searchVo);
     }
