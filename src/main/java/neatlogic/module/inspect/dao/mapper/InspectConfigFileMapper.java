@@ -64,6 +64,8 @@ public interface InspectConfigFileMapper {
 
     List<InspectConfigFilePathVo> getInspectConfigFilePathListByJobId(Long jobId);
 
+    List<InspectConfigFilePathVo> getInspectConfigFilePathListBySql(String sql);
+
     Long getPreviousVersionIdByPathIdAndVersionId(@Param("pathId") Long pathId, @Param("versionId") Long versionId);
 
     int insertInspectConfigFilePath(InspectConfigFilePathVo pathVo);

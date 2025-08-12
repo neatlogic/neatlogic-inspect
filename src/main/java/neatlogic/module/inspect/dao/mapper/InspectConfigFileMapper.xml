@@ -516,6 +516,10 @@
         WHERE c.`job_id` = #{value}
     </select>
 
+    <select id="getInspectConfigFilePathListBySql" parameterType="java.lang.String" resultType="neatlogic.framework.inspect.dto.InspectConfigFilePathVo">
+        ${sql}
+    </select>
+
     <select id="getPreviousVersionIdByPathIdAndVersionId" resultType="java.lang.Long">
         SELECT
             `id`
