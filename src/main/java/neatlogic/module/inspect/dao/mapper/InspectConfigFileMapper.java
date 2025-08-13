@@ -24,6 +24,8 @@ import java.util.List;
 
 public interface InspectConfigFileMapper {
 
+    List<InspectConfigFilePathVo> getInspectConfigFilePathListBySql(String sql);
+
     int getInspectResourceCount(ResourceSearchVo searchVo);
 
     List<Long> getInspectResourceIdList(ResourceSearchVo searchVo);
@@ -63,8 +65,6 @@ public interface InspectConfigFileMapper {
     List<InspectConfigFilePathVo> getInspectConfigFilePathList(List<Long> idList);
 
     List<InspectConfigFilePathVo> getInspectConfigFilePathListByJobId(Long jobId);
-
-    List<InspectConfigFilePathVo> getInspectConfigFilePathListBySql(String sql);
 
     Long getPreviousVersionIdByPathIdAndVersionId(@Param("pathId") Long pathId, @Param("versionId") Long versionId);
 

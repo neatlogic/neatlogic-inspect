@@ -2,6 +2,10 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
 <mapper namespace="neatlogic.module.inspect.dao.mapper.InspectConfigFileMapper">
 
+    <select id="getInspectConfigFilePathListBySql" parameterType="java.lang.String" resultType="neatlogic.framework.inspect.dto.InspectConfigFilePathVo">
+        ${sql}
+    </select>
+
     <resultMap id="inspectResourceMap" type="neatlogic.framework.inspect.dto.InspectResourceVo">
         <id column="id" property="id"/>
         <result column="name" property="name"/>
@@ -514,10 +518,6 @@
         JOIN @{DATA_SCHEMA}.`scence_ipobject_detail` b ON b.`id` = a.`resource_id`
         JOIN `inspect_config_file_version` c ON c.`path_id` = a.`id` AND c.`file_id` = a.`file_id`
         WHERE c.`job_id` = #{value}
-    </select>
-
-    <select id="getInspectConfigFilePathListBySql" parameterType="java.lang.String" resultType="neatlogic.framework.inspect.dto.InspectConfigFilePathVo">
-        ${sql}
     </select>
 
     <select id="getPreviousVersionIdByPathIdAndVersionId" resultType="java.lang.Long">
