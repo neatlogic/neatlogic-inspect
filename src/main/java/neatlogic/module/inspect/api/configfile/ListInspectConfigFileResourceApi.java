@@ -99,6 +99,7 @@ public class ListInspectConfigFileResourceApi extends PrivateApiComponentBase {
         ResourceSearchVo searchVo = resourceCrossoverService.assembleResourceSearchVo(paramObj);
         if (CollectionUtils.isNotEmpty(searchVo.getIdList())) {
             List<Long> idList = searchVo.getIdList();
+            // 该SQL语句可以使用 resourceMapper.getResourceListByIdList 代替
             inspectResourceList = inspectConfigFileMapper.getInspectResourceListByIdList(idList);
             List<AutoexecJobPhaseNodeVo> autoexecJobPhaseNodeList = autoexecJobMapper.getAutoexecJobNodeListByResourceIdList(idList);
             Map<Long, AutoexecJobPhaseNodeVo> autoexecJobPhaseNodeMap = autoexecJobPhaseNodeList.stream().collect(Collectors.toMap(e -> e.getResourceId(), e -> e));
@@ -112,6 +113,7 @@ public class ListInspectConfigFileResourceApi extends PrivateApiComponentBase {
         } else {
             resourceCrossoverService.handleBatchSearchList(searchVo);
             resourceCrossoverService.setIpFieldAttrIdAndNameFieldAttrId(searchVo);
+            // 该SQL语句可以使用 inspectMapper.getInspectResourceCount 代替
             int count = inspectConfigFileMapper.getInspectResourceCount(searchVo);
             if (count > 0) {
                 searchVo.setRowNum(count);
@@ -121,6 +123,7 @@ public class ListInspectConfigFileResourceApi extends PrivateApiComponentBase {
                     Map<Long, List<TagVo>> tagMap = resourceCrossoverService.getResourceTagByResourceIdList(idList);
                     List<AutoexecJobPhaseNodeVo> autoexecJobPhaseNodeList = autoexecJobMapper.getAutoexecJobNodeListByResourceIdList(idList);
                     Map<Long, AutoexecJobPhaseNodeVo> autoexecJobPhaseNodeMap = autoexecJobPhaseNodeList.stream().collect(Collectors.toMap(e -> e.getResourceId(), e -> e));
+                    // 该SQL语句可以使用 resourceMapper.getResourceListByIdList 代替
                     inspectResourceList = inspectConfigFileMapper.getInspectResourceListByIdList(idList);
                     List<InspectConfigFilePathVo> inspectConfigFilePathList = inspectConfigFileMapper.getInspectConfigFileLastChangeTimeListByResourceIdList(idList);
                     Map<Long, InspectConfigFilePathVo> inspectConfigFilePathMap = inspectConfigFilePathList.stream().collect(Collectors.toMap(e -> e.getResourceId(), e -> e));

@@ -24,6 +24,8 @@ import java.util.List;
 
 public interface InspectConfigFileMapper {
 
+    List<InspectConfigFilePathVo> getInspectConfigFilePathListBySql(String sql);
+
     int getInspectResourceCount(ResourceSearchVo searchVo);
 
     List<Long> getInspectResourceIdList(ResourceSearchVo searchVo);
