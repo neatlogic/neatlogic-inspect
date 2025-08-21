@@ -16,7 +16,7 @@
         <result column="maintenance_window" property="maintenanceWindow"/>
         <result column="description" property="description"/>
         <result column="network_area" property="networkArea"/>
-        <result column="port" property="port"/>
+        <result column="port" property="port" typeHandler="neatlogic.framework.dao.plugin.EmptyStringToNullIntegerTypeHandler"/>
         <result column="ip" property="ip"/>
         <result column="state_id" property="stateId"/>
         <result column="state_name" property="stateName"/>
