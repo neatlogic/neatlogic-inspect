@@ -43,9 +43,6 @@ public class UpdateNodesByOtherHandler implements IUpdateNodes {
     @Override
     public boolean update(AutoexecCombopExecuteConfigVo executeConfigVo, AutoexecJobVo jobVo, String userName, Long protocolId) {
         boolean isHasNode = false;
-        if (executeConfigVo == null || executeConfigVo.getExecuteNodeConfig() == null) {
-            return false;
-        }
         JSONObject otherFilter = executeConfigVo.getExecuteNodeConfig().getOtherFilter();
         if (MapUtils.isNotEmpty(otherFilter)) {
             Long appSystemId = otherFilter.getLong("appSystemId");
