@@ -20,7 +20,7 @@ package neatlogic.module.inspect.job.node;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import neatlogic.framework.autoexec.crossover.IAutoexecJobCrossoverService;
-import neatlogic.framework.autoexec.dto.combop.AutoexecCombopExecuteNodeConfigVo;
+import neatlogic.framework.autoexec.dto.combop.AutoexecCombopExecuteConfigVo;
 import neatlogic.framework.autoexec.dto.job.AutoexecJobVo;
 import neatlogic.framework.autoexec.job.node.IUpdateNodes;
 import neatlogic.framework.cmdb.dto.resourcecenter.ResourceSearchVo;
@@ -41,12 +41,9 @@ import java.util.Set;
 public class UpdateNodesByOtherHandler implements IUpdateNodes {
 
     @Override
-    public boolean update(AutoexecCombopExecuteNodeConfigVo executeNodeConfigVo, AutoexecJobVo jobVo, String userName, Long protocolId) {
+    public boolean update(AutoexecCombopExecuteConfigVo executeConfigVo, AutoexecJobVo jobVo, String userName, Long protocolId) {
         boolean isHasNode = false;
-        if (executeNodeConfigVo == null) {
-            return false;
-        }
-        JSONObject otherFilter = executeNodeConfigVo.getOtherFilter();
+        JSONObject otherFilter = executeConfigVo.getExecuteNodeConfig().getOtherFilter();
         if (MapUtils.isNotEmpty(otherFilter)) {
             Long appSystemId = otherFilter.getLong("appSystemId");
             Long appModuleId = otherFilter.getLong("appModuleId");
