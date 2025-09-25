@@ -141,7 +141,7 @@ public class ExportInspectResourceReportApi extends PrivateBinaryStreamApiCompon
             ResourceSearchVo searchVo = resourceCrossoverService.assembleResourceSearchVo(paramObj);
             resourceCrossoverService.handleBatchSearchList(searchVo);
             resourceCrossoverService.setIpFieldAttrIdAndNameFieldAttrId(searchVo);
-            int rowNum = inspectMapper.getInspectResourceCount(searchVo);
+            int rowNum = inspectService.getInspectResourceCount(searchVo);
             if (rowNum > 0) {
                 searchVo.setPageSize(100);
                 searchVo.setRowNum(rowNum);
