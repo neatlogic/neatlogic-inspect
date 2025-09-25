@@ -16,6 +16,7 @@ package neatlogic.module.inspect.api.definition;
 
 import com.alibaba.fastjson.JSONObject;
 import neatlogic.framework.auth.core.AuthAction;
+import neatlogic.framework.cmdb.crossover.IResourceCenterResourceCrossoverService;
 import neatlogic.framework.cmdb.crossover.IResourceCrossoverMapper;
 import neatlogic.framework.cmdb.crossover.ISyncCrossoverMapper;
 import neatlogic.framework.cmdb.dto.resourcecenter.ResourceVo;
@@ -74,8 +75,8 @@ public class GetInspectResourceThresholdsSourceApi extends PrivateApiComponentBa
     public Object myDoService(JSONObject paramObj) throws Exception {
         JSONObject returnObj = new JSONObject();
         Long resourceId = paramObj.getLong("resourceId");
-        IResourceCrossoverMapper iResourceCrossoverMapper = CrossoverServiceFactory.getApi(IResourceCrossoverMapper.class);
-        ResourceVo resourceVo = iResourceCrossoverMapper.getResourceById(resourceId);
+        IResourceCenterResourceCrossoverService resourceCenterResourceCrossoverService = CrossoverServiceFactory.getApi(IResourceCenterResourceCrossoverService.class);
+        ResourceVo resourceVo = resourceCenterResourceCrossoverService.getResourceById(resourceId);
         if (resourceVo == null) {
             throw new ResourceNotFoundException(resourceId);
         }
@@ -85,6 +86,7 @@ public class GetInspectResourceThresholdsSourceApi extends PrivateApiComponentBa
         returnObj.put("collectionName", collectionName);
         List<Long> returnAppSystemIdList = inspectCollectService.getCollectionThresholdsAppSystemIdListByResourceId(resourceId);
         if (CollectionUtils.isNotEmpty(returnAppSystemIdList)) {
+            IResourceCrossoverMapper iResourceCrossoverMapper = CrossoverServiceFactory.getApi(IResourceCrossoverMapper.class);
             returnObj.put("appSystemVoList", iResourceCrossoverMapper.searchAppSystemListByIdList(returnAppSystemIdList));
         }
         return returnObj;

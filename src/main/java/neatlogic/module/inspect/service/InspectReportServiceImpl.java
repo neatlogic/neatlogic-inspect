@@ -70,6 +70,9 @@ public class InspectReportServiceImpl implements InspectReportService {
     @Resource
     InspectMapper inspectMapper;
 
+    @Resource
+    private InspectService inspectService;
+
     @Override
     public Document getInspectReport(Long resourceId, String id, Long jobId) {
         MongoCollection<Document> collection;
@@ -116,22 +119,22 @@ public class InspectReportServiceImpl implements InspectReportService {
     @Override
     public List<InspectResourceVo> getInspectAutoexecJobNodeList(Long jobId, ResourceSearchVo searchVo) {
         List<InspectResourceVo> inspectResourceVoList = null;
-        int resourceCount = inspectMapper.getInspectAutoexecJobNodeResourceCount(searchVo, jobId);
+        int resourceCount = inspectService.getInspectAutoexecJobNodeResourceCount(searchVo, jobId);
         if (resourceCount > 0) {
             searchVo.setRowNum(resourceCount);
             if (StringUtils.isNotBlank(searchVo.getKeyword())) {
-                int ipKeywordCount = inspectMapper.getInspectAutoexecJobNodeResourceCountByIpKeyword(searchVo, jobId);
+                int ipKeywordCount = inspectService.getInspectAutoexecJobNodeResourceCountByIpKeyword(searchVo, jobId);
                 if (ipKeywordCount > 0) {
                     searchVo.setIsIpFieldSort(1);
                 } else {
-                    int nameKeywordCount = inspectMapper.getInspectAutoexecJobNodeResourceCountByNameKeyword(searchVo, jobId);
+                    int nameKeywordCount = inspectService.getInspectAutoexecJobNodeResourceCountByNameKeyword(searchVo, jobId);
                     if (nameKeywordCount > 0) {
                         searchVo.setIsNameFieldSort(1);
                     }
                 }
             }
-            List<Long> resourceIdList = inspectMapper.getInspectAutoexecJobNodeResourceIdList(searchVo, jobId);
-            inspectResourceVoList = inspectMapper.getInspectResourceListByIdListAndJobId(resourceIdList, jobId);
+            List<Long> resourceIdList = inspectService.getInspectAutoexecJobNodeResourceIdList(searchVo, jobId);
+            inspectResourceVoList = inspectService.getInspectResourceListByIdListAndJobId(resourceIdList, jobId);
             //排序
             List<InspectResourceVo> resultList = new ArrayList<>();
             for (Long id : resourceIdList) {
@@ -154,22 +157,22 @@ public class InspectReportServiceImpl implements InspectReportService {
     public List<InspectResourceVo> getInspectResourceReportList(ResourceSearchVo searchVo) {
         if (CollectionUtils.isEmpty(searchVo.getIdList())) {
             List<InspectResourceVo> inspectResourceVoList = null;
-            int resourceCount = inspectMapper.getInspectResourceCount(searchVo);
+            int resourceCount = inspectService.getInspectResourceCount(searchVo);
             if (resourceCount > 0) {
                 searchVo.setRowNum(resourceCount);
                 if (StringUtils.isNotBlank(searchVo.getKeyword())) {
-                    int ipKeywordCount = inspectMapper.getInspectResourceCountByIpKeyword(searchVo);
+                    int ipKeywordCount = inspectService.getInspectResourceCountByIpKeyword(searchVo);
                     if (ipKeywordCount > 0) {
                         searchVo.setIsIpFieldSort(1);
                     } else {
-                        int nameKeywordCount = inspectMapper.getInspectResourceCountByNameKeyword(searchVo);
+                        int nameKeywordCount = inspectService.getInspectResourceCountByNameKeyword(searchVo);
                         if (nameKeywordCount > 0) {
                             searchVo.setIsNameFieldSort(1);
                         }
                     }
                 }
-                List<Long> resourceIdList = inspectMapper.getInspectResourceIdList(searchVo);
-                inspectResourceVoList = inspectMapper.getInspectResourceListByIdList(resourceIdList);
+                List<Long> resourceIdList = inspectService.getInspectResourceIdList(searchVo);
+                inspectResourceVoList = inspectService.getInspectResourceListByIdList(resourceIdList);
                 Map<Long, InspectResourceVo> inspectResourceMap = inspectResourceVoList.stream().collect(Collectors.toMap(InspectResourceVo::getId, e -> e));
                 List<InspectResourceScriptVo> resourceScriptVoList = inspectMapper.getResourceScriptListByResourceIdList(resourceIdList);
                 if (CollectionUtils.isNotEmpty(resourceScriptVoList)) {
@@ -192,7 +195,7 @@ public class InspectReportServiceImpl implements InspectReportService {
             }
             return inspectResourceVoList;
         } else {
-            return inspectMapper.getInspectResourceListByIdList(searchVo.getIdList());
+            return inspectService.getInspectResourceListByIdList(searchVo.getIdList());
         }
     }
 
@@ -413,7 +416,7 @@ public class InspectReportServiceImpl implements InspectReportService {
         IResourceCenterResourceCrossoverService resourceCenterResourceCrossoverService = CrossoverServiceFactory.getApi(IResourceCenterResourceCrossoverService.class);
         List<Long> typeIdList = resourceCenterResourceCrossoverService.getDownwardCiIdListByCiIdList(Arrays.asList(searchVo.getTypeId()));
         searchVo.setTypeIdList(typeIdList);
-        int resourceCount = inspectMapper.getInspectResourceCount(searchVo);
+        int resourceCount = inspectService.getInspectResourceCount(searchVo);
         searchVo.setRowNum(resourceCount);
         if (resourceCount > 0) {
             List<String> headerList = new ArrayList<>();
@@ -433,8 +436,8 @@ public class InspectReportServiceImpl implements InspectReportService {
             Map<String, String> fieldPathTextMap = new HashMap<>();
             for (int i = 1; i <= searchVo.getPageCount(); i++) {
                 searchVo.setCurrentPage(i);
-                List<Long> resourceIdList = inspectMapper.getInspectResourceIdList(searchVo);
-                List<InspectResourceVo> inspectResourceVos = inspectMapper.getInspectResourceListByIdList(resourceIdList);
+                List<Long> resourceIdList = inspectService.getInspectResourceIdList(searchVo);
+                List<InspectResourceVo> inspectResourceVos = inspectService.getInspectResourceListByIdList(resourceIdList);
                 putCommonDataMap(resourceIdList, inspectResourceVos, isNeedAlertDetail, nameList, fieldPathTextMap, sheetBuilder);
             }
             return workbook;
@@ -478,7 +481,7 @@ public class InspectReportServiceImpl implements InspectReportService {
                 searchVo.setTypeId(typeId);
                 List<Long> idList = resourceCenterDataSource.getAppResourceIdList(searchVo, false);
                 if (CollectionUtils.isNotEmpty(idList)) {
-                    List<InspectResourceVo> inspectResourceVos = inspectMapper.getInspectResourceListByIdList(idList);
+                    List<InspectResourceVo> inspectResourceVos = inspectService.getInspectResourceListByIdList(idList);
                     putCommonDataMap(idList, inspectResourceVos, isNeedAlertDetail, nameList, fieldPathTextMap, sheetBuilder);
                 }
             }
@@ -594,15 +597,15 @@ public class InspectReportServiceImpl implements InspectReportService {
             calendar.add(Calendar.DAY_OF_MONTH, -1);//获取前一天数据
             startDate = calendar.getTime();
         }
-        int resourceCount = inspectMapper.getInspectResourceCount(searchVo);
+        int resourceCount = inspectService.getInspectResourceCount(searchVo);
         if (resourceCount > 0) {
             searchVo.setRowNum(resourceCount);
             searchVo.setPageSize(20);
             for (int i = 1; i <= searchVo.getPageCount(); i++) {
                 searchVo.setCurrentPage(i);
                 searchVo.setStartNum(searchVo.getStartNum());
-                List<Long> resourceIdList = inspectMapper.getInspectResourceIdList(searchVo);
-                List<InspectResourceVo> inspectResourceVoList = inspectMapper.getInspectResourceListByIdList(resourceIdList);
+                List<Long> resourceIdList = inspectService.getInspectResourceIdList(searchVo);
+                List<InspectResourceVo> inspectResourceVoList = inspectService.getInspectResourceListByIdList(resourceIdList);
                 if (CollectionUtils.isNotEmpty(inspectResourceVoList)) {
                     JSONObject inspectDetail = getInspectDetailByResourceIdListAndDate(inspectResourceVoList.stream().map(InspectResourceVo::getId).collect(Collectors.toList()), startDate, endDate);
                     if (MapUtils.isNotEmpty(inspectDetail)) {

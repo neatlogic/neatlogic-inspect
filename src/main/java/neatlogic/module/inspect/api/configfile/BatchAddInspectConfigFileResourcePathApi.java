@@ -28,12 +28,12 @@ import neatlogic.framework.cmdb.exception.ci.CiNotFoundException;
 import neatlogic.framework.common.constvalue.ApiParamType;
 import neatlogic.framework.crossover.CrossoverServiceFactory;
 import neatlogic.framework.inspect.auth.INSPECT_CONFIG_FILE_MODIFY;
-import neatlogic.framework.inspect.dao.mapper.InspectMapper;
 import neatlogic.framework.inspect.dto.InspectConfigFilePathVo;
 import neatlogic.framework.restful.annotation.*;
 import neatlogic.framework.restful.constvalue.OperationTypeEnum;
 import neatlogic.framework.restful.core.privateapi.PrivateApiComponentBase;
 import neatlogic.module.inspect.dao.mapper.InspectConfigFileMapper;
+import neatlogic.module.inspect.service.InspectService;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.ListUtils;
 import org.springframework.stereotype.Service;
@@ -52,7 +52,7 @@ public class BatchAddInspectConfigFileResourcePathApi extends PrivateApiComponen
     @Resource
     private InspectConfigFileMapper inspectConfigFileMapper;
     @Resource
-    private InspectMapper inspectMapper;
+    private InspectService inspectService;
 
     @Override
     public String getToken() {
@@ -113,14 +113,14 @@ public class BatchAddInspectConfigFileResourcePathApi extends PrivateApiComponen
             IResourceCenterResourceCrossoverService resourceCenterResourceCrossoverService = CrossoverServiceFactory.getApi(IResourceCenterResourceCrossoverService.class);
             List<Long> typeIdList = resourceCenterResourceCrossoverService.getDownwardCiIdListByCiIdList(Arrays.asList(searchVo.getTypeId()));
             searchVo.setTypeIdList(typeIdList);
-            int count = inspectMapper.getInspectResourceCount(searchVo);
+            int count = inspectService.getInspectResourceCount(searchVo);
             if (count > 0) {
                 searchVo.setPageSize(100);
                 searchVo.setRowNum(count);
                 int pageCount = searchVo.getPageCount();
                 for (int currentPage = 1; currentPage <= pageCount; currentPage++) {
                     searchVo.setCurrentPage(currentPage);
-                    List<Long> resourceIdList = inspectMapper.getInspectResourceIdList(searchVo);
+                    List<Long> resourceIdList = inspectService.getInspectResourceIdList(searchVo);
                     addPath(resourceIdList, pathArray);
                 }
             }

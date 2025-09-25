@@ -1,18 +1,17 @@
 package neatlogic.module.inspect.api.report;
 
-import neatlogic.framework.asynchronization.threadlocal.TenantContext;
+import com.alibaba.fastjson.JSONObject;
 import neatlogic.framework.auth.core.AuthAction;
-import neatlogic.framework.cmdb.crossover.IResourceCrossoverMapper;
-import neatlogic.framework.crossover.CrossoverServiceFactory;
-import neatlogic.framework.inspect.dao.mapper.InspectMapper;
-import neatlogic.framework.inspect.dto.InspectResourceScriptVo;
+import neatlogic.framework.cmdb.crossover.IResourceCenterResourceCrossoverService;
 import neatlogic.framework.cmdb.exception.resourcecenter.ResourceNotFoundException;
 import neatlogic.framework.common.constvalue.ApiParamType;
+import neatlogic.framework.crossover.CrossoverServiceFactory;
 import neatlogic.framework.inspect.auth.INSPECT_MODIFY;
+import neatlogic.framework.inspect.dao.mapper.InspectMapper;
+import neatlogic.framework.inspect.dto.InspectResourceScriptVo;
 import neatlogic.framework.restful.annotation.*;
 import neatlogic.framework.restful.constvalue.OperationTypeEnum;
 import neatlogic.framework.restful.core.privateapi.PrivateApiComponentBase;
-import com.alibaba.fastjson.JSONObject;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
@@ -50,8 +49,8 @@ public class GetInspectAccessEndPointScriptApi extends PrivateApiComponentBase {
     @Override
     public Object myDoService(JSONObject paramObj) throws Exception {
         Long resourceId = paramObj.getLong("resourceId");
-        IResourceCrossoverMapper resourceCrossoverMapper = CrossoverServiceFactory.getApi(IResourceCrossoverMapper.class);
-        if (resourceCrossoverMapper.getResourceIdByResourceId(resourceId) == null) {
+        IResourceCenterResourceCrossoverService resourceCenterResourceCrossoverService = CrossoverServiceFactory.getApi(IResourceCenterResourceCrossoverService.class);
+        if (resourceCenterResourceCrossoverService.getResourceIdByResourceId(resourceId) == null) {
             throw new ResourceNotFoundException(resourceId);
         }
         return inspectMapper.getResourceScriptByResourceId(resourceId);

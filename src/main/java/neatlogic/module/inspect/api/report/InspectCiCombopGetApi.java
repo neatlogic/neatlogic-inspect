@@ -20,7 +20,7 @@ import neatlogic.framework.auth.core.AuthAction;
 import neatlogic.framework.autoexec.dao.mapper.AutoexecCombopMapper;
 import neatlogic.framework.autoexec.dto.combop.AutoexecCombopVo;
 import neatlogic.framework.cmdb.crossover.ICiCrossoverMapper;
-import neatlogic.framework.cmdb.crossover.IResourceCrossoverMapper;
+import neatlogic.framework.cmdb.crossover.IResourceCenterResourceCrossoverService;
 import neatlogic.framework.cmdb.dto.ci.CiVo;
 import neatlogic.framework.cmdb.dto.resourcecenter.ResourceVo;
 import neatlogic.framework.cmdb.exception.ci.CiNotFoundException;
@@ -75,8 +75,8 @@ public class InspectCiCombopGetApi extends PrivateApiComponentBase {
         Long ciId = paramObj.getLong("ciId");
         Long resourceId = paramObj.getLong("resourceId");
         if(resourceId != null){
-            IResourceCrossoverMapper resourceCrossoverMapper = CrossoverServiceFactory.getApi(IResourceCrossoverMapper.class);
-            List<ResourceVo> resourceVoList = resourceCrossoverMapper.getResourceByIdList(Collections.singletonList(resourceId));
+            IResourceCenterResourceCrossoverService resourceCenterResourceCrossoverService = CrossoverServiceFactory.getApi(IResourceCenterResourceCrossoverService.class);
+            List<ResourceVo> resourceVoList = resourceCenterResourceCrossoverService.getResourceByIdList(Collections.singletonList(resourceId));
             if(CollectionUtils.isEmpty(resourceVoList)){
                 throw new ResourceNotFoundException(resourceId);
             }

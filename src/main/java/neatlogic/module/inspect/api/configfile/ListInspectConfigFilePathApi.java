@@ -26,6 +26,7 @@ import neatlogic.framework.restful.constvalue.OperationTypeEnum;
 import neatlogic.framework.restful.core.privateapi.PrivateApiComponentBase;
 import neatlogic.framework.util.TableResultUtil;
 import neatlogic.module.inspect.dao.mapper.InspectConfigFileMapper;
+import neatlogic.module.inspect.service.InspectService;
 import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.stereotype.Service;
 
@@ -42,6 +43,9 @@ public class ListInspectConfigFilePathApi extends PrivateApiComponentBase {
 
     @Resource
     private InspectConfigFileMapper inspectConfigFileMapper;
+
+    @Resource
+    private InspectService inspectService;
 
     @Override
     public String getToken() {
@@ -72,13 +76,13 @@ public class ListInspectConfigFilePathApi extends PrivateApiComponentBase {
     @Override
     public Object myDoService(JSONObject paramObj) throws Exception {
         InspectConfigFilePathSearchVo searchVo = JSONObject.toJavaObject(paramObj, InspectConfigFilePathSearchVo.class);
-        int rowNum = inspectConfigFileMapper.getInspectConfigFilePathCount(searchVo);
+        int rowNum = inspectService.getInspectConfigFilePathCount(searchVo);
         if (rowNum > 0) {
             searchVo.setRowNum(rowNum);
-            List<Long> idList = inspectConfigFileMapper.getInspectConfigFilePathIdList(searchVo);
+            List<Long> idList = inspectService.getInspectConfigFilePathIdList(searchVo);
             if (CollectionUtils.isNotEmpty(idList)) {
                 List<InspectConfigFilePathVo> tbodyList = new ArrayList<>();
-                List<InspectConfigFilePathVo> inspectResourceConfigFilePathList = inspectConfigFileMapper.getInspectConfigFilePathList(idList);
+                List<InspectConfigFilePathVo> inspectResourceConfigFilePathList = inspectService.getInspectConfigFilePathList(idList);
                 Map<Long, InspectConfigFilePathVo> map = inspectResourceConfigFilePathList.stream().collect(Collectors.toMap(InspectConfigFilePathVo::getId, e -> e));
                 List<InspectConfigFilePathVo> inspectResourceConfigFileVersionCountList = inspectConfigFileMapper.getInspectConfigFileVersionCountByPathIdList(idList);
                 Map<Long, Integer> versionCountMap = inspectResourceConfigFileVersionCountList.stream().collect(Collectors.toMap(InspectConfigFilePathVo::getId, InspectConfigFilePathVo::getVersionCount));
