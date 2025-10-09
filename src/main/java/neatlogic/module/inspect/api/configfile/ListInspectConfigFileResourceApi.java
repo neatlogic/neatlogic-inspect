@@ -33,6 +33,7 @@ import neatlogic.framework.restful.constvalue.OperationTypeEnum;
 import neatlogic.framework.restful.core.privateapi.PrivateApiComponentBase;
 import neatlogic.framework.util.TableResultUtil;
 import neatlogic.module.inspect.dao.mapper.InspectConfigFileMapper;
+import neatlogic.module.inspect.service.InspectService;
 import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.stereotype.Service;
 
@@ -52,6 +53,9 @@ public class ListInspectConfigFileResourceApi extends PrivateApiComponentBase {
     private InspectConfigFileMapper inspectConfigFileMapper;
     @Resource
     private AutoexecJobMapper autoexecJobMapper;
+
+    @Resource
+    private InspectService inspectService;
     @Override
     public String getToken() {
         return "inspect/configfile/resource/list";
@@ -118,7 +122,7 @@ public class ListInspectConfigFileResourceApi extends PrivateApiComponentBase {
             if (count > 0) {
                 searchVo.setRowNum(count);
                 resourceCrossoverService.setIsIpFieldSortAndIsNameFieldSort(searchVo);
-                List<Long> idList = inspectConfigFileMapper.getInspectResourceIdList(searchVo);
+                List<Long> idList = inspectService.getInspectResourceIdList(searchVo);
                 if (CollectionUtils.isNotEmpty(idList)) {
                     Map<Long, List<TagVo>> tagMap = resourceCrossoverService.getResourceTagByResourceIdList(idList);
                     List<AutoexecJobPhaseNodeVo> autoexecJobPhaseNodeList = autoexecJobMapper.getAutoexecJobNodeListByResourceIdList(idList);

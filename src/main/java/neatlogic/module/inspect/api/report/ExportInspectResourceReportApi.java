@@ -40,6 +40,7 @@ import neatlogic.framework.util.FileUtil;
 import neatlogic.framework.util.TimeUtil;
 import neatlogic.framework.util.excel.ExcelBuilder;
 import neatlogic.framework.util.excel.SheetBuilder;
+import neatlogic.module.inspect.service.InspectService;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.poi.hssf.util.HSSFColor;
@@ -68,6 +69,9 @@ public class ExportInspectResourceReportApi extends PrivateBinaryStreamApiCompon
 
     @Resource
     private InspectMapper inspectMapper;
+
+    @Resource
+    private InspectService inspectService;
 
     @Override
     public String getToken() {
@@ -127,7 +131,7 @@ public class ExportInspectResourceReportApi extends PrivateBinaryStreamApiCompon
         JSONArray defaultValue = paramObj.getJSONArray("defaultValue");
         if (CollectionUtils.isNotEmpty(defaultValue)) {
             List<Long> idList = defaultValue.toJavaList(Long.class);
-            inspectResourceVoList = inspectMapper.getInspectResourceListByIdList(idList);
+            inspectResourceVoList = inspectService.getInspectResourceListByIdList(idList);
             for (ResourceVo resourceVo : inspectResourceVoList) {
                 Map<String, Object> dataMap = resourceConvertDataMap(resourceVo);
                 sheetBuilder.addData(dataMap);
@@ -137,16 +141,16 @@ public class ExportInspectResourceReportApi extends PrivateBinaryStreamApiCompon
             ResourceSearchVo searchVo = resourceCrossoverService.assembleResourceSearchVo(paramObj);
             resourceCrossoverService.handleBatchSearchList(searchVo);
             resourceCrossoverService.setIpFieldAttrIdAndNameFieldAttrId(searchVo);
-            int rowNum = inspectMapper.getInspectResourceCount(searchVo);
+            int rowNum = inspectService.getInspectResourceCount(searchVo);
             if (rowNum > 0) {
                 searchVo.setPageSize(100);
                 searchVo.setRowNum(rowNum);
                 if (StringUtils.isNotBlank(searchVo.getKeyword())) {
-                    int ipKeywordCount = inspectMapper.getInspectResourceCountByIpKeyword(searchVo);
+                    int ipKeywordCount = inspectService.getInspectResourceCountByIpKeyword(searchVo);
                     if (ipKeywordCount > 0) {
                         searchVo.setIsIpFieldSort(1);
                     } else {
-                        int nameKeywordCount = inspectMapper.getInspectResourceCountByNameKeyword(searchVo);
+                        int nameKeywordCount = inspectService.getInspectResourceCountByNameKeyword(searchVo);
                         if (nameKeywordCount > 0) {
                             searchVo.setIsNameFieldSort(1);
                         }
@@ -154,9 +158,9 @@ public class ExportInspectResourceReportApi extends PrivateBinaryStreamApiCompon
                 }
                 for (int i = 1; i <= searchVo.getPageCount(); i++) {
                     searchVo.setCurrentPage(i);
-                    List<Long> idList = inspectMapper.getInspectResourceIdList(searchVo);
+                    List<Long> idList = inspectService.getInspectResourceIdList(searchVo);
                     if (CollectionUtils.isNotEmpty(idList)) {
-                        inspectResourceVoList = inspectMapper.getInspectResourceListByIdList(idList);
+                        inspectResourceVoList = inspectService.getInspectResourceListByIdList(idList);
                         for (ResourceVo resourceVo : inspectResourceVoList) {
                             Map<String, Object> dataMap = resourceConvertDataMap(resourceVo);
                             sheetBuilder.addData(dataMap);

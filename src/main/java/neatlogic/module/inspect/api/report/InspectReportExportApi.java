@@ -19,7 +19,7 @@ import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import neatlogic.framework.auth.core.AuthAction;
-import neatlogic.framework.cmdb.crossover.IResourceCrossoverMapper;
+import neatlogic.framework.cmdb.crossover.IResourceCenterResourceCrossoverService;
 import neatlogic.framework.cmdb.dto.resourcecenter.ResourceVo;
 import neatlogic.framework.common.constvalue.ApiParamType;
 import neatlogic.framework.crossover.CrossoverServiceFactory;
@@ -109,8 +109,8 @@ public class InspectReportExportApi extends PrivateBinaryStreamApiComponentBase 
         String id = paramObj.getString("id");
         Long jobId = paramObj.getLong("jobId");
         String type = paramObj.getString("type");
-        IResourceCrossoverMapper resourceCrossoverMapper = CrossoverServiceFactory.getApi(IResourceCrossoverMapper.class);
-        ResourceVo resource = resourceCrossoverMapper.getResourceById(resourceId);
+        IResourceCenterResourceCrossoverService resourceCenterResourceCrossoverService = CrossoverServiceFactory.getApi(IResourceCenterResourceCrossoverService.class);
+        ResourceVo resource = resourceCenterResourceCrossoverService.getResourceById(resourceId);
         String fileName = resourceId.toString();
         if (resource != null && resource.getName() != null) {
             fileName = resource.getName();

@@ -1,10 +1,11 @@
 package neatlogic.module.inspect.api.report;
 
+import com.alibaba.fastjson.JSONObject;
 import neatlogic.framework.auth.core.AuthAction;
 import neatlogic.framework.autoexec.dao.mapper.AutoexecScriptMapper;
 import neatlogic.framework.autoexec.dto.script.AutoexecScriptVo;
 import neatlogic.framework.autoexec.exception.AutoexecScriptNotFoundException;
-import neatlogic.framework.cmdb.crossover.IResourceCrossoverMapper;
+import neatlogic.framework.cmdb.crossover.IResourceCenterResourceCrossoverService;
 import neatlogic.framework.cmdb.exception.resourcecenter.ResourceNotFoundException;
 import neatlogic.framework.common.constvalue.ApiParamType;
 import neatlogic.framework.crossover.CrossoverServiceFactory;
@@ -17,7 +18,6 @@ import neatlogic.framework.restful.annotation.OperationType;
 import neatlogic.framework.restful.annotation.Param;
 import neatlogic.framework.restful.constvalue.OperationTypeEnum;
 import neatlogic.framework.restful.core.privateapi.PrivateApiComponentBase;
-import com.alibaba.fastjson.JSONObject;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -65,8 +65,8 @@ public class SaveInspectAccessEndPointScriptApi extends PrivateApiComponentBase 
         Long scriptId = null;
         Long resourceId = paramObj.getLong("resourceId");
         JSONObject paramConfig = paramObj.getJSONObject("config");
-        IResourceCrossoverMapper resourceCrossoverMapper = CrossoverServiceFactory.getApi(IResourceCrossoverMapper.class);
-        if (resourceCrossoverMapper.getResourceIdByResourceId(resourceId) == null) {
+        IResourceCenterResourceCrossoverService resourceCenterResourceCrossoverService = CrossoverServiceFactory.getApi(IResourceCenterResourceCrossoverService.class);
+        if (resourceCenterResourceCrossoverService.getResourceIdByResourceId(resourceId) == null) {
             throw new ResourceNotFoundException(resourceId);
         }
         inspectMapper.deleteResourceScriptByResourceId(resourceId);

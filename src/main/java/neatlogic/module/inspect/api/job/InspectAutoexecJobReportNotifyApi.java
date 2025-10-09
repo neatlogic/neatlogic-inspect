@@ -55,6 +55,7 @@ import neatlogic.framework.restful.core.privateapi.PrivateApiComponentBase;
 import neatlogic.framework.util.TimeUtil;
 import neatlogic.module.inspect.dao.mapper.InspectConfigFileMapper;
 import neatlogic.module.inspect.service.InspectReportService;
+import neatlogic.module.inspect.service.InspectService;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -79,6 +80,9 @@ public class InspectAutoexecJobReportNotifyApi extends PrivateApiComponentBase {
 
     @Resource
     private InspectConfigFileMapper inspectConfigFileMapper;
+
+    @Resource
+    private InspectService inspectService;
 
     @Resource
     AutoexecJobMapper autoexecJobMapper;
@@ -201,7 +205,7 @@ public class InspectAutoexecJobReportNotifyApi extends PrivateApiComponentBase {
      * @return 表格数据
      */
     private JSONObject getFileChangeAuditTable(Long jobId) {
-        List<InspectConfigFilePathVo> inspectResourceConfigFilePathList = inspectConfigFileMapper.getInspectConfigFilePathListByJobId(jobId);
+        List<InspectConfigFilePathVo> inspectResourceConfigFilePathList = inspectService.getInspectConfigFilePathListByJobId(jobId);
         if (CollectionUtils.isEmpty(inspectResourceConfigFilePathList)) {
             return null;
         }
