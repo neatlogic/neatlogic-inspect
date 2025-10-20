@@ -41,7 +41,7 @@
 
     <update id="updateInspectNewProblemCustomViewCondition" parameterType="neatlogic.framework.inspect.dto.InspectNewProblemCustomViewVo">
         update inspect_new_problem_customview set
-        `condition_config` = #{conditionConfigStr}
+        `condition_config` = #{conditionConfigStr, typeHandler=CompressHandler}
         where `id` = #{id}
     </update>
 
@@ -80,7 +80,7 @@
               #{id},
               #{name},
               #{userUuid},
-              #{conditionConfigStr},
+              #{conditionConfigStr, typeHandler=CompressHandler},
               #{sort}
         )
     </insert>
