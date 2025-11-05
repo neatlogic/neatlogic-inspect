@@ -48,6 +48,7 @@ import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
 @Service
+@SystemUser("autoexec")
 @Transactional
 @AuthAction(action = INSPECT_BASE.class)
 @OperationType(type = OperationTypeEnum.SEARCH)

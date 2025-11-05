@@ -70,6 +70,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
+@SystemUser("autoexec")
 @AuthAction(action = INSPECT_SCHEDULE_EXECUTE.class)
 @AuthAction(action = INSPECT_EXECUTE.class)
 @OperationType(type = OperationTypeEnum.SEARCH)

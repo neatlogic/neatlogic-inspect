@@ -35,6 +35,7 @@ import javax.annotation.Resource;
 import java.util.List;
 
 @Service
+@SystemUser("autoexec")
 @AuthAction(action = INSPECT_BASE.class)
 @OperationType(type = OperationTypeEnum.SEARCH)
 public class ListInspectConfigFileResourcePathApi extends PrivateApiComponentBase {
