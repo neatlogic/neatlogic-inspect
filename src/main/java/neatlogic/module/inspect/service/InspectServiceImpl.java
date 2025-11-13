@@ -24,6 +24,7 @@ import neatlogic.framework.inspect.dto.InspectConfigFilePathSearchVo;
 import neatlogic.framework.inspect.dto.InspectConfigFilePathVo;
 import neatlogic.framework.inspect.dto.InspectResourceVo;
 import neatlogic.module.inspect.dao.mapper.InspectConfigFileMapper;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -60,7 +61,9 @@ public class InspectServiceImpl implements InspectService {
         if (Objects.equals(mode, JSQLPARSER_MODE) || Objects.equals(enable, COMPARISON_ENABLED)) {
             IResourceBuildSqlCrossoverService resourceBuildSqlCrossoverService = CrossoverServiceFactory.getApi(IResourceBuildSqlCrossoverService.class);
             String sql = resourceBuildSqlCrossoverService.buildGetInspectResourceListByIdListSql(idList);
-            newResourceList = inspectMapper.getInspectResourceListByIdListSql(sql);
+            if (StringUtils.isNotBlank(sql)) {
+                newResourceList = inspectMapper.getInspectResourceListByIdListSql(sql);
+            }
         }
         if (Objects.equals(mode, MYBATIS_MODE) || Objects.equals(enable, COMPARISON_ENABLED)) {
             oldResourceList = inspectMapper.getInspectResourceListByIdList(idList);
@@ -80,7 +83,10 @@ public class InspectServiceImpl implements InspectService {
     public List<InspectResourceVo> getInspectResourceListByIdList(List<Long> idList, List<String> selectFieldNameList) {
         IResourceBuildSqlCrossoverService resourceBuildSqlCrossoverService = CrossoverServiceFactory.getApi(IResourceBuildSqlCrossoverService.class);
         String sql = resourceBuildSqlCrossoverService.buildGetInspectResourceListByIdListSql(idList, selectFieldNameList);
-        return inspectMapper.getInspectResourceListByIdListSql(sql);
+        if (StringUtils.isNotBlank(sql)) {
+            return inspectMapper.getInspectResourceListByIdListSql(sql);
+        }
+        return new ArrayList<>();
     }
 
     @Override
@@ -92,7 +98,9 @@ public class InspectServiceImpl implements InspectService {
         if (Objects.equals(mode, JSQLPARSER_MODE) || Objects.equals(enable, COMPARISON_ENABLED)) {
             IResourceBuildSqlCrossoverService resourceBuildSqlCrossoverService = CrossoverServiceFactory.getApi(IResourceBuildSqlCrossoverService.class);
             String sql = resourceBuildSqlCrossoverService.buildGetInspectResourceListByIdListAndJobIdSql(idList, jobId);
-            newResourceList = inspectMapper.getInspectResourceListByIdListSql(sql);
+            if (StringUtils.isNotBlank(sql)) {
+                newResourceList = inspectMapper.getInspectResourceListByIdListSql(sql);
+            }
         }
         if (Objects.equals(mode, MYBATIS_MODE) || Objects.equals(enable, COMPARISON_ENABLED)) {
             oldResourceList = inspectMapper.getInspectResourceListByIdListAndJobId(idList, jobId);
@@ -112,7 +120,10 @@ public class InspectServiceImpl implements InspectService {
     public List<InspectResourceVo> getInspectResourceListByIdListAndJobId(List<Long> idList, Long jobId, List<String> selectFieldNameList) {
         IResourceBuildSqlCrossoverService resourceBuildSqlCrossoverService = CrossoverServiceFactory.getApi(IResourceBuildSqlCrossoverService.class);
         String sql = resourceBuildSqlCrossoverService.buildGetInspectResourceListByIdListAndJobIdSql(idList, jobId, selectFieldNameList);
-        return inspectMapper.getInspectResourceListByIdListSql(sql);
+        if (StringUtils.isNotBlank(sql)) {
+            return inspectMapper.getInspectResourceListByIdListSql(sql);
+        }
+        return new ArrayList<>();
     }
 
     @Override
@@ -125,7 +136,9 @@ public class InspectServiceImpl implements InspectService {
             IResourceCrossoverMapper resourceCrossoverMapper = CrossoverServiceFactory.getApi(IResourceCrossoverMapper.class);
             IResourceBuildSqlCrossoverService resourceBuildSqlCrossoverService = CrossoverServiceFactory.getApi(IResourceBuildSqlCrossoverService.class);
             String sql = resourceBuildSqlCrossoverService.buildGetInspectResourceCountSql(searchVo);
-            newCount = resourceCrossoverMapper.getCountBySql(sql);
+            if (StringUtils.isNotBlank(sql)) {
+                newCount = resourceCrossoverMapper.getCountBySql(sql);
+            }
         }
         if (Objects.equals(mode, MYBATIS_MODE) || Objects.equals(enable, COMPARISON_ENABLED)) {
             oldCount = inspectMapper.getInspectResourceCount(searchVo);
@@ -151,7 +164,9 @@ public class InspectServiceImpl implements InspectService {
             IResourceCrossoverMapper resourceCrossoverMapper = CrossoverServiceFactory.getApi(IResourceCrossoverMapper.class);
             IResourceBuildSqlCrossoverService resourceBuildSqlCrossoverService = CrossoverServiceFactory.getApi(IResourceBuildSqlCrossoverService.class);
             String sql = resourceBuildSqlCrossoverService.buildGetInspectResourceCountByIpKeywordSql(searchVo);
-            newCount = resourceCrossoverMapper.getCountBySql(sql);
+            if (StringUtils.isNotBlank(sql)) {
+                newCount = resourceCrossoverMapper.getCountBySql(sql);
+            }
         }
         if (Objects.equals(mode, MYBATIS_MODE) || Objects.equals(enable, COMPARISON_ENABLED)) {
             oldCount = inspectMapper.getInspectResourceCountByIpKeyword(searchVo);
@@ -177,7 +192,9 @@ public class InspectServiceImpl implements InspectService {
             IResourceCrossoverMapper resourceCrossoverMapper = CrossoverServiceFactory.getApi(IResourceCrossoverMapper.class);
             IResourceBuildSqlCrossoverService resourceBuildSqlCrossoverService = CrossoverServiceFactory.getApi(IResourceBuildSqlCrossoverService.class);
             String sql = resourceBuildSqlCrossoverService.buildGetInspectResourceCountByNameKeywordSql(searchVo);
-            newCount = resourceCrossoverMapper.getCountBySql(sql);
+            if (StringUtils.isNotBlank(sql)) {
+                newCount = resourceCrossoverMapper.getCountBySql(sql);
+            }
         }
         if (Objects.equals(mode, MYBATIS_MODE) || Objects.equals(enable, COMPARISON_ENABLED)) {
             oldCount = inspectMapper.getInspectResourceCountByNameKeyword(searchVo);
@@ -203,7 +220,9 @@ public class InspectServiceImpl implements InspectService {
             IResourceCrossoverMapper resourceCrossoverMapper = CrossoverServiceFactory.getApi(IResourceCrossoverMapper.class);
             IResourceBuildSqlCrossoverService resourceBuildSqlCrossoverService = CrossoverServiceFactory.getApi(IResourceBuildSqlCrossoverService.class);
             String sql = resourceBuildSqlCrossoverService.buildGetInspectResourceIdListSql(searchVo);
-            newIdList = resourceCrossoverMapper.getIdListBySql(sql);
+            if (StringUtils.isNotBlank(sql)) {
+                newIdList = resourceCrossoverMapper.getIdListBySql(sql);
+            }
         }
         if (Objects.equals(mode, MYBATIS_MODE) || Objects.equals(enable, COMPARISON_ENABLED)) {
             oldIdList = inspectMapper.getInspectResourceIdList(searchVo);
@@ -229,7 +248,9 @@ public class InspectServiceImpl implements InspectService {
             IResourceCrossoverMapper resourceCrossoverMapper = CrossoverServiceFactory.getApi(IResourceCrossoverMapper.class);
             IResourceBuildSqlCrossoverService resourceBuildSqlCrossoverService = CrossoverServiceFactory.getApi(IResourceBuildSqlCrossoverService.class);
             String sql = resourceBuildSqlCrossoverService.buildGetInspectAutoexecJobNodeResourceCountSql(searchVo, jobId);
-            newCount = resourceCrossoverMapper.getCountBySql(sql);
+            if (StringUtils.isNotBlank(sql)) {
+                newCount = resourceCrossoverMapper.getCountBySql(sql);
+            }
         }
         if (Objects.equals(mode, MYBATIS_MODE) || Objects.equals(enable, COMPARISON_ENABLED)) {
             oldCount = inspectMapper.getInspectAutoexecJobNodeResourceCount(searchVo, jobId);
@@ -255,7 +276,9 @@ public class InspectServiceImpl implements InspectService {
             IResourceCrossoverMapper resourceCrossoverMapper = CrossoverServiceFactory.getApi(IResourceCrossoverMapper.class);
             IResourceBuildSqlCrossoverService resourceBuildSqlCrossoverService = CrossoverServiceFactory.getApi(IResourceBuildSqlCrossoverService.class);
             String sql = resourceBuildSqlCrossoverService.buildGetInspectAutoexecJobNodeResourceCountByIpKeywordSql(searchVo, jobId);
-            newCount = resourceCrossoverMapper.getCountBySql(sql);
+            if (StringUtils.isNotBlank(sql)) {
+                newCount = resourceCrossoverMapper.getCountBySql(sql);
+            }
         }
         if (Objects.equals(mode, MYBATIS_MODE) || Objects.equals(enable, COMPARISON_ENABLED)) {
             oldCount = inspectMapper.getInspectAutoexecJobNodeResourceCountByIpKeyword(searchVo, jobId);
@@ -281,7 +304,9 @@ public class InspectServiceImpl implements InspectService {
             IResourceCrossoverMapper resourceCrossoverMapper = CrossoverServiceFactory.getApi(IResourceCrossoverMapper.class);
             IResourceBuildSqlCrossoverService resourceBuildSqlCrossoverService = CrossoverServiceFactory.getApi(IResourceBuildSqlCrossoverService.class);
             String sql = resourceBuildSqlCrossoverService.buildGetInspectAutoexecJobNodeResourceCountByNameKeywordSql(searchVo, jobId);
-            newCount = resourceCrossoverMapper.getCountBySql(sql);
+            if (StringUtils.isNotBlank(sql)) {
+                newCount = resourceCrossoverMapper.getCountBySql(sql);
+            }
         }
         if (Objects.equals(mode, MYBATIS_MODE) || Objects.equals(enable, COMPARISON_ENABLED)) {
             oldCount = inspectMapper.getInspectAutoexecJobNodeResourceCountByNameKeyword(searchVo, jobId);
@@ -307,7 +332,9 @@ public class InspectServiceImpl implements InspectService {
             IResourceCrossoverMapper resourceCrossoverMapper = CrossoverServiceFactory.getApi(IResourceCrossoverMapper.class);
             IResourceBuildSqlCrossoverService resourceBuildSqlCrossoverService = CrossoverServiceFactory.getApi(IResourceBuildSqlCrossoverService.class);
             String sql = resourceBuildSqlCrossoverService.buildGetInspectAutoexecJobNodeResourceIdListSql(searchVo, jobId);
-            newIdList = resourceCrossoverMapper.getIdListBySql(sql);
+            if (StringUtils.isNotBlank(sql)) {
+                newIdList = resourceCrossoverMapper.getIdListBySql(sql);
+            }
         }
         if (Objects.equals(mode, MYBATIS_MODE) || Objects.equals(enable, COMPARISON_ENABLED)) {
             oldIdList = inspectMapper.getInspectAutoexecJobNodeResourceIdList(searchVo, jobId);
@@ -333,7 +360,9 @@ public class InspectServiceImpl implements InspectService {
             IResourceCrossoverMapper resourceCrossoverMapper = CrossoverServiceFactory.getApi(IResourceCrossoverMapper.class);
             IResourceBuildSqlCrossoverService resourceBuildSqlCrossoverService = CrossoverServiceFactory.getApi(IResourceBuildSqlCrossoverService.class);
             String sql = resourceBuildSqlCrossoverService.buildGetInspectConfigFileResourceIdListSql(searchVo);
-            newIdList = resourceCrossoverMapper.getIdListBySql(sql);
+            if (StringUtils.isNotBlank(sql)) {
+                newIdList = resourceCrossoverMapper.getIdListBySql(sql);
+            }
         }
         if (Objects.equals(mode, MYBATIS_MODE) || Objects.equals(enable, COMPARISON_ENABLED)) {
             oldIdList = inspectConfigFileMapper.getInspectResourceIdList(searchVo);
@@ -360,7 +389,9 @@ public class InspectServiceImpl implements InspectService {
             IResourceBuildSqlCrossoverService resourceBuildSqlCrossoverService = CrossoverServiceFactory.getApi(IResourceBuildSqlCrossoverService.class);
             ResourceSearchVo searchVo = JSONObject.parseObject(JSONObject.toJSONString(inspectConfigFilePathSearchVo), ResourceSearchVo.class);
             String sql = resourceBuildSqlCrossoverService.buildGetInspectConfigFilePathCountSql(searchVo);
-            newCount = resourceCrossoverMapper.getCountBySql(sql);
+            if (StringUtils.isNotBlank(sql)) {
+                newCount = resourceCrossoverMapper.getCountBySql(sql);
+            }
         }
         if (Objects.equals(mode, MYBATIS_MODE) || Objects.equals(enable, COMPARISON_ENABLED)) {
             oldCount = inspectConfigFileMapper.getInspectConfigFilePathCount(inspectConfigFilePathSearchVo);
@@ -387,7 +418,9 @@ public class InspectServiceImpl implements InspectService {
             IResourceBuildSqlCrossoverService resourceBuildSqlCrossoverService = CrossoverServiceFactory.getApi(IResourceBuildSqlCrossoverService.class);
             ResourceSearchVo searchVo = JSONObject.parseObject(JSONObject.toJSONString(inspectConfigFilePathSearchVo), ResourceSearchVo.class);
             String sql = resourceBuildSqlCrossoverService.buildGetInspectConfigFilePathIdListSql(searchVo);
-            newIdList = resourceCrossoverMapper.getIdListBySql(sql);
+            if (StringUtils.isNotBlank(sql)) {
+                newIdList = resourceCrossoverMapper.getIdListBySql(sql);
+            }
         }
         if (Objects.equals(mode, MYBATIS_MODE) || Objects.equals(enable, COMPARISON_ENABLED)) {
             oldIdList = inspectConfigFileMapper.getInspectConfigFilePathIdList(inspectConfigFilePathSearchVo);
@@ -412,7 +445,9 @@ public class InspectServiceImpl implements InspectService {
         if (Objects.equals(mode, JSQLPARSER_MODE) || Objects.equals(enable, COMPARISON_ENABLED)) {
             IResourceBuildSqlCrossoverService resourceBuildSqlCrossoverService = CrossoverServiceFactory.getApi(IResourceBuildSqlCrossoverService.class);
             String sql = resourceBuildSqlCrossoverService.buildGetInspectConfigFilePathListSql(idList);
-            newResourceList = inspectConfigFileMapper.getInspectConfigFilePathListBySql(sql);
+            if (StringUtils.isNotBlank(sql)) {
+                newResourceList = inspectConfigFileMapper.getInspectConfigFilePathListBySql(sql);
+            }
         }
         if (Objects.equals(mode, MYBATIS_MODE) || Objects.equals(enable, COMPARISON_ENABLED)) {
             oldResourceList = inspectConfigFileMapper.getInspectConfigFilePathList(idList);
@@ -437,7 +472,9 @@ public class InspectServiceImpl implements InspectService {
         if (Objects.equals(mode, JSQLPARSER_MODE) || Objects.equals(enable, COMPARISON_ENABLED)) {
             IResourceBuildSqlCrossoverService resourceBuildSqlCrossoverService = CrossoverServiceFactory.getApi(IResourceBuildSqlCrossoverService.class);
             String sql = resourceBuildSqlCrossoverService.buildGetInspectConfigFilePathListByJobIdSql(jobId);
-            newResourceList = inspectConfigFileMapper.getInspectConfigFilePathListBySql(sql);
+            if (StringUtils.isNotBlank(sql)) {
+                newResourceList = inspectConfigFileMapper.getInspectConfigFilePathListBySql(sql);
+            }
         }
         if (Objects.equals(mode, MYBATIS_MODE) || Objects.equals(enable, COMPARISON_ENABLED)) {
             oldResourceList = inspectConfigFileMapper.getInspectConfigFilePathListByJobId(jobId);
