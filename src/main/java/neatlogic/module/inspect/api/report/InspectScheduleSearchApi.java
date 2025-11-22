@@ -4,7 +4,7 @@ import neatlogic.framework.auth.core.AuthAction;
 import neatlogic.framework.autoexec.dao.mapper.AutoexecJobMapper;
 import neatlogic.framework.autoexec.dto.job.AutoexecJobInvokeVo;
 import neatlogic.framework.cmdb.crossover.ICiCrossoverMapper;
-import neatlogic.framework.cmdb.crossover.IResourceEntityCrossoverMapper;
+import neatlogic.framework.cmdb.crossover.IResourceEntityCrossoverService;
 import neatlogic.framework.cmdb.dto.ci.CiVo;
 import neatlogic.framework.common.constvalue.ApiParamType;
 import neatlogic.framework.crossover.CrossoverServiceFactory;
@@ -57,14 +57,11 @@ public class InspectScheduleSearchApi extends PrivateApiComponentBase {
     public Object myDoService(JSONObject paramObj) throws Exception {
         String keyword = paramObj.getString("keyword");
         List<InspectScheduleVo> result = new ArrayList<>();
-        IResourceEntityCrossoverMapper resourceEntityCrossoverMapper = CrossoverServiceFactory.getApi(IResourceEntityCrossoverMapper.class);
-        List<Long> ciIdList = resourceEntityCrossoverMapper.getAllResourceTypeCiIdList();
-        if (CollectionUtils.isNotEmpty(ciIdList)) {
-            List<CiVo> ciList = new ArrayList<>();
+        IResourceEntityCrossoverService resourceEntityCrossoverService = CrossoverServiceFactory.getApi(IResourceEntityCrossoverService.class);
+        CiVo rootCiVo = resourceEntityCrossoverService.getAssetListRootCi();
+        if (rootCiVo != null) {
             ICiCrossoverMapper ciCrossoverMapper = CrossoverServiceFactory.getApi(ICiCrossoverMapper.class);
-            List<CiVo> ciVoList = ciCrossoverMapper.getCiByIdList(ciIdList);
-            ciVoList.sort(Comparator.comparing(CiVo::getLft));
-            ciVoList.forEach(o -> ciList.addAll(ciCrossoverMapper.getDownwardCiListByLR(o.getLft(), o.getRht())));
+            List<CiVo> ciList = ciCrossoverMapper.getDownwardCiListByLR(rootCiVo.getLft(), rootCiVo.getRht());
             if (StringUtils.isNotEmpty(keyword)) {
                 ciList.removeIf(o -> !o.getLabel().toLowerCase(Locale.ROOT).contains(keyword.toLowerCase(Locale.ROOT))
                         && !o.getName().toLowerCase(Locale.ROOT).contains(keyword.toLowerCase(Locale.ROOT)));
