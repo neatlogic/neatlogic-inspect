@@ -1,8 +1,9 @@
 package neatlogic.module.inspect.api.definition;
 
+import com.alibaba.fastjson.JSONObject;
 import neatlogic.framework.auth.core.AuthAction;
 import neatlogic.framework.cmdb.crossover.ICiCrossoverMapper;
-import neatlogic.framework.cmdb.crossover.IResourceEntityCrossoverMapper;
+import neatlogic.framework.cmdb.crossover.IResourceEntityCrossoverService;
 import neatlogic.framework.cmdb.dto.ci.CiVo;
 import neatlogic.framework.common.constvalue.ApiParamType;
 import neatlogic.framework.crossover.CrossoverServiceFactory;
@@ -15,7 +16,6 @@ import neatlogic.framework.restful.annotation.OperationType;
 import neatlogic.framework.restful.annotation.Param;
 import neatlogic.framework.restful.constvalue.OperationTypeEnum;
 import neatlogic.framework.restful.core.privateapi.PrivateApiComponentBase;
-import com.alibaba.fastjson.JSONObject;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
@@ -59,20 +59,13 @@ public class InspectCombopSearchApi extends PrivateApiComponentBase {
         List<InspectCiCombopVo> inspectCiList = inspectMapper.searchInspectCiCombopList();
 
         //获取cmdb的ciType
-        IResourceEntityCrossoverMapper resourceEntityCrossoverMapper = CrossoverServiceFactory.getApi(IResourceEntityCrossoverMapper.class);
-        List<Long> ciIdList = resourceEntityCrossoverMapper.getAllResourceTypeCiIdList();
+        IResourceEntityCrossoverService resourceEntityCrossoverService = CrossoverServiceFactory.getApi(IResourceEntityCrossoverService.class);
+        CiVo rootCiVo = resourceEntityCrossoverService.getAssetListRootCi();
         List<CiVo> ciList = new ArrayList<>();
         List<InspectCiCombopVo> ciCombopVoList = new ArrayList<>();
-        if (CollectionUtils.isNotEmpty(ciIdList)) {
+        if (rootCiVo != null) {
             ICiCrossoverMapper ciCrossoverMapper = CrossoverServiceFactory.getApi(ICiCrossoverMapper.class);
-            List<CiVo> ciVoList = ciCrossoverMapper.getCiByIdList(ciIdList);
-            ciVoList.sort(Comparator.comparing(CiVo::getLft));
-            for (CiVo ciVo : ciVoList) {
-                List<CiVo> ciListTmp = ciCrossoverMapper.getDownwardCiListByLR(ciVo.getLft(), ciVo.getRht());
-                if (CollectionUtils.isNotEmpty(ciListTmp)) {
-                    ciList.addAll(ciListTmp);
-                }
-            }
+            ciList = ciCrossoverMapper.getDownwardCiListByLR(rootCiVo.getLft(), rootCiVo.getRht());
             String keyword = paramObj.getString("keyword");
             if (StringUtils.isNotBlank(keyword)) {
                 keyword = keyword.toLowerCase(Locale.ROOT);
