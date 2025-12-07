@@ -15,7 +15,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.*/
 
 package neatlogic.module.inspect.api.report;
 
-import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import neatlogic.framework.auth.core.AuthAction;
@@ -146,7 +145,7 @@ public class InspectReportExportApi extends PrivateBinaryStreamApiComponentBase 
 
             JSONArray lineList = new JSONArray();
             JSONArray tableList = new JSONArray();
-            getDataMap(reportDoc, translationMap, alertMap, lineList, tableList);//
+            getDataMap(reportDoc, translationMap, alertMap, lineList, tableList);
             JSONObject dataObj = new JSONObject();
             if (MapUtils.isNotEmpty(alert)) {
                 dataObj.put("alert", alert);
@@ -413,7 +412,7 @@ public class InspectReportExportApi extends PrivateBinaryStreamApiComponentBase 
             for (String head : headSet) {
                 Object obj = object.get(head);
                 if (obj != null) {
-                    if (obj instanceof List && CollectionUtils.isNotEmpty((List) obj) && ((List) obj).get(0) instanceof Map) {//
+                    if (obj instanceof List && CollectionUtils.isNotEmpty((List) obj) && ((List) obj).get(0) instanceof Map) {
                         List list = (List) obj;
                         if (CollectionUtils.isNotEmpty(list)) {
                             JSONObject _table = new JSONObject();
