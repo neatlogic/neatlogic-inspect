@@ -197,9 +197,10 @@ public class InspectAppSystemScheduleJob extends JobBase {
         jobVo.setName(name);
         AutoexecCombopExecuteNodeConfigVo executeNodeConfig = new AutoexecCombopExecuteNodeConfigVo();
         executeNodeConfig.setSelectNodeList(selectNodeList);
-        AutoexecCombopExecuteConfigVo executeConfig = new AutoexecCombopExecuteConfigVo();
-        executeConfig.setExecuteNodeConfig(executeNodeConfig);
-        jobVo.setExecuteConfig(executeConfig);
+//        AutoexecCombopExecuteConfigVo executeConfig = new AutoexecCombopExecuteConfigVo();
+//        executeConfig.setExecuteNodeConfig(executeNodeConfig);
+//        jobVo.setExecuteConfig(executeConfig);
+        jobVo.setExecuteNodeConfig(executeNodeConfig);
         UserVo fcuVo = userMapper.getUserByUuid(userUuid);
         AuthenticationInfoVo authenticationInfoVo = authenticationInfoService.getAuthenticationInfo(userUuid);
         UserContext.init(fcuVo, authenticationInfoVo, SystemUser.SYSTEM.getTimezone());

@@ -104,13 +104,14 @@ public class CreateInspectResourceEntityJobApi extends PrivateApiComponentBase {
         jobVo.setName(resourceVo.getName());
         jobVo.setInvokeId(ciId);
         jobVo.setRouteId(ciId.toString());
-        AutoexecCombopExecuteConfigVo executeConfig = new AutoexecCombopExecuteConfigVo();
+//        AutoexecCombopExecuteConfigVo executeConfig = new AutoexecCombopExecuteConfigVo();
         AutoexecCombopExecuteNodeConfigVo executeNodeConfig = new AutoexecCombopExecuteNodeConfigVo();
         List<AutoexecNodeVo> selectNodeList = new ArrayList<>();
         selectNodeList.add(new AutoexecNodeVo(resourceVo));
         executeNodeConfig.setSelectNodeList(selectNodeList);
-        executeConfig.setExecuteNodeConfig(executeNodeConfig);
-        jobVo.setExecuteConfig(executeConfig);
+//        executeConfig.setExecuteNodeConfig(executeNodeConfig);
+//        jobVo.setExecuteConfig(executeConfig);
+        jobVo.setExecuteNodeConfig(executeNodeConfig);
         IAutoexecJobActionCrossoverService autoexecJobActionCrossoverService = CrossoverServiceFactory.getApi(IAutoexecJobActionCrossoverService.class);
         autoexecJobActionCrossoverService.validateAndCreateJobFromCombop(jobVo);
         IAutoexecJobActionHandler fireAction = AutoexecJobActionHandlerFactory.getAction(JobAction.FIRE.getValue());

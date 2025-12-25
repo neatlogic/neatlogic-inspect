@@ -201,7 +201,7 @@ public class CreateInspectAppJobApi extends PrivateApiComponentBase {
                                 jobVo.setName(ciVo.getLabel() + "(" + ciVo.getName() + ")");
                                 jobVo.setInvokeId(typeId);
                                 jobVo.setRouteId(appSystemId.toString());
-                                AutoexecCombopExecuteConfigVo executeConfig = new AutoexecCombopExecuteConfigVo();
+//                                AutoexecCombopExecuteConfigVo executeConfig = new AutoexecCombopExecuteConfigVo();
                                 AutoexecCombopExecuteNodeConfigVo executeNodeConfig = new AutoexecCombopExecuteNodeConfigVo();
                                 JSONObject filter = new JSONObject();
                                 filter.put("typeId", typeId);
@@ -212,8 +212,9 @@ public class CreateInspectAppJobApi extends PrivateApiComponentBase {
                                 List<AutoexecNodeVo> autoexecNodeList = getAutoexecNodeList(filter);
                                 jsonObj.put("执行目标列表", autoexecNodeList);
                                 executeNodeConfig.setOtherFilter(filter);
-                                executeConfig.setExecuteNodeConfig(executeNodeConfig);
-                                jobVo.setExecuteConfig(executeConfig);
+//                                executeConfig.setExecuteNodeConfig(executeNodeConfig);
+//                                jobVo.setExecuteConfig(executeConfig);
+                                jobVo.setExecuteNodeConfig(executeNodeConfig);
                                 autoexecJobList.add(jobVo);
                                 jsonObj.put("jobId", jobVo.getId());
                                 jsonObj.put("jobName", jobVo.getName());
