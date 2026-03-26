@@ -1,0 +1,585 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="neatlogic.module.inspect.dao.mapper.InspectConfigCompareMapper">
+
+    <resultMap id="baselineMap" type="neatlogic.module.inspect.dto.InspectConfigBaselineVo">
+        <id column="id" property="id"/>
+        <result column="app_system_id" property="appSystemId"/>
+        <result column="app_module_id" property="appModuleId"/>
+        <result column="env_id" property="envId"/>
+        <result column="type_id" property="typeId"/>
+        <result column="schema_name" property="schemaName"/>
+        <result column="scope_hash" property="scopeHash"/>
+        <result column="name" property="name"/>
+        <result column="description" property="description"/>
+        <result column="current_version_id" property="currentVersionId"/>
+        <result column="current_version" property="currentVersion"/>
+        <result column="current_status" property="currentStatus"/>
+        <result column="current_field_count" property="currentFieldCount"/>
+        <result column="current_approved_time" property="currentActivatedTime"/>
+        <result column="current_publisher" property="currentPublisher"/>
+        <result column="current_source_snapshot_id" property="currentSourceSnapshotId"/>
+        <result column="fcd" property="fcd"/>
+        <result column="fcu" property="fcu"/>
+        <result column="lcd" property="lcd"/>
+        <result column="lcu" property="lcu"/>
+    </resultMap>
+
+    <resultMap id="aiSettingMap" type="neatlogic.module.inspect.dto.InspectConfigAiSettingVo">
+        <id column="id" property="id"/>
+        <result column="schema_name" property="schemaName"/>
+        <result column="model_id" property="modelId"/>
+        <result column="prompt" property="prompt"/>
+        <result column="fcd" property="fcd"/>
+        <result column="fcu" property="fcu"/>
+        <result column="lcd" property="lcd"/>
+        <result column="lcu" property="lcu"/>
+    </resultMap>
+
+    <resultMap id="baselineVersionMap" type="neatlogic.module.inspect.dto.InspectConfigBaselineVersionVo">
+        <id column="id" property="id"/>
+        <result column="baseline_id" property="baselineId"/>
+        <result column="version" property="version"/>
+        <result column="status" property="status"/>
+        <result column="is_frozen" property="isFrozen"/>
+        <result column="source_type" property="sourceType"/>
+        <result column="source_snapshot_id" property="sourceSnapshotId"/>
+        <result column="field_count" property="fieldCount"/>
+        <result column="baseline_data" property="baselineData"/>
+        <result column="ai_candidate_data" property="aiCandidateData"/>
+        <result column="change_summary" property="changeSummary"/>
+        <result column="change_log" property="changeLog"/>
+        <result column="approved_time" property="approvedTime"/>
+        <result column="activated_time" property="activatedTime"/>
+        <result column="is_current_active" property="isCurrentActive"/>
+        <result column="approval_status" property="approvalStatus"/>
+        <result column="approver" property="approver"/>
+        <result column="approval_comment" property="approvalComment"/>
+        <result column="approved_time" property="actionTime"/>
+        <result column="fcd" property="fcd"/>
+        <result column="fcu" property="fcu"/>
+        <result column="lcd" property="lcd"/>
+        <result column="lcu" property="lcu"/>
+    </resultMap>
+
+    <resultMap id="snapshotMap" type="neatlogic.module.inspect.dto.InspectConfigSnapshotVo">
+        <id column="id" property="id"/>
+        <result column="app_system_id" property="appSystemId"/>
+        <result column="app_module_id" property="appModuleId"/>
+        <result column="env_id" property="envId"/>
+        <result column="resource_id" property="resourceId"/>
+        <result column="type_id" property="typeId"/>
+        <result column="job_id" property="jobId"/>
+        <result column="schema_name" property="schemaName"/>
+        <result column="schema_version" property="schemaVersion"/>
+        <result column="source" property="source"/>
+        <result column="status" property="status"/>
+        <result column="collect_time" property="collectTime"/>
+        <result column="config_file_audit_id" property="configFileAuditId"/>
+        <result column="raw_data" property="rawData"/>
+        <result column="normalized_data" property="normalizedData"/>
+        <result column="summary" property="summary"/>
+        <result column="fcd" property="fcd"/>
+        <result column="fcu" property="fcu"/>
+        <result column="lcd" property="lcd"/>
+        <result column="lcu" property="lcu"/>
+    </resultMap>
+
+    <resultMap id="compareTaskMap" type="neatlogic.module.inspect.dto.InspectConfigCompareTaskVo">
+        <id column="id" property="id"/>
+        <result column="compare_type" property="compareType"/>
+        <result column="baseline_version_id" property="baselineVersionId"/>
+        <result column="source_snapshot_id" property="sourceSnapshotId"/>
+        <result column="target_snapshot_id" property="targetSnapshotId"/>
+        <result column="app_system_id" property="appSystemId"/>
+        <result column="app_module_id" property="appModuleId"/>
+        <result column="env_id" property="envId"/>
+        <result column="status" property="status"/>
+        <result column="compare_result" property="compareResult"/>
+        <result column="risk_level" property="riskLevel"/>
+        <result column="is_blocked" property="isBlocked"/>
+        <result column="total_count" property="totalCount"/>
+        <result column="diff_count" property="diffCount"/>
+        <result column="high_count" property="highCount"/>
+        <result column="medium_count" property="mediumCount"/>
+        <result column="low_count" property="lowCount"/>
+        <result column="summary" property="summary"/>
+        <result column="ai_summary" property="aiSummary"/>
+        <result column="fcd" property="fcd"/>
+        <result column="fcu" property="fcu"/>
+        <result column="lcd" property="lcd"/>
+        <result column="lcu" property="lcu"/>
+    </resultMap>
+
+    <resultMap id="compareDetailMap" type="neatlogic.module.inspect.dto.InspectConfigCompareDetailVo">
+        <id column="id" property="id"/>
+        <result column="task_id" property="taskId"/>
+        <result column="layer" property="layer"/>
+        <result column="path" property="path"/>
+        <result column="label" property="label"/>
+        <result column="compare_mode" property="compareMode"/>
+        <result column="status" property="status"/>
+        <result column="risk_level" property="riskLevel"/>
+        <result column="is_blocked" property="isBlocked"/>
+        <result column="reason" property="reason"/>
+        <result column="source_value" property="sourceValue"/>
+        <result column="target_value" property="targetValue"/>
+        <result column="sort" property="sort"/>
+    </resultMap>
+
+    <select id="getBaselineList" resultMap="baselineMap">
+        SELECT
+            b.`id`,
+            b.`app_system_id`,
+            b.`app_module_id`,
+            b.`env_id`,
+            b.`type_id`,
+            b.`schema_name`,
+            b.`scope_hash`,
+            b.`name`,
+            b.`description`,
+            b.`current_version_id`,
+            b.`fcd`,
+            b.`fcu`,
+            b.`lcd`,
+            b.`lcu`,
+            v.`version` AS `current_version`,
+            v.`status` AS `current_status`,
+            v.`field_count` AS `current_field_count`,
+            COALESCE(v.`approved_time`, v.`lcd`, v.`fcd`) AS `current_approved_time`,
+            COALESCE(v.`lcu`, v.`fcu`) AS `current_publisher`,
+            v.`source_snapshot_id` AS `current_source_snapshot_id`
+        FROM `inspect_config_baseline` b
+        LEFT JOIN `inspect_config_baseline_version` v ON b.`current_version_id` = v.`id`
+        <where>
+            <if test="appSystemId != null">
+                AND b.`app_system_id` = #{appSystemId}
+            </if>
+            <if test="appModuleId != null">
+                AND b.`app_module_id` = #{appModuleId}
+            </if>
+            <if test="envId != null">
+                AND b.`env_id` = #{envId}
+            </if>
+            <if test="schemaName != null and schemaName != ''">
+                AND b.`schema_name` = #{schemaName}
+            </if>
+        </where>
+        ORDER BY b.`type_id` ASC, b.`lcd` DESC
+    </select>
+
+    <select id="getBaselineByScopeHash" parameterType="java.lang.String" resultMap="baselineMap">
+        SELECT
+            b.`id`,
+            b.`app_system_id`,
+            b.`app_module_id`,
+            b.`env_id`,
+            b.`type_id`,
+            b.`schema_name`,
+            b.`scope_hash`,
+            b.`name`,
+            b.`description`,
+            b.`current_version_id`,
+            b.`fcd`,
+            b.`fcu`,
+            b.`lcd`,
+            b.`lcu`,
+            v.`version` AS `current_version`,
+            v.`status` AS `current_status`,
+            v.`field_count` AS `current_field_count`,
+            COALESCE(v.`approved_time`, v.`lcd`, v.`fcd`) AS `current_approved_time`,
+            COALESCE(v.`lcu`, v.`fcu`) AS `current_publisher`,
+            v.`source_snapshot_id` AS `current_source_snapshot_id`
+        FROM `inspect_config_baseline` b
+        LEFT JOIN `inspect_config_baseline_version` v ON b.`current_version_id` = v.`id`
+        WHERE b.`scope_hash` = #{scopeHash}
+    </select>
+
+    <select id="getBaselineById" parameterType="java.lang.Long" resultMap="baselineMap">
+        SELECT
+            b.`id`,
+            b.`app_system_id`,
+            b.`app_module_id`,
+            b.`env_id`,
+            b.`type_id`,
+            b.`schema_name`,
+            b.`scope_hash`,
+            b.`name`,
+            b.`description`,
+            b.`current_version_id`,
+            b.`fcd`,
+            b.`fcu`,
+            b.`lcd`,
+            b.`lcu`,
+            v.`version` AS `current_version`,
+            v.`status` AS `current_status`,
+            v.`field_count` AS `current_field_count`,
+            COALESCE(v.`approved_time`, v.`lcd`, v.`fcd`) AS `current_approved_time`,
+            COALESCE(v.`lcu`, v.`fcu`) AS `current_publisher`,
+            v.`source_snapshot_id` AS `current_source_snapshot_id`
+        FROM `inspect_config_baseline` b
+        LEFT JOIN `inspect_config_baseline_version` v ON b.`current_version_id` = v.`id`
+        WHERE b.`id` = #{id}
+    </select>
+
+    <select id="getAiSettingByScope" parameterType="neatlogic.module.inspect.dto.InspectConfigAiSettingVo" resultMap="aiSettingMap">
+        SELECT
+            `id`,
+            `schema_name`,
+            `model_id`,
+            `prompt`,
+            `fcd`,
+            `fcu`,
+            `lcd`,
+            `lcu`
+        FROM `inspect_config_ai_setting`
+        WHERE `schema_name` = #{schemaName}
+        LIMIT 1
+    </select>
+
+    <select id="getBaselineVersionById" parameterType="java.lang.Long" resultMap="baselineVersionMap">
+        SELECT
+            v.`id`,
+            v.`baseline_id`,
+            v.`version`,
+            v.`status`,
+            v.`is_frozen`,
+            v.`source_type`,
+            v.`source_snapshot_id`,
+            v.`field_count`,
+            v.`baseline_data`,
+            v.`ai_candidate_data`,
+            v.`change_summary`,
+            v.`change_log`,
+            v.`approved_time`,
+            v.`activated_time`,
+            CASE WHEN b.`current_version_id` = v.`id` THEN 1 ELSE 0 END AS `is_current_active`,
+            v.`approval_status`,
+            v.`approver`,
+            v.`approval_comment`,
+            v.`fcd`,
+            v.`fcu`,
+            v.`lcd`,
+            v.`lcu`
+        FROM `inspect_config_baseline_version` v
+        LEFT JOIN `inspect_config_baseline` b ON b.`id` = v.`baseline_id`
+        WHERE v.`id` = #{id}
+    </select>
+
+    <select id="getBaselineVersionListByBaselineId" parameterType="java.lang.Long" resultMap="baselineVersionMap">
+        SELECT
+            v.`id`,
+            v.`baseline_id`,
+            v.`version`,
+            v.`status`,
+            v.`is_frozen`,
+            v.`source_type`,
+            v.`source_snapshot_id`,
+            v.`field_count`,
+            v.`baseline_data`,
+            v.`ai_candidate_data`,
+            v.`change_summary`,
+            v.`change_log`,
+            v.`approved_time`,
+            v.`activated_time`,
+            CASE WHEN b.`current_version_id` = v.`id` THEN 1 ELSE 0 END AS `is_current_active`,
+            v.`approval_status`,
+            v.`approver`,
+            v.`approval_comment`,
+            v.`fcd`,
+            v.`fcu`,
+            v.`lcd`,
+            v.`lcu`
+        FROM `inspect_config_baseline_version` v
+        LEFT JOIN `inspect_config_baseline` b ON b.`id` = v.`baseline_id`
+        WHERE v.`baseline_id` = #{baselineId}
+        ORDER BY v.`fcd` DESC, v.`id` DESC
+    </select>
+
+    <select id="getSnapshotById" parameterType="java.lang.Long" resultMap="snapshotMap">
+        SELECT
+            `id`,
+            `app_system_id`,
+            `app_module_id`,
+            `env_id`,
+            `resource_id`,
+            `type_id`,
+            `job_id`,
+            `schema_name`,
+            `schema_version`,
+            `source`,
+            `status`,
+            `collect_time`,
+            `config_file_audit_id`,
+            `raw_data`,
+            `normalized_data`,
+            `summary`,
+            `fcd`,
+            `fcu`,
+            `lcd`,
+            `lcu`
+        FROM `inspect_config_snapshot`
+        WHERE `id` = #{id}
+    </select>
+
+    <select id="getLatestSnapshot" resultMap="snapshotMap">
+        SELECT
+            `id`,
+            `app_system_id`,
+            `app_module_id`,
+            `env_id`,
+            `resource_id`,
+            `type_id`,
+            `job_id`,
+            `schema_name`,
+            `schema_version`,
+            `source`,
+            `status`,
+            `collect_time`,
+            `config_file_audit_id`,
+            `raw_data`,
+            `normalized_data`,
+            `summary`,
+            `fcd`,
+            `fcu`,
+            `lcd`,
+            `lcu`
+        FROM `inspect_config_snapshot`
+        WHERE `app_system_id` = #{appSystemId}
+            <choose>
+                <when test="appModuleId != null">
+                    AND `app_module_id` = #{appModuleId}
+                </when>
+                <otherwise>
+                    AND `app_module_id` IS NULL
+                </otherwise>
+            </choose>
+            <choose>
+                <when test="envId != null">
+                    AND `env_id` = #{envId}
+                </when>
+                <otherwise>
+                    AND `env_id` IS NULL
+                </otherwise>
+            </choose>
+            AND `resource_id` = #{resourceId}
+            <choose>
+                <when test="typeId != null">
+                    AND `type_id` = #{typeId}
+                </when>
+                <otherwise>
+                    AND `type_id` IS NULL
+                </otherwise>
+            </choose>
+            AND `schema_name` = #{schemaName}
+        ORDER BY `collect_time` DESC, `id` DESC
+        LIMIT 1
+    </select>
+
+    <insert id="insertBaseline" parameterType="neatlogic.module.inspect.dto.InspectConfigBaselineVo">
+        INSERT INTO `inspect_config_baseline` (
+            `id`, `app_system_id`, `app_module_id`, `env_id`, `type_id`, `schema_name`, `scope_hash`, `name`,
+            `description`, `current_version_id`, `fcd`, `fcu`, `lcd`, `lcu`
+        ) VALUES (
+            #{id}, #{appSystemId}, #{appModuleId}, #{envId}, #{typeId}, #{schemaName}, #{scopeHash}, #{name},
+            #{description}, #{currentVersionId}, NOW(3), #{fcu}, NOW(3), #{lcu}
+        )
+    </insert>
+
+    <insert id="insertAiSetting" parameterType="neatlogic.module.inspect.dto.InspectConfigAiSettingVo">
+        INSERT INTO `inspect_config_ai_setting` (
+            `id`, `schema_name`, `model_id`, `prompt`, `fcd`, `fcu`, `lcd`, `lcu`
+        ) VALUES (
+            #{id}, #{schemaName}, #{modelId}, #{prompt}, NOW(3), #{fcu}, NOW(3), #{lcu}
+        )
+    </insert>
+
+    <update id="updateAiSetting" parameterType="neatlogic.module.inspect.dto.InspectConfigAiSettingVo">
+        UPDATE `inspect_config_ai_setting`
+        SET `model_id` = #{modelId},
+            `prompt` = #{prompt},
+            `lcd` = NOW(3),
+            `lcu` = #{lcu}
+        WHERE `id` = #{id}
+    </update>
+
+    <update id="updateBaselineCurrentVersion" parameterType="neatlogic.module.inspect.dto.InspectConfigBaselineVo">
+        UPDATE `inspect_config_baseline`
+        SET `current_version_id` = #{currentVersionId},
+            `name` = #{name},
+            `description` = #{description},
+            `lcd` = NOW(3),
+            `lcu` = #{lcu}
+        WHERE `id` = #{id}
+    </update>
+
+    <insert id="insertBaselineVersion" parameterType="neatlogic.module.inspect.dto.InspectConfigBaselineVersionVo">
+        INSERT INTO `inspect_config_baseline_version` (
+            `id`, `baseline_id`, `version`, `status`, `is_frozen`, `source_type`, `source_snapshot_id`, `field_count`,
+            `baseline_data`, `ai_candidate_data`, `change_summary`, `change_log`, `approved_time`, `activated_time`,
+            `fcd`, `fcu`, `lcd`, `lcu`
+        ) VALUES (
+            #{id}, #{baselineId}, #{version}, #{status}, #{isFrozen}, #{sourceType}, #{sourceSnapshotId}, #{fieldCount},
+            #{baselineData}, #{aiCandidateData}, #{changeSummary}, #{changeLog}, #{approvedTime}, #{activatedTime},
+            NOW(3), #{fcu}, NOW(3), #{lcu}
+        )
+    </insert>
+
+    <update id="updateBaselineVersionContent" parameterType="neatlogic.module.inspect.dto.InspectConfigBaselineVersionVo">
+        UPDATE `inspect_config_baseline_version`
+        SET `field_count` = #{fieldCount},
+            `baseline_data` = #{baselineData},
+            `ai_candidate_data` = #{aiCandidateData},
+            `change_summary` = #{changeSummary},
+            `change_log` = #{changeLog},
+            `lcd` = NOW(3),
+            `lcu` = #{lcu}
+        WHERE `id` = #{id}
+    </update>
+
+    <update id="updateBaselineVersionToActive" parameterType="neatlogic.module.inspect.dto.InspectConfigBaselineVersionVo">
+        UPDATE `inspect_config_baseline_version`
+        SET `status` = #{status},
+            `approved_time` = #{approvedTime},
+            `activated_time` = #{activatedTime},
+            `lcd` = NOW(3),
+            `lcu` = #{lcu}
+        WHERE `id` = #{id}
+    </update>
+
+    <update id="updateBaselineVersionStatusById" parameterType="neatlogic.module.inspect.dto.InspectConfigBaselineVersionVo">
+        UPDATE `inspect_config_baseline_version`
+        SET `status` = #{status},
+            `approved_time` = #{approvedTime},
+            `activated_time` = #{activatedTime},
+            `approval_status` = #{approvalStatus},
+            `approver` = #{approver},
+            `approval_comment` = #{approvalComment},
+            `lcd` = NOW(3),
+            `lcu` = #{lcu}
+        WHERE `id` = #{id}
+    </update>
+
+    <update id="updateBaselineVersionStatusByBaselineId">
+        UPDATE `inspect_config_baseline_version`
+        SET `status` = #{status},
+            `lcd` = NOW(3),
+            `lcu` = #{lcu}
+        WHERE `baseline_id` = #{baselineId}
+          AND `status` = 'active'
+    </update>
+
+    <delete id="deleteCompareDetailByBaselineVersionId" parameterType="java.lang.Long">
+        DELETE d
+        FROM `inspect_config_compare_detail` d
+        INNER JOIN `inspect_config_compare_task` t ON d.`task_id` = t.`id`
+        WHERE t.`baseline_version_id` = #{baselineVersionId}
+    </delete>
+
+    <delete id="deleteCompareTaskByBaselineVersionId" parameterType="java.lang.Long">
+        DELETE FROM `inspect_config_compare_task`
+        WHERE `baseline_version_id` = #{baselineVersionId}
+    </delete>
+
+    <delete id="deleteBaselineVersionById" parameterType="java.lang.Long">
+        DELETE FROM `inspect_config_baseline_version`
+        WHERE `id` = #{id}
+    </delete>
+
+    <select id="getBaselineVersionCountByBaselineId" parameterType="java.lang.Long" resultType="java.lang.Integer">
+        SELECT COUNT(1)
+        FROM `inspect_config_baseline_version`
+        WHERE `baseline_id` = #{baselineId}
+    </select>
+
+    <delete id="deleteCompareDetailByBaselineId" parameterType="java.lang.Long">
+        DELETE d
+        FROM `inspect_config_compare_detail` d
+        INNER JOIN `inspect_config_compare_task` t ON d.`task_id` = t.`id`
+        INNER JOIN `inspect_config_baseline_version` v ON t.`baseline_version_id` = v.`id`
+        WHERE v.`baseline_id` = #{baselineId}
+    </delete>
+
+    <delete id="deleteCompareTaskByBaselineId" parameterType="java.lang.Long">
+        DELETE t
+        FROM `inspect_config_compare_task` t
+        INNER JOIN `inspect_config_baseline_version` v ON t.`baseline_version_id` = v.`id`
+        WHERE v.`baseline_id` = #{baselineId}
+    </delete>
+
+    <delete id="deleteBaselineRuleByBaselineId" parameterType="java.lang.Long">
+        DELETE FROM `inspect_config_rule`
+        WHERE `baseline_id` = #{baselineId}
+    </delete>
+
+    <delete id="deleteBaselineVersionByBaselineId" parameterType="java.lang.Long">
+        DELETE FROM `inspect_config_baseline_version`
+        WHERE `baseline_id` = #{baselineId}
+    </delete>
+
+    <delete id="deleteBaselineById" parameterType="java.lang.Long">
+        DELETE FROM `inspect_config_baseline`
+        WHERE `id` = #{id}
+    </delete>
+
+    <insert id="insertSnapshot" parameterType="neatlogic.module.inspect.dto.InspectConfigSnapshotVo">
+        INSERT INTO `inspect_config_snapshot` (
+            `id`, `app_system_id`, `app_module_id`, `env_id`, `resource_id`, `type_id`, `job_id`, `schema_name`,
+            `schema_version`, `source`, `status`, `collect_time`, `config_file_audit_id`, `raw_data`,
+            `normalized_data`, `summary`, `fcd`, `fcu`, `lcd`, `lcu`
+        ) VALUES (
+            #{id}, #{appSystemId}, #{appModuleId}, #{envId}, #{resourceId}, #{typeId}, #{jobId}, #{schemaName},
+            #{schemaVersion}, #{source}, #{status}, #{collectTime}, #{configFileAuditId}, #{rawData},
+            #{normalizedData}, #{summary}, NOW(3), #{fcu}, NOW(3), #{lcu}
+        )
+    </insert>
+
+    <insert id="insertCompareTask" parameterType="neatlogic.module.inspect.dto.InspectConfigCompareTaskVo">
+        INSERT INTO `inspect_config_compare_task` (
+            `id`, `compare_type`, `baseline_version_id`, `source_snapshot_id`, `target_snapshot_id`, `app_system_id`,
+            `app_module_id`, `env_id`, `status`, `compare_result`, `risk_level`, `is_blocked`, `total_count`,
+            `diff_count`, `high_count`, `medium_count`, `low_count`, `summary`, `ai_summary`, `fcd`, `fcu`, `lcd`, `lcu`
+        ) VALUES (
+            #{id}, #{compareType}, #{baselineVersionId}, #{sourceSnapshotId}, #{targetSnapshotId}, #{appSystemId},
+            #{appModuleId}, #{envId}, #{status}, #{compareResult}, #{riskLevel}, #{isBlocked}, #{totalCount},
+            #{diffCount}, #{highCount}, #{mediumCount}, #{lowCount}, #{summary}, #{aiSummary}, NOW(3), #{fcu}, NOW(3), #{lcu}
+        )
+    </insert>
+
+    <update id="updateCompareTask" parameterType="neatlogic.module.inspect.dto.InspectConfigCompareTaskVo">
+        UPDATE `inspect_config_compare_task`
+        SET `status` = #{status},
+            `compare_result` = #{compareResult},
+            `risk_level` = #{riskLevel},
+            `is_blocked` = #{isBlocked},
+            `total_count` = #{totalCount},
+            `diff_count` = #{diffCount},
+            `high_count` = #{highCount},
+            `medium_count` = #{mediumCount},
+            `low_count` = #{lowCount},
+            `summary` = #{summary},
+            `ai_summary` = #{aiSummary},
+            `lcd` = NOW(3),
+            `lcu` = #{lcu}
+        WHERE `id` = #{id}
+    </update>
+
+    <insert id="insertCompareDetail" parameterType="neatlogic.module.inspect.dto.InspectConfigCompareDetailVo">
+        INSERT INTO `inspect_config_compare_detail` (
+            `id`, `task_id`, `layer`, `path`, `label`, `compare_mode`, `status`, `risk_level`,
+            `is_blocked`, `reason`, `source_value`, `target_value`, `sort`
+        ) VALUES (
+            #{id}, #{taskId}, #{layer}, #{path}, #{label}, #{compareMode}, #{status}, #{riskLevel},
+            #{isBlocked}, #{reason}, #{sourceValue}, #{targetValue}, #{sort}
+        )
+    </insert>
+
+    <select id="getCompareDetailListByTaskId" parameterType="java.lang.Long" resultMap="compareDetailMap">
+        SELECT
+            `id`, `task_id`, `layer`, `path`, `label`, `compare_mode`, `status`, `risk_level`,
+            `is_blocked`, `reason`, `source_value`, `target_value`, `sort`
+        FROM `inspect_config_compare_detail`
+        WHERE `task_id` = #{taskId}
+        ORDER BY `sort` ASC, `id` ASC
+    </select>
+</mapper>
