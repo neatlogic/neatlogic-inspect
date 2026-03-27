@@ -82,6 +82,8 @@ CREATE TABLE IF NOT EXISTS `inspect_config_snapshot` (
   `config_file_audit_id` bigint DEFAULT NULL COMMENT '配置文件审计ID',
   `raw_data` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci COMMENT '原始采集数据',
   `normalized_data` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci COMMENT '规范化快照数据',
+  `ai_candidate_data` mediumtext CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci COMMENT 'AI候选筛选结果',
+  `ai_draft_data` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci COMMENT 'AI辅助后的基线草稿',
   `summary` mediumtext CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci COMMENT '快照摘要',
   `fcd` timestamp(3) NULL DEFAULT NULL COMMENT '创建时间',
   `fcu` char(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '创建人',

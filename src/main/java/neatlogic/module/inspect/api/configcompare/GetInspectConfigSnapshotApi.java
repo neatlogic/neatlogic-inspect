@@ -46,14 +46,18 @@ public class GetInspectConfigSnapshotApi extends PrivateApiComponentBase {
             @Param(name = "schemaName", type = ApiParamType.STRING, desc = "采集维度")
     })
     @Output({
-            @Param(name = "snapshot", type = ApiParamType.JSONOBJECT, desc = "快照")
+            @Param(name = "snapshot", type = ApiParamType.JSONOBJECT, desc = "快照"),
+            @Param(name = "aiCandidate", type = ApiParamType.JSONOBJECT, desc = "AI候选结果"),
+            @Param(name = "baselineDraft", type = ApiParamType.JSONOBJECT, desc = "AI辅助后的基线草稿"),
+            @Param(name = "baselineSummary", type = ApiParamType.JSONOBJECT, desc = "基线草稿摘要"),
+            @Param(name = "rawSnapshot", type = ApiParamType.JSONOBJECT, desc = "原始快照")
     })
     @Description(desc = "获取巡检配置快照")
     @Override
     public Object myDoService(JSONObject paramObj) throws Exception {
         InspectConfigSnapshotVo snapshotVo;
         if (paramObj.getLong("id") != null) {
-            snapshotVo = inspectConfigCompareService.getSnapshotById(paramObj.getLong("id"));
+            return inspectConfigCompareService.getSnapshotDetail(paramObj.getLong("id"));
         } else {
             snapshotVo = inspectConfigCompareService.generateSnapshot(
                     paramObj.getLong("appSystemId"),

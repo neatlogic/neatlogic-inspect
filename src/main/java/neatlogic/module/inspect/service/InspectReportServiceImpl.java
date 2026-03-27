@@ -111,7 +111,7 @@ public class InspectReportServiceImpl implements InspectReportService {
                 if (collectionVo != null) {
                     reportDoc.put("fields", collectionVo.getFields());
                 }
-                enrichConfigCompareProjection(collectionName, resourceId != null ? resourceId : reportDoc.getLong("RESOURCE_ID"), reportDoc, reportJson, name);
+                enrichConfigCompareProjection(collectionName, resourceId != null ? resourceId : reportDoc.getLong("RESOURCE_ID"), reportDoc, reportJson, name, null);
             }
             //补充inspectStatus
             reportDoc.put("inspectStatus", InspectStatus.getAllInspectStatusMap());
@@ -333,7 +333,6 @@ public class InspectReportServiceImpl implements InspectReportService {
                         if (collectionVo != null) {
                             reportJson.put("fields", collectionVo.getFields());
                         }
-                        enrichConfigCompareProjection(collection.getNamespace().getCollectionName(), document.getLong("RESOURCE_ID"), document, reportJson, name);
                         inspectReport.put("inspectResult", inspectResult);
                         inspectReport.put("reportJson", reportJson);
                         inspectReportArray.add(inspectReport);
@@ -661,24 +660,43 @@ public class InspectReportServiceImpl implements InspectReportService {
         if (resourceId == null) {
             return;
         }
+        String schemaName = inspectConfigCompareService.getCurrentAiSettingViewName();
+        if (StringUtils.isBlank(schemaName)) {
+            return;
+        }
         MongoCollection<Document> latestCollection = mongoTemplate.getDb().getCollection("INSPECT_REPORTS");
         Document latestDoc = latestCollection.find(new Document("RESOURCE_ID", resourceId)).first();
-        enrichConfigCompareProjection("INSPECT_REPORTS", resourceId, latestDoc, latestDoc != null ? JSONObject.parseObject(latestDoc.toJson()) : null, inspectConfigCompareService.getCurrentAiSettingViewName());
+        JSONObject latestJson = latestDoc != null ? JSONObject.parseObject(latestDoc.toJson()) : null;
+        List<Document> historyDocList = new ArrayList<>();
         if (jobId != null) {
             MongoCollection<Document> historyCollection = mongoTemplate.getDb().getCollection("INSPECT_REPORTS_HIS");
             FindIterable<Document> historyIterable = historyCollection.find(new Document("RESOURCE_ID", resourceId).append("_jobid", String.valueOf(jobId)));
             for (Document historyDoc : historyIterable) {
-                enrichConfigCompareProjection("INSPECT_REPORTS_HIS", resourceId, historyDoc, JSONObject.parseObject(historyDoc.toJson()), inspectConfigCompareService.getCurrentAiSettingViewName());
+                historyDocList.add(historyDoc);
             }
+        }
+        Document sourceDoc = CollectionUtils.isNotEmpty(historyDocList) ? historyDocList.get(0) : latestDoc;
+        JSONObject configCompareResult = null;
+        if (sourceDoc != null) {
+            JSONObject sourceJson = JSONObject.parseObject(sourceDoc.toJson());
+            ensureReportFields(sourceDoc, sourceJson, schemaName);
+            configCompareResult = sourceJson.getJSONObject("_config_compare_result");
+            if (MapUtils.isEmpty(configCompareResult)) {
+                configCompareResult = inspectConfigCompareService.compareReportWithBaseline(resourceId, schemaName, sourceJson);
+            }
+        }
+        enrichConfigCompareProjection("INSPECT_REPORTS", resourceId, latestDoc, latestJson, schemaName, configCompareResult);
+        for (Document historyDoc : historyDocList) {
+            enrichConfigCompareProjection("INSPECT_REPORTS_HIS", resourceId, historyDoc, JSONObject.parseObject(historyDoc.toJson()), schemaName, configCompareResult);
         }
     }
 
-    private void enrichConfigCompareProjection(String collectionName, Long resourceId, Document reportDoc, JSONObject reportJson, String schemaName) {
+    private void enrichConfigCompareProjection(String collectionName, Long resourceId, Document reportDoc, JSONObject reportJson, String schemaName, JSONObject sharedConfigCompareResult) {
         if (reportDoc == null || resourceId == null || MapUtils.isEmpty(reportJson) || StringUtils.isBlank(schemaName)) {
             return;
         }
         ensureReportFields(reportDoc, reportJson, schemaName);
-        JSONObject configCompareResult = reportJson.getJSONObject("_config_compare_result");
+        JSONObject configCompareResult = MapUtils.isNotEmpty(sharedConfigCompareResult) ? sharedConfigCompareResult : reportJson.getJSONObject("_config_compare_result");
         if (MapUtils.isEmpty(configCompareResult)) {
             configCompareResult = inspectConfigCompareService.compareReportWithBaseline(resourceId, schemaName, reportJson);
         }

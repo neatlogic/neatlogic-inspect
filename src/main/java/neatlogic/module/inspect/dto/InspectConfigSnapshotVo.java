@@ -21,6 +21,8 @@ public class InspectConfigSnapshotVo extends BasePageVo {
     private Long configFileAuditId;
     private String rawData;
     private String normalizedData;
+    private String aiCandidateData;
+    private String aiDraftData;
     private String summary;
     private Date fcd;
     private String fcu;
@@ -148,6 +150,22 @@ public class InspectConfigSnapshotVo extends BasePageVo {
 
     public void setNormalizedData(String normalizedData) {
         this.normalizedData = normalizedData;
+    }
+
+    public String getAiCandidateData() {
+        return aiCandidateData;
+    }
+
+    public void setAiCandidateData(String aiCandidateData) {
+        this.aiCandidateData = aiCandidateData;
+    }
+
+    public String getAiDraftData() {
+        return aiDraftData;
+    }
+
+    public void setAiDraftData(String aiDraftData) {
+        this.aiDraftData = aiDraftData;
     }
 
     public String getSummary() {

@@ -380,6 +380,99 @@ public class InspectConfigCompareService {
         return inspectConfigCompareMapper.getSnapshotById(id);
     }
 
+    public List<InspectConfigSnapshotVo> getSnapshotList(InspectConfigSnapshotVo searchVo) {
+        if (searchVo == null) {
+            return Collections.emptyList();
+        }
+        int rowNum = inspectConfigCompareMapper.getSnapshotCount(searchVo);
+        searchVo.setRowNum(rowNum);
+        if (rowNum == 0) {
+            return Collections.emptyList();
+        }
+        return inspectConfigCompareMapper.getSnapshotList(searchVo);
+    }
+
+    public JSONObject getSnapshotDetail(Long snapshotId) {
+        if (snapshotId == null) {
+            throw new ParamNotExistsException("id");
+        }
+        InspectConfigSnapshotVo snapshotVo = inspectConfigCompareMapper.getSnapshotById(snapshotId);
+        if (snapshotVo == null) {
+            throw new ParamNotExistsException("snapshot");
+        }
+        JSONObject snapshotDraftData = getSnapshotDraftData(snapshotVo, true);
+        JSONObject aiCandidate = snapshotDraftData.getJSONObject("aiCandidate");
+        JSONObject baselineDraft = snapshotDraftData.getJSONObject("baselineDraft");
+        JSONObject result = new JSONObject(true);
+        result.put("snapshot", snapshotVo);
+        result.put("aiCandidate", aiCandidate);
+        result.put("baselineDraft", baselineDraft);
+        result.put("baselineSummary", buildSummary(baselineDraft));
+        result.put("rawSnapshot", parseJsonObject(snapshotVo.getRawData()));
+        return result;
+    }
+
+    @Transactional
+    public InspectConfigBaselineVersionVo promoteSnapshotToBaseline(Long snapshotId, String baselineData, String baselineName, String description) {
+        if (snapshotId == null) {
+            throw new ParamNotExistsException("snapshotId");
+        }
+        InspectConfigSnapshotVo snapshotVo = inspectConfigCompareMapper.getSnapshotById(snapshotId);
+        if (snapshotVo == null) {
+            throw new ParamNotExistsException("snapshot");
+        }
+        JSONObject snapshotDraftData = getSnapshotDraftData(snapshotVo, true);
+        JSONObject draftCandidate = snapshotDraftData.getJSONObject("aiCandidate");
+        JSONObject storedDraft = snapshotDraftData.getJSONObject("baselineDraft");
+        JSONObject baselineDraft = StringUtils.isNotBlank(baselineData)
+                ? normalizeBaselineDraft(JSONObject.parseObject(baselineData))
+                : storedDraft;
+        String scopeHash = buildScopeHash(snapshotVo.getAppSystemId(), snapshotVo.getAppModuleId(), snapshotVo.getEnvId(), snapshotVo.getTypeId(), snapshotVo.getSchemaName());
+        InspectConfigBaselineVo baselineVo = inspectConfigCompareMapper.getBaselineByScopeHash(scopeHash);
+        String userUuid = UserContext.get().getUserUuid(true);
+        if (baselineVo == null) {
+            baselineVo = new InspectConfigBaselineVo();
+            baselineVo.setAppSystemId(snapshotVo.getAppSystemId());
+            baselineVo.setAppModuleId(snapshotVo.getAppModuleId());
+            baselineVo.setEnvId(snapshotVo.getEnvId());
+            baselineVo.setTypeId(snapshotVo.getTypeId());
+            baselineVo.setSchemaName(snapshotVo.getSchemaName());
+            baselineVo.setScopeHash(scopeHash);
+            baselineVo.setName(StringUtils.defaultIfBlank(baselineName, snapshotVo.getSchemaName() + "基线"));
+            baselineVo.setDescription(description);
+            baselineVo.setFcu(userUuid);
+            baselineVo.setLcu(userUuid);
+            inspectConfigCompareMapper.insertBaseline(baselineVo);
+        }
+        InspectConfigBaselineVersionVo versionVo = new InspectConfigBaselineVersionVo();
+        versionVo.setBaselineId(baselineVo.getId());
+        versionVo.setVersion("v" + new SimpleDateFormat("yyyyMMddHHmmssSSS").format(new Date()));
+        versionVo.setStatus("draft");
+        versionVo.setIsFrozen(0);
+        versionVo.setSourceType("snapshot");
+        versionVo.setSourceSnapshotId(snapshotVo.getId());
+        JSONArray baselineFieldList = baselineDraft.getJSONArray("fieldList");
+        versionVo.setFieldCount(baselineFieldList != null ? baselineFieldList.size() : 0);
+        versionVo.setBaselineData(baselineDraft.toJSONString());
+        versionVo.setAiCandidateData(draftCandidate != null ? draftCandidate.toJSONString() : null);
+        if (draftCandidate == null) {
+            versionVo.setChangeSummary("由快照“" + snapshotVo.getId() + "”生成基线草稿");
+        } else if (Objects.equals(draftCandidate.getInteger("aiEnabled"), 1)) {
+            versionVo.setChangeSummary("由快照“" + snapshotVo.getId() + "”经AI辅助筛选生成基线草稿");
+        } else {
+            versionVo.setChangeSummary("由快照“" + snapshotVo.getId() + "”按规则生成基线草稿");
+        }
+        versionVo.setChangeLog(buildSummary(baselineDraft).toJSONString());
+        versionVo.setFcu(userUuid);
+        versionVo.setLcu(userUuid);
+        inspectConfigCompareMapper.insertBaselineVersion(versionVo);
+        baselineVo.setName(StringUtils.defaultIfBlank(baselineName, baselineVo.getName()));
+        baselineVo.setDescription(description);
+        baselineVo.setLcu(userUuid);
+        inspectConfigCompareMapper.updateBaselineCurrentVersion(baselineVo);
+        return getBaselineVersionById(versionVo.getId());
+    }
+
     public InspectConfigSnapshotVo generateSnapshot(Long appSystemId, Long appModuleId, Long envId, Long typeId, Long resourceId, String schemaName) {
         if (resourceId == null) {
             throw new ParamNotExistsException("resourceId");
@@ -436,8 +529,9 @@ public class InspectConfigCompareService {
             baselineVo.setLcu(userUuid);
             inspectConfigCompareMapper.insertBaseline(baselineVo);
         }
-        JSONObject draftCandidate = buildCandidateDraft(snapshotVo);
-        JSONObject baselineDraft = buildBaselineDraft(snapshotVo, draftCandidate);
+        JSONObject snapshotDraftData = getSnapshotDraftData(snapshotVo, true);
+        JSONObject draftCandidate = snapshotDraftData.getJSONObject("aiCandidate");
+        JSONObject baselineDraft = snapshotDraftData.getJSONObject("baselineDraft");
         InspectConfigBaselineVersionVo versionVo = new InspectConfigBaselineVersionVo();
         versionVo.setBaselineId(baselineVo.getId());
         versionVo.setVersion("v" + new SimpleDateFormat("yyyyMMddHHmmssSSS").format(new Date()));
@@ -478,6 +572,26 @@ public class InspectConfigCompareService {
         return doCompare("baseline", appSystemId, appModuleId, envId, snapshotVo, versionVo, null);
     }
 
+    public JSONObject compareSnapshotWithBaseline(Long snapshotId) {
+        if (snapshotId == null) {
+            throw new ParamNotExistsException("snapshotId");
+        }
+        InspectConfigSnapshotVo snapshotVo = inspectConfigCompareMapper.getSnapshotById(snapshotId);
+        if (snapshotVo == null) {
+            throw new ParamNotExistsException("snapshot");
+        }
+        String scopeHash = buildScopeHash(snapshotVo.getAppSystemId(), snapshotVo.getAppModuleId(), snapshotVo.getEnvId(), snapshotVo.getTypeId(), snapshotVo.getSchemaName());
+        InspectConfigBaselineVo baselineVo = inspectConfigCompareMapper.getBaselineByScopeHash(scopeHash);
+        if (baselineVo == null || baselineVo.getCurrentVersionId() == null) {
+            throw new ParamNotExistsException("当前作用域尚未建立配置基线");
+        }
+        InspectConfigBaselineVersionVo versionVo = inspectConfigCompareMapper.getBaselineVersionById(baselineVo.getCurrentVersionId());
+        if (versionVo == null) {
+            throw new ParamNotExistsException("baselineVersion");
+        }
+        return doCompare("baseline", snapshotVo.getAppSystemId(), snapshotVo.getAppModuleId(), snapshotVo.getEnvId(), snapshotVo, versionVo, null);
+    }
+
     public JSONObject compareReportWithBaseline(Long resourceId, String schemaName, JSONObject reportJson) {
         if (resourceId == null || StringUtils.isBlank(schemaName) || MapUtils.isEmpty(reportJson)) {
             return null;
@@ -486,6 +600,8 @@ public class InspectConfigCompareService {
         if (resourceVo == null || resourceVo.getAppSystemId() == null || resourceVo.getTypeId() == null) {
             return null;
         }
+        InspectConfigSnapshotVo snapshotVo = generateSnapshotFromReport(resourceVo, schemaName, reportJson);
+        getSnapshotDraftData(snapshotVo, true);
         String scopeHash = buildScopeHash(resourceVo.getAppSystemId(), resourceVo.getAppModuleId(), resourceVo.getEnvId(), resourceVo.getTypeId(), schemaName);
         InspectConfigBaselineVo baselineVo = inspectConfigCompareMapper.getBaselineByScopeHash(scopeHash);
         if (baselineVo == null || baselineVo.getCurrentVersionId() == null) {
@@ -495,7 +611,6 @@ public class InspectConfigCompareService {
         if (versionVo == null) {
             return null;
         }
-        InspectConfigSnapshotVo snapshotVo = generateSnapshotFromReport(resourceVo, schemaName, reportJson);
         JSONObject compareData = doCompare("baseline", resourceVo.getAppSystemId(), resourceVo.getAppModuleId(), resourceVo.getEnvId(), snapshotVo, versionVo, null);
         return buildReportConfigCompareResult(compareData, versionVo);
     }
@@ -881,6 +996,30 @@ public class InspectConfigCompareService {
         return summary;
     }
 
+    private JSONObject getSnapshotDraftData(InspectConfigSnapshotVo snapshotVo, boolean persistIfMissing) {
+        JSONObject result = new JSONObject(true);
+        if (snapshotVo == null) {
+            result.put("aiCandidate", null);
+            result.put("baselineDraft", null);
+            return result;
+        }
+        JSONObject aiCandidate = parseJsonObject(snapshotVo.getAiCandidateData());
+        JSONObject baselineDraft = parseJsonObject(snapshotVo.getAiDraftData());
+        if (baselineDraft == null) {
+            aiCandidate = buildCandidateDraft(snapshotVo);
+            baselineDraft = buildBaselineDraft(snapshotVo, aiCandidate);
+            if (persistIfMissing && snapshotVo.getId() != null) {
+                snapshotVo.setAiCandidateData(aiCandidate != null ? aiCandidate.toJSONString() : null);
+                snapshotVo.setAiDraftData(baselineDraft != null ? baselineDraft.toJSONString() : null);
+                snapshotVo.setLcu(UserContext.get().getUserUuid(true));
+                inspectConfigCompareMapper.updateSnapshotAiData(snapshotVo);
+            }
+        }
+        result.put("aiCandidate", aiCandidate);
+        result.put("baselineDraft", baselineDraft);
+        return result;
+    }
+
     private JSONObject buildCandidateDraft(InspectConfigSnapshotVo snapshotVo) {
         JSONObject aiCandidateDraft = buildAiCandidateDraft(snapshotVo);
         if (aiCandidateDraft != null) {
@@ -1154,6 +1293,13 @@ public class InspectConfigCompareService {
         } catch (Exception ex) {
             return null;
         }
+    }
+
+    private JSONObject parseJsonObject(String value) {
+        if (StringUtils.isBlank(value)) {
+            return null;
+        }
+        return JSONObject.parseObject(value);
     }
 
     private JSONObject mergeAiCandidateResult(InspectConfigSnapshotVo snapshotVo, JSONObject normalizedData, AiModelVo modelVo, JSONObject aiResult, Long analysisDurationMillis, String callMode) {

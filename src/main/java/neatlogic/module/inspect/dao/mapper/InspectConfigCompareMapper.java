@@ -21,6 +21,10 @@ public interface InspectConfigCompareMapper {
 
     InspectConfigSnapshotVo getSnapshotById(Long id);
 
+    int getSnapshotCount(InspectConfigSnapshotVo searchVo);
+
+    List<InspectConfigSnapshotVo> getSnapshotList(InspectConfigSnapshotVo searchVo);
+
     InspectConfigSnapshotVo getLatestSnapshot(@Param("appSystemId") Long appSystemId,
                                               @Param("appModuleId") Long appModuleId,
                                               @Param("envId") Long envId,
@@ -67,6 +71,8 @@ public interface InspectConfigCompareMapper {
     void deleteBaselineById(Long id);
 
     void insertSnapshot(InspectConfigSnapshotVo snapshotVo);
+
+    void updateSnapshotAiData(InspectConfigSnapshotVo snapshotVo);
 
     void insertCompareTask(InspectConfigCompareTaskVo taskVo);
 

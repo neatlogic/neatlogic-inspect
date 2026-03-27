@@ -78,6 +78,8 @@
         <result column="config_file_audit_id" property="configFileAuditId"/>
         <result column="raw_data" property="rawData"/>
         <result column="normalized_data" property="normalizedData"/>
+        <result column="ai_candidate_data" property="aiCandidateData"/>
+        <result column="ai_draft_data" property="aiDraftData"/>
         <result column="summary" property="summary"/>
         <result column="fcd" property="fcd"/>
         <result column="fcu" property="fcu"/>
@@ -313,6 +315,8 @@
             `config_file_audit_id`,
             `raw_data`,
             `normalized_data`,
+            `ai_candidate_data`,
+            `ai_draft_data`,
             `summary`,
             `fcd`,
             `fcu`,
@@ -320,6 +324,93 @@
             `lcu`
         FROM `inspect_config_snapshot`
         WHERE `id` = #{id}
+    </select>
+
+    <select id="getSnapshotCount" parameterType="neatlogic.module.inspect.dto.InspectConfigSnapshotVo" resultType="java.lang.Integer">
+        SELECT COUNT(1)
+        FROM `inspect_config_snapshot`
+        WHERE `app_system_id` = #{appSystemId}
+            <choose>
+                <when test="appModuleId != null">
+                    AND `app_module_id` = #{appModuleId}
+                </when>
+                <otherwise>
+                    AND `app_module_id` IS NULL
+                </otherwise>
+            </choose>
+            <choose>
+                <when test="envId != null">
+                    AND `env_id` = #{envId}
+                </when>
+                <otherwise>
+                    AND `env_id` IS NULL
+                </otherwise>
+            </choose>
+            AND `resource_id` = #{resourceId}
+            <choose>
+                <when test="typeId != null">
+                    AND `type_id` = #{typeId}
+                </when>
+                <otherwise>
+                    AND `type_id` IS NULL
+                </otherwise>
+            </choose>
+            AND `schema_name` = #{schemaName}
+    </select>
+
+    <select id="getSnapshotList" parameterType="neatlogic.module.inspect.dto.InspectConfigSnapshotVo" resultMap="snapshotMap">
+        SELECT
+            `id`,
+            `app_system_id`,
+            `app_module_id`,
+            `env_id`,
+            `resource_id`,
+            `type_id`,
+            `job_id`,
+            `schema_name`,
+            `schema_version`,
+            `source`,
+            `status`,
+            `collect_time`,
+            `config_file_audit_id`,
+            `raw_data`,
+            `normalized_data`,
+            `ai_candidate_data`,
+            `ai_draft_data`,
+            `summary`,
+            `fcd`,
+            `fcu`,
+            `lcd`,
+            `lcu`
+        FROM `inspect_config_snapshot`
+        WHERE `app_system_id` = #{appSystemId}
+            <choose>
+                <when test="appModuleId != null">
+                    AND `app_module_id` = #{appModuleId}
+                </when>
+                <otherwise>
+                    AND `app_module_id` IS NULL
+                </otherwise>
+            </choose>
+            <choose>
+                <when test="envId != null">
+                    AND `env_id` = #{envId}
+                </when>
+                <otherwise>
+                    AND `env_id` IS NULL
+                </otherwise>
+            </choose>
+            AND `resource_id` = #{resourceId}
+            <choose>
+                <when test="typeId != null">
+                    AND `type_id` = #{typeId}
+                </when>
+                <otherwise>
+                    AND `type_id` IS NULL
+                </otherwise>
+            </choose>
+            AND `schema_name` = #{schemaName}
+        ORDER BY `collect_time` DESC, `id` DESC
     </select>
 
     <select id="getLatestSnapshot" resultMap="snapshotMap">
@@ -339,6 +430,8 @@
             `config_file_audit_id`,
             `raw_data`,
             `normalized_data`,
+            `ai_candidate_data`,
+            `ai_draft_data`,
             `summary`,
             `fcd`,
             `fcu`,
@@ -527,13 +620,22 @@
         INSERT INTO `inspect_config_snapshot` (
             `id`, `app_system_id`, `app_module_id`, `env_id`, `resource_id`, `type_id`, `job_id`, `schema_name`,
             `schema_version`, `source`, `status`, `collect_time`, `config_file_audit_id`, `raw_data`,
-            `normalized_data`, `summary`, `fcd`, `fcu`, `lcd`, `lcu`
+            `normalized_data`, `ai_candidate_data`, `ai_draft_data`, `summary`, `fcd`, `fcu`, `lcd`, `lcu`
         ) VALUES (
             #{id}, #{appSystemId}, #{appModuleId}, #{envId}, #{resourceId}, #{typeId}, #{jobId}, #{schemaName},
             #{schemaVersion}, #{source}, #{status}, #{collectTime}, #{configFileAuditId}, #{rawData},
-            #{normalizedData}, #{summary}, NOW(3), #{fcu}, NOW(3), #{lcu}
+            #{normalizedData}, #{aiCandidateData}, #{aiDraftData}, #{summary}, NOW(3), #{fcu}, NOW(3), #{lcu}
         )
     </insert>
+
+    <update id="updateSnapshotAiData" parameterType="neatlogic.module.inspect.dto.InspectConfigSnapshotVo">
+        UPDATE `inspect_config_snapshot`
+        SET `ai_candidate_data` = #{aiCandidateData},
+            `ai_draft_data` = #{aiDraftData},
+            `lcd` = NOW(3),
+            `lcu` = #{lcu}
+        WHERE `id` = #{id}
+    </update>
 
     <insert id="insertCompareTask" parameterType="neatlogic.module.inspect.dto.InspectConfigCompareTaskVo">
         INSERT INTO `inspect_config_compare_task` (
