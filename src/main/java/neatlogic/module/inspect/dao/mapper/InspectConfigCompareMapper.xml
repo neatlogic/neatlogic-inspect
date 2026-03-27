@@ -27,7 +27,7 @@
 
     <resultMap id="aiSettingMap" type="neatlogic.module.inspect.dto.InspectConfigAiSettingVo">
         <id column="id" property="id"/>
-        <result column="schema_name" property="schemaName"/>
+        <result column="view_name" property="viewName"/>
         <result column="model_id" property="modelId"/>
         <result column="prompt" property="prompt"/>
         <result column="fcd" property="fcd"/>
@@ -222,10 +222,10 @@
         WHERE b.`id` = #{id}
     </select>
 
-    <select id="getAiSettingByScope" parameterType="neatlogic.module.inspect.dto.InspectConfigAiSettingVo" resultMap="aiSettingMap">
+    <select id="getAiSetting" resultMap="aiSettingMap">
         SELECT
             `id`,
-            `schema_name`,
+            `view_name`,
             `model_id`,
             `prompt`,
             `fcd`,
@@ -233,7 +233,7 @@
             `lcd`,
             `lcu`
         FROM `inspect_config_ai_setting`
-        WHERE `schema_name` = #{schemaName}
+        ORDER BY `lcd` DESC, `fcd` DESC
         LIMIT 1
     </select>
 
@@ -388,15 +388,16 @@
 
     <insert id="insertAiSetting" parameterType="neatlogic.module.inspect.dto.InspectConfigAiSettingVo">
         INSERT INTO `inspect_config_ai_setting` (
-            `id`, `schema_name`, `model_id`, `prompt`, `fcd`, `fcu`, `lcd`, `lcu`
+            `id`, `view_name`, `model_id`, `prompt`, `fcd`, `fcu`, `lcd`, `lcu`
         ) VALUES (
-            #{id}, #{schemaName}, #{modelId}, #{prompt}, NOW(3), #{fcu}, NOW(3), #{lcu}
+            #{id}, #{viewName}, #{modelId}, #{prompt}, NOW(3), #{fcu}, NOW(3), #{lcu}
         )
     </insert>
 
     <update id="updateAiSetting" parameterType="neatlogic.module.inspect.dto.InspectConfigAiSettingVo">
         UPDATE `inspect_config_ai_setting`
-        SET `model_id` = #{modelId},
+        SET `view_name` = #{viewName},
+            `model_id` = #{modelId},
             `prompt` = #{prompt},
             `lcd` = NOW(3),
             `lcu` = #{lcu}

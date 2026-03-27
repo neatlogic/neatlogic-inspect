@@ -38,7 +38,7 @@ public class SaveInspectConfigAiSettingApi extends PrivateApiComponentBase {
     }
 
     @Input({
-            @Param(name = "schemaName", type = ApiParamType.STRING, isRequired = true, desc = "采集维度"),
+            @Param(name = "viewName", type = ApiParamType.STRING, desc = "操作系统入口视图名"),
             @Param(name = "modelId", type = ApiParamType.LONG, isRequired = true, desc = "模型id"),
             @Param(name = "prompt", type = ApiParamType.STRING, desc = "提示词")
     })
@@ -49,7 +49,7 @@ public class SaveInspectConfigAiSettingApi extends PrivateApiComponentBase {
     @Override
     public Object myDoService(JSONObject paramObj) {
         JSONObject result = new JSONObject();
-        result.put("setting", inspectConfigCompareService.saveAiSetting(paramObj.getString("schemaName"), paramObj.getLong("modelId"), paramObj.getString("prompt")));
+        result.put("setting", inspectConfigCompareService.saveAiSetting(paramObj.getLong("modelId"), paramObj.getString("prompt"), paramObj.getString("viewName")));
         return result;
     }
 }

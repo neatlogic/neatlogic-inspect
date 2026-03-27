@@ -143,4 +143,12 @@ public interface InspectReportService {
      * @param endDate   结束时间
      */
     void updateInspectAlertEveryDayData(Date startDate, Date endDate);
+
+    /**
+     * 对最新/本次历史巡检报告自动执行配置基线比对，并将结果写回报告文档
+     *
+     * @param resourceId 资源id
+     * @param jobId      作业id
+     */
+    void autoCompareConfigBaselineReport(Long resourceId, Long jobId);
 }

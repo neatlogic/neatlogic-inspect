@@ -13,7 +13,7 @@ public interface InspectConfigCompareMapper {
 
     InspectConfigBaselineVo getBaselineById(Long id);
 
-    InspectConfigAiSettingVo getAiSettingByScope(InspectConfigAiSettingVo settingVo);
+    InspectConfigAiSettingVo getAiSetting();
 
     InspectConfigBaselineVersionVo getBaselineVersionById(Long id);
 

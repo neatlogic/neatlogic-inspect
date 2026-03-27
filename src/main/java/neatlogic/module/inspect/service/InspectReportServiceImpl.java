@@ -69,18 +69,23 @@ public class InspectReportServiceImpl implements InspectReportService {
 
     @Resource
     private InspectService inspectService;
+    @Resource
+    private InspectConfigCompareService inspectConfigCompareService;
 
     @Override
     public Document getInspectReport(Long resourceId, String id, Long jobId) {
         MongoCollection<Document> collection;
+        String collectionName;
         Document doc = new Document();
         if (StringUtils.isNotBlank(id) || (jobId != null && resourceId != null)) {
             //场景1：用id查历史报告
             //场景2：用jobId和resourceId查历史报告
             collection = mongoTemplate.getDb().getCollection("INSPECT_REPORTS_HIS");
+            collectionName = "INSPECT_REPORTS_HIS";
         } else {
             //场景3：用resourceId查最新报告
             collection = mongoTemplate.getDb().getCollection("INSPECT_REPORTS");
+            collectionName = "INSPECT_REPORTS";
         }
         if (resourceId != null) {
             doc.put("RESOURCE_ID", resourceId);
@@ -106,6 +111,7 @@ public class InspectReportServiceImpl implements InspectReportService {
                 if (collectionVo != null) {
                     reportDoc.put("fields", collectionVo.getFields());
                 }
+                enrichConfigCompareProjection(collectionName, resourceId != null ? resourceId : reportDoc.getLong("RESOURCE_ID"), reportDoc, reportJson, name);
             }
             //补充inspectStatus
             reportDoc.put("inspectStatus", InspectStatus.getAllInspectStatusMap());
@@ -254,6 +260,31 @@ public class InspectReportServiceImpl implements InspectReportService {
                             resourceAlertArray.add(dataMap);
                         }
                     }
+                    JSONArray configIssueList = getConfigCompareIssueList(reportJson);
+                    if (CollectionUtils.isNotEmpty(configIssueList)) {
+                        for (int j = 0; j < configIssueList.size(); j++) {
+                            JSONObject issue = configIssueList.getJSONObject(j);
+                            if (MapUtils.isEmpty(issue)) {
+                                continue;
+                            }
+                            Map<String, Object> dataMap = new HashMap<>();
+                            dataMap.put("ruleSeq", issue.getString("ruleSeq"));
+                            dataMap.put("ruleName", issue.getString("ruleName"));
+                            dataMap.put("collectionName", issue.getString("collectionName"));
+                            dataMap.put("appSystemId", null);
+                            dataMap.put("alertLevel", issue.getString("alertLevel"));
+                            dataMap.put("alertTips", issue.getString("alertTips"));
+                            dataMap.put("alertRule", issue.getString("reason"));
+                            dataMap.put("alertObject", issue.getString("alertObject"));
+                            dataMap.put("alertValue", issue.getString("alertValue"));
+                            dataMap.put("flag", issue.getString("flag"));
+                            dataMap.put("appSystemName", issue.getString("appSystemName"));
+                            if (reportJson.containsKey("_report_time") && reportJson.get("_report_time") != null) {
+                                dataMap.put("reportTime", reportJson.getJSONObject("_report_time").getDate("$date"));
+                            }
+                            resourceAlertArray.add(dataMap);
+                        }
+                    }
                 }
                 resourceAlert.put(mongoInspectAlertDetail.getString("id"), resourceAlertArray);
             }
@@ -302,6 +333,7 @@ public class InspectReportServiceImpl implements InspectReportService {
                         if (collectionVo != null) {
                             reportJson.put("fields", collectionVo.getFields());
                         }
+                        enrichConfigCompareProjection(collection.getNamespace().getCollectionName(), document.getLong("RESOURCE_ID"), document, reportJson, name);
                         inspectReport.put("inspectResult", inspectResult);
                         inspectReport.put("reportJson", reportJson);
                         inspectReportArray.add(inspectReport);
@@ -622,5 +654,132 @@ public class InspectReportServiceImpl implements InspectReportService {
                 }
             }
         }
+    }
+
+    @Override
+    public void autoCompareConfigBaselineReport(Long resourceId, Long jobId) {
+        if (resourceId == null) {
+            return;
+        }
+        MongoCollection<Document> latestCollection = mongoTemplate.getDb().getCollection("INSPECT_REPORTS");
+        Document latestDoc = latestCollection.find(new Document("RESOURCE_ID", resourceId)).first();
+        enrichConfigCompareProjection("INSPECT_REPORTS", resourceId, latestDoc, latestDoc != null ? JSONObject.parseObject(latestDoc.toJson()) : null, inspectConfigCompareService.getCurrentAiSettingViewName());
+        if (jobId != null) {
+            MongoCollection<Document> historyCollection = mongoTemplate.getDb().getCollection("INSPECT_REPORTS_HIS");
+            FindIterable<Document> historyIterable = historyCollection.find(new Document("RESOURCE_ID", resourceId).append("_jobid", String.valueOf(jobId)));
+            for (Document historyDoc : historyIterable) {
+                enrichConfigCompareProjection("INSPECT_REPORTS_HIS", resourceId, historyDoc, JSONObject.parseObject(historyDoc.toJson()), inspectConfigCompareService.getCurrentAiSettingViewName());
+            }
+        }
+    }
+
+    private void enrichConfigCompareProjection(String collectionName, Long resourceId, Document reportDoc, JSONObject reportJson, String schemaName) {
+        if (reportDoc == null || resourceId == null || MapUtils.isEmpty(reportJson) || StringUtils.isBlank(schemaName)) {
+            return;
+        }
+        ensureReportFields(reportDoc, reportJson, schemaName);
+        JSONObject configCompareResult = reportJson.getJSONObject("_config_compare_result");
+        if (MapUtils.isEmpty(configCompareResult)) {
+            configCompareResult = inspectConfigCompareService.compareReportWithBaseline(resourceId, schemaName, reportJson);
+        }
+        if (MapUtils.isEmpty(configCompareResult)) {
+            return;
+        }
+        reportJson.put("_config_compare_result", configCompareResult);
+        reportDoc.put("_config_compare_result", configCompareResult);
+        JSONArray issueList = configCompareResult.getJSONArray("issueList");
+        if (issueList != null) {
+            reportJson.put("CONFIG_COMPARE_ISSUES", issueList);
+            reportDoc.put("CONFIG_COMPARE_ISSUES", issueList);
+        }
+        appendConfigCompareField(reportDoc);
+        reportJson.put("fields", toJsonArray(reportDoc.get("fields")));
+        persistConfigCompareProjection(collectionName, reportDoc, configCompareResult, issueList);
+    }
+
+    private void ensureReportFields(Document reportDoc, JSONObject reportJson, String schemaName) {
+        if (reportDoc == null || MapUtils.isEmpty(reportJson) || StringUtils.isBlank(schemaName) || reportJson.get("fields") != null) {
+            return;
+        }
+        CollectionVo collectionVo = mongoTemplate.findOne(new Query(Criteria.where("name").is(schemaName)), CollectionVo.class, "_dictionary");
+        if (collectionVo == null || CollectionUtils.isEmpty(collectionVo.getFields())) {
+            return;
+        }
+        reportJson.put("fields", collectionVo.getFields());
+        reportDoc.put("fields", collectionVo.getFields());
+    }
+
+    private void appendConfigCompareField(Document reportDoc) {
+        if (reportDoc == null) {
+            return;
+        }
+        JSONArray fieldArray = toJsonArray(reportDoc.get("fields"));
+        if (fieldArray == null) {
+            fieldArray = new JSONArray();
+            reportDoc.put("fields", fieldArray);
+        }
+        for (int i = 0; i < fieldArray.size(); i++) {
+            JSONObject field = fieldArray.getJSONObject(i);
+            if (field != null && Objects.equals(field.getString("name"), "CONFIG_COMPARE_ISSUES")) {
+                return;
+            }
+        }
+        JSONObject field = new JSONObject(true);
+        field.put("name", "CONFIG_COMPARE_ISSUES");
+        field.put("desc", "配置基线差异");
+        field.put("type", "JsonArray");
+        JSONArray subset = new JSONArray();
+        subset.add(buildSubsetField("layer", "层级", "String"));
+        subset.add(buildSubsetField("label", "字段", "String"));
+        subset.add(buildSubsetField("status", "状态", "String"));
+        subset.add(buildSubsetField("riskLevel", "风险", "String"));
+        subset.add(buildSubsetField("baselineVersion", "基线版本", "String"));
+        subset.add(buildSubsetField("baselineValue", "基线值", "String"));
+        subset.add(buildSubsetField("currentValue", "当前值", "String"));
+        subset.add(buildSubsetField("reason", "说明", "String"));
+        field.put("subset", subset);
+        fieldArray.add(field);
+    }
+
+    private JSONObject buildSubsetField(String name, String desc, String type) {
+        JSONObject field = new JSONObject(true);
+        field.put("name", name);
+        field.put("desc", desc);
+        field.put("type", type);
+        return field;
+    }
+
+    private JSONArray getConfigCompareIssueList(JSONObject reportJson) {
+        if (MapUtils.isEmpty(reportJson)) {
+            return null;
+        }
+        JSONObject configCompareResult = reportJson.getJSONObject("_config_compare_result");
+        if (MapUtils.isEmpty(configCompareResult)) {
+            return null;
+        }
+        return configCompareResult.getJSONArray("issueList");
+    }
+
+    private void persistConfigCompareProjection(String collectionName, Document reportDoc, JSONObject configCompareResult, JSONArray issueList) {
+        if (StringUtils.isBlank(collectionName) || reportDoc == null || reportDoc.getObjectId("_id") == null || MapUtils.isEmpty(configCompareResult)) {
+            return;
+        }
+        MongoCollection<Document> collection = mongoTemplate.getDb().getCollection(collectionName);
+        Document setDoc = new Document("_config_compare_result", Document.parse(configCompareResult.toJSONString()))
+                .append("fields", JSON.parseArray(JSON.toJSONString(reportDoc.get("fields"))));
+        if (issueList != null) {
+            setDoc.append("CONFIG_COMPARE_ISSUES", JSON.parseArray(issueList.toJSONString()));
+        }
+        collection.updateOne(new Document("_id", reportDoc.getObjectId("_id")), new Document("$set", setDoc));
+    }
+
+    private JSONArray toJsonArray(Object value) {
+        if (value instanceof JSONArray) {
+            return (JSONArray) value;
+        }
+        if (value == null) {
+            return null;
+        }
+        return JSON.parseArray(JSON.toJSONString(value));
     }
 }

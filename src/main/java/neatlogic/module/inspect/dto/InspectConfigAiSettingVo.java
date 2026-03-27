@@ -7,7 +7,7 @@ import java.util.Date;
 
 public class InspectConfigAiSettingVo extends BasePageVo {
     private Long id;
-    private String schemaName;
+    private String viewName;
     private Long modelId;
     private String prompt;
     private Date fcd;
@@ -26,16 +26,16 @@ public class InspectConfigAiSettingVo extends BasePageVo {
         this.id = id;
     }
 
-    public String getSchemaName() {
-        return schemaName;
-    }
-
-    public void setSchemaName(String schemaName) {
-        this.schemaName = schemaName;
-    }
-
     public Long getModelId() {
         return modelId;
+    }
+
+    public String getViewName() {
+        return viewName;
+    }
+
+    public void setViewName(String viewName) {
+        this.viewName = viewName;
     }
 
     public void setModelId(Long modelId) {

@@ -24,7 +24,7 @@ CREATE TABLE IF NOT EXISTS `inspect_config_baseline` (
 
 CREATE TABLE IF NOT EXISTS `inspect_config_ai_setting` (
   `id` bigint NOT NULL COMMENT '唯一标识',
-  `schema_name` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '维度名称，如os/nginx/tomcat',
+  `view_name` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '应用清单入口视图名',
   `model_id` bigint NOT NULL COMMENT 'AI模型ID',
   `prompt` mediumtext CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci COMMENT 'AI提示词',
   `fcd` timestamp(3) NULL DEFAULT NULL COMMENT '创建时间',
@@ -32,7 +32,7 @@ CREATE TABLE IF NOT EXISTS `inspect_config_ai_setting` (
   `lcd` timestamp(3) NULL DEFAULT NULL COMMENT '修改时间',
   `lcu` char(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '修改人',
   PRIMARY KEY (`id`) USING BTREE,
-  UNIQUE KEY `uk_schema_name` (`schema_name`) USING BTREE,
+  UNIQUE KEY `uk_view_name` (`view_name`) USING BTREE,
   KEY `idx_model_id` (`model_id`) USING BTREE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='巡检配置比对AI模型设置';
 
