@@ -31,6 +31,8 @@ import neatlogic.framework.dao.mapper.UserMapper;
 import neatlogic.framework.dto.UserVo;
 import neatlogic.framework.exception.core.ApiRuntimeException;
 import neatlogic.framework.exception.type.ParamNotExistsException;
+import neatlogic.framework.util.jsondiff.common.model.JsonComparedOption;
+import neatlogic.framework.util.jsondiff.core.DefaultJsonDifference;
 import neatlogic.framework.util.Md5Util;
 import neatlogic.module.inspect.dao.mapper.InspectConfigCompareMapper;
 import neatlogic.module.inspect.dto.*;
@@ -100,6 +102,13 @@ public class InspectConfigCompareService {
             "FIREWALL_ENABLE", "SELINUX_STATUS", "IP_RULES", "NETWORKMANAGER_ENABLE", "MAX_OPEN_FILES",
             "MAX_USER_PROCESS_COUNT", "AUTO_RESTART", "NFS_MOUNTED"
     ));
+
+    private static final Map<String, String> OBJECT_BY_KEY_FIELD_MAP = new HashMap<String, String>() {{
+        put("USERS", "NAME");
+        put("DISKS", "NAME");
+        put("MOUNT_POINTS", "NAME");
+        put("ETH_INTERFACES", "NAME");
+    }};
 
     @Resource
     private MongoTemplate mongoTemplate;
@@ -297,6 +306,8 @@ public class InspectConfigCompareService {
         versionVo.setStatus("pending_approval");
         versionVo.setApprovedTime(null);
         versionVo.setActivatedTime(null);
+        versionVo.setSubmitter(userUuid);
+        versionVo.setSubmitTime(new Date());
         versionVo.setApprovalStatus(APPROVAL_STATUS_PENDING);
         versionVo.setApprover(null);
         versionVo.setApprovalComment(null);
@@ -421,6 +432,9 @@ public class InspectConfigCompareService {
         if (snapshotVo == null) {
             throw new ParamNotExistsException("snapshot");
         }
+        if (snapshotVo.getEnvId() == null) {
+            throw new ApiRuntimeException("未绑定应用环境的节点不允许生成基线草稿");
+        }
         JSONObject snapshotDraftData = getSnapshotDraftData(snapshotVo, true);
         JSONObject draftCandidate = snapshotDraftData.getJSONObject("aiCandidate");
         JSONObject storedDraft = snapshotDraftData.getJSONObject("baselineDraft");
@@ -438,7 +452,7 @@ public class InspectConfigCompareService {
             baselineVo.setTypeId(snapshotVo.getTypeId());
             baselineVo.setSchemaName(snapshotVo.getSchemaName());
             baselineVo.setScopeHash(scopeHash);
-            baselineVo.setName(StringUtils.defaultIfBlank(baselineName, snapshotVo.getSchemaName() + "基线"));
+            baselineVo.setName(StringUtils.defaultIfBlank(baselineName, buildBaselineName(snapshotVo.getAppSystemId(), snapshotVo.getAppModuleId(), snapshotVo.getEnvId())));
             baselineVo.setDescription(description);
             baselineVo.setFcu(userUuid);
             baselineVo.setLcu(userUuid);
@@ -451,6 +465,7 @@ public class InspectConfigCompareService {
         versionVo.setIsFrozen(0);
         versionVo.setSourceType("snapshot");
         versionVo.setSourceSnapshotId(snapshotVo.getId());
+        versionVo.setSourceResourceId(snapshotVo.getResourceId());
         JSONArray baselineFieldList = baselineDraft.getJSONArray("fieldList");
         versionVo.setFieldCount(baselineFieldList != null ? baselineFieldList.size() : 0);
         versionVo.setBaselineData(baselineDraft.toJSONString());
@@ -466,7 +481,7 @@ public class InspectConfigCompareService {
         versionVo.setFcu(userUuid);
         versionVo.setLcu(userUuid);
         inspectConfigCompareMapper.insertBaselineVersion(versionVo);
-        baselineVo.setName(StringUtils.defaultIfBlank(baselineName, baselineVo.getName()));
+        baselineVo.setName(StringUtils.defaultIfBlank(baselineName, buildBaselineName(baselineVo.getAppSystemId(), baselineVo.getAppModuleId(), baselineVo.getEnvId())));
         baselineVo.setDescription(description);
         baselineVo.setLcu(userUuid);
         inspectConfigCompareMapper.updateBaselineCurrentVersion(baselineVo);
@@ -511,6 +526,9 @@ public class InspectConfigCompareService {
     }
 
     public InspectConfigBaselineVersionVo promoteResourceToBaseline(Long appSystemId, Long appModuleId, Long envId, Long typeId, Long resourceId, String schemaName, String baselineName, String description) {
+        if (envId == null) {
+            throw new ApiRuntimeException("未绑定应用环境的节点不允许生成基线草稿");
+        }
         InspectConfigSnapshotVo snapshotVo = generateSnapshot(appSystemId, appModuleId, envId, typeId, resourceId, schemaName);
         String scopeHash = buildScopeHash(appSystemId, appModuleId, envId, typeId, schemaName);
         InspectConfigBaselineVo baselineVo = inspectConfigCompareMapper.getBaselineByScopeHash(scopeHash);
@@ -523,7 +541,7 @@ public class InspectConfigCompareService {
             baselineVo.setTypeId(typeId);
             baselineVo.setSchemaName(schemaName);
             baselineVo.setScopeHash(scopeHash);
-            baselineVo.setName(StringUtils.defaultIfBlank(baselineName, schemaName + "基线"));
+            baselineVo.setName(StringUtils.defaultIfBlank(baselineName, buildBaselineName(appSystemId, appModuleId, envId)));
             baselineVo.setDescription(description);
             baselineVo.setFcu(userUuid);
             baselineVo.setLcu(userUuid);
@@ -539,6 +557,7 @@ public class InspectConfigCompareService {
         versionVo.setIsFrozen(0);
         versionVo.setSourceType("candidate");
         versionVo.setSourceSnapshotId(snapshotVo.getId());
+        versionVo.setSourceResourceId(snapshotVo.getResourceId());
         JSONArray baselineFieldList = baselineDraft.getJSONArray("fieldList");
         versionVo.setFieldCount(baselineFieldList != null ? baselineFieldList.size() : 0);
         versionVo.setBaselineData(baselineDraft.toJSONString());
@@ -554,11 +573,43 @@ public class InspectConfigCompareService {
         versionVo.setFcu(userUuid);
         versionVo.setLcu(userUuid);
         inspectConfigCompareMapper.insertBaselineVersion(versionVo);
-        baselineVo.setName(StringUtils.defaultIfBlank(baselineName, baselineVo.getName()));
+        baselineVo.setName(StringUtils.defaultIfBlank(baselineName, buildBaselineName(baselineVo.getAppSystemId(), baselineVo.getAppModuleId(), baselineVo.getEnvId())));
         baselineVo.setDescription(description);
         baselineVo.setLcu(userUuid);
         inspectConfigCompareMapper.updateBaselineCurrentVersion(baselineVo);
         return getBaselineVersionById(versionVo.getId());
+    }
+
+    private String buildBaselineName(Long appSystemId, Long appModuleId, Long envId) {
+        IResourceCrossoverMapper resourceCrossoverMapper = CrossoverServiceFactory.getApi(IResourceCrossoverMapper.class);
+        String appSystemName = "应用系统";
+        if (appSystemId != null) {
+            ResourceVo appSystem = resourceCrossoverMapper.getAppSystemById(appSystemId);
+            if (appSystem != null && StringUtils.isNotBlank(appSystem.getName())) {
+                appSystemName = appSystem.getName();
+            } else {
+                appSystemName = String.valueOf(appSystemId);
+            }
+        }
+        String appModuleName = "全部模块";
+        if (appModuleId != null) {
+            ResourceVo appModule = resourceCrossoverMapper.getAppModuleById(appModuleId);
+            if (appModule != null && StringUtils.isNotBlank(appModule.getName())) {
+                appModuleName = appModule.getName();
+            } else {
+                appModuleName = String.valueOf(appModuleId);
+            }
+        }
+        String envName = "全部环境";
+        if (envId != null) {
+            ResourceVo appEnv = resourceCrossoverMapper.getAppEnvById(envId);
+            if (appEnv != null && StringUtils.isNotBlank(appEnv.getName())) {
+                envName = appEnv.getName();
+            } else {
+                envName = String.valueOf(envId);
+            }
+        }
+        return appSystemName + "-" + appModuleName + "-" + envName;
     }
 
     public JSONObject compareWithBaseline(Long appSystemId, Long appModuleId, Long envId, Long typeId, Long resourceId, String schemaName) {
@@ -668,15 +719,40 @@ public class InspectConfigCompareService {
             return;
         }
         Set<String> userUuidSet = new HashSet<>();
+        Set<Long> sourceResourceIdSet = new HashSet<>();
         for (InspectConfigBaselineVersionVo versionVo : versionList) {
+            if (StringUtils.isNotBlank(versionVo.getSubmitter())) {
+                userUuidSet.add(versionVo.getSubmitter());
+            }
             if (StringUtils.isNotBlank(versionVo.getApprover())) {
                 userUuidSet.add(versionVo.getApprover());
             }
+            if (versionVo.getSourceResourceId() != null) {
+                sourceResourceIdSet.add(versionVo.getSourceResourceId());
+            }
         }
         Map<String, UserVo> userMap = getUserMapByUuidSet(userUuidSet);
+        Map<Long, String> sourceIpMap = new HashMap<>();
+        if (CollectionUtils.isNotEmpty(sourceResourceIdSet)) {
+            IResourceCenterResourceCrossoverService resourceService = CrossoverServiceFactory.getApi(IResourceCenterResourceCrossoverService.class);
+            List<ResourceVo> resourceList = resourceService.getResourceListByIdList(new ArrayList<>(sourceResourceIdSet), Arrays.asList("id", "ip"));
+            if (CollectionUtils.isNotEmpty(resourceList)) {
+                for (ResourceVo resourceVo : resourceList) {
+                    if (resourceVo != null && resourceVo.getId() != null) {
+                        sourceIpMap.put(resourceVo.getId(), resourceVo.getIp());
+                    }
+                }
+            }
+        }
         for (InspectConfigBaselineVersionVo versionVo : versionList) {
+            if (StringUtils.isNotBlank(versionVo.getSubmitter())) {
+                versionVo.setSubmitterVo(JSON.parseObject(JSON.toJSONString(userMap.get(versionVo.getSubmitter())), UserVo.class));
+            }
             if (StringUtils.isNotBlank(versionVo.getApprover())) {
-                versionVo.setApproverVo(userMap.get(versionVo.getApprover()));
+                versionVo.setApproverVo(JSON.parseObject(JSON.toJSONString(userMap.get(versionVo.getApprover())), UserVo.class));
+            }
+            if (versionVo.getSourceResourceId() != null) {
+                versionVo.setSourceIp(sourceIpMap.get(versionVo.getSourceResourceId()));
             }
         }
     }
@@ -905,7 +981,7 @@ public class InspectConfigCompareService {
         fieldJson.put("label", StringUtils.defaultIfBlank(label, fieldName));
         fieldJson.put("type", type);
         fieldJson.put("layer", layer);
-        fieldJson.put("compareMode", "exact");
+        fieldJson.put("compareMode", getDefaultCompareMode(fieldName, type, normalizedValue));
         fieldJson.put("value", normalizedValue);
         fieldJson.put("canonicalValue", JSON.toJSONString(normalizedValue));
         fieldList.add(fieldJson);
@@ -1472,7 +1548,7 @@ public class InspectConfigCompareService {
             normalizedField.put("label", StringUtils.defaultIfBlank(field.getString("label"), field.getString("path")));
             normalizedField.put("type", StringUtils.defaultIfBlank(field.getString("type"), inferType(normalizedValue)));
             normalizedField.put("layer", layer);
-            normalizedField.put("compareMode", StringUtils.defaultIfBlank(field.getString("compareMode"), "exact"));
+            normalizedField.put("compareMode", StringUtils.defaultIfBlank(field.getString("compareMode"), getDefaultCompareMode(field.getString("path"), normalizedField.getString("type"), normalizedValue)));
             normalizedField.put("value", normalizedValue);
             normalizedField.put("canonicalValue", JSON.toJSONString(normalizedValue));
             normalizedFieldList.add(normalizedField);
@@ -1500,6 +1576,11 @@ public class InspectConfigCompareService {
         for (String path : pathSet) {
             JSONObject sourceField = sourceFieldMap.get(path);
             JSONObject targetField = targetFieldMap.get(path);
+            String compareMode = getCompareMode(sourceField, targetField);
+            if (Objects.equals("ignore", compareMode)) {
+                totalCount--;
+                continue;
+            }
             boolean isDifferent = false;
             String status;
             String reason;
@@ -1513,10 +1594,18 @@ public class InspectConfigCompareService {
                 isDifferent = true;
                 status = "additional";
                 reason = "目标快照缺少该字段";
-            } else if (!Objects.equals(sourceField.getString("canonicalValue"), targetField.getString("canonicalValue"))) {
+            } else if (!isFieldValueEqual(compareMode, sourceField, targetField)) {
                 isDifferent = true;
                 status = "different";
-                reason = "字段值不一致";
+                if (Objects.equals("object_by_key", compareMode)) {
+                    reason = "数组对象按主键比对后不一致";
+                } else if (Objects.equals("set", compareMode)) {
+                    reason = "集合值不一致";
+                } else if (Objects.equals("kv_map", compareMode)) {
+                    reason = "键值映射不一致";
+                } else {
+                    reason = "字段值不一致";
+                }
             } else {
                 status = "same";
                 reason = "字段一致";
@@ -1536,7 +1625,7 @@ public class InspectConfigCompareService {
                 diff.put("path", path);
                 diff.put("label", sourceField != null ? sourceField.getString("label") : targetField.getString("label"));
                 diff.put("layer", layer);
-                diff.put("compareMode", "exact");
+                diff.put("compareMode", compareMode);
                 diff.put("status", status);
                 diff.put("riskLevel", riskLevel);
                 diff.put("isBlocked", Objects.equals("high", riskLevel) ? 1 : 0);
@@ -1567,6 +1656,85 @@ public class InspectConfigCompareService {
                 JSONObject field = fieldList.getJSONObject(i);
                 result.put(field.getString("path"), field);
             }
+        }
+        return result;
+    }
+
+    private String getDefaultCompareMode(String fieldName, String type, Object value) {
+        String normalizedFieldName = StringUtils.defaultString(fieldName);
+        if (OBJECT_BY_KEY_FIELD_MAP.containsKey(normalizedFieldName)) {
+            return "object_by_key";
+        }
+        if (Objects.equals("JsonArray", type) && value instanceof JSONArray) {
+            if (Objects.equals("DNS_SERVERS", normalizedFieldName)
+                    || Objects.equals("NTP_SERVERS", normalizedFieldName)
+                    || Objects.equals("PATCHES_APPLIED", normalizedFieldName)) {
+                return "set";
+            }
+        }
+        if (Objects.equals("JsonObject", type) && value instanceof JSONObject) {
+            return "kv_map";
+        }
+        return "exact";
+    }
+
+    private String getCompareMode(JSONObject sourceField, JSONObject targetField) {
+        String compareMode = sourceField != null ? sourceField.getString("compareMode") : null;
+        if (StringUtils.isBlank(compareMode) && targetField != null) {
+            compareMode = targetField.getString("compareMode");
+        }
+        return StringUtils.defaultIfBlank(compareMode, "exact");
+    }
+
+    private boolean isFieldValueEqual(String compareMode, JSONObject sourceField, JSONObject targetField) {
+        if (sourceField == null || targetField == null) {
+            return sourceField == null && targetField == null;
+        }
+        Object sourceValue = normalizeJsonValue(sourceField.get("value"));
+        Object targetValue = normalizeJsonValue(targetField.get("value"));
+        if (Objects.equals("object_by_key", compareMode)) {
+            String keyField = OBJECT_BY_KEY_FIELD_MAP.get(sourceField.getString("path"));
+            if (StringUtils.isBlank(keyField)) {
+                keyField = OBJECT_BY_KEY_FIELD_MAP.get(targetField.getString("path"));
+            }
+            if (StringUtils.isNotBlank(keyField)) {
+                sourceValue = buildObjectByKeyJson(sourceValue, keyField);
+                targetValue = buildObjectByKeyJson(targetValue, keyField);
+            }
+        }
+        if (sourceValue == null || targetValue == null) {
+            return sourceValue == null && targetValue == null;
+        }
+        if (sourceValue instanceof JSONObject && targetValue instanceof JSONObject) {
+            return new DefaultJsonDifference().detectDiff((JSONObject) sourceValue, (JSONObject) targetValue).isMatch();
+        }
+        if (sourceValue instanceof JSONArray && targetValue instanceof JSONArray) {
+            DefaultJsonDifference difference = new DefaultJsonDifference();
+            if (Objects.equals("set", compareMode)) {
+                difference.option(new JsonComparedOption().setIgnoreOrder(true));
+            }
+            return difference.detectDiff((JSONArray) sourceValue, (JSONArray) targetValue).isMatch();
+        }
+        return Objects.equals(sourceValue, targetValue);
+    }
+
+    private JSONObject buildObjectByKeyJson(Object value, String keyField) {
+        JSONObject result = new JSONObject(true);
+        if (!(value instanceof JSONArray) || StringUtils.isBlank(keyField)) {
+            return result;
+        }
+        JSONArray array = (JSONArray) value;
+        for (int i = 0; i < array.size(); i++) {
+            Object item = array.get(i);
+            if (!(item instanceof JSONObject)) {
+                continue;
+            }
+            JSONObject jsonObject = (JSONObject) item;
+            Object keyValue = jsonObject.get(keyField);
+            if (keyValue == null) {
+                continue;
+            }
+            result.put(String.valueOf(keyValue), jsonObject);
         }
         return result;
     }

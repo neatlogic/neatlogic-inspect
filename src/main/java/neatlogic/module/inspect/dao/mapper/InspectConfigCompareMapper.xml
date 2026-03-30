@@ -44,6 +44,7 @@
         <result column="is_frozen" property="isFrozen"/>
         <result column="source_type" property="sourceType"/>
         <result column="source_snapshot_id" property="sourceSnapshotId"/>
+        <result column="source_resource_id" property="sourceResourceId"/>
         <result column="field_count" property="fieldCount"/>
         <result column="baseline_data" property="baselineData"/>
         <result column="ai_candidate_data" property="aiCandidateData"/>
@@ -52,6 +53,8 @@
         <result column="approved_time" property="approvedTime"/>
         <result column="activated_time" property="activatedTime"/>
         <result column="is_current_active" property="isCurrentActive"/>
+        <result column="submitter" property="submitter"/>
+        <result column="submit_time" property="submitTime"/>
         <result column="approval_status" property="approvalStatus"/>
         <result column="approver" property="approver"/>
         <result column="approval_comment" property="approvalComment"/>
@@ -248,11 +251,14 @@
             v.`is_frozen`,
             v.`source_type`,
             v.`source_snapshot_id`,
+            COALESCE(v.`source_resource_id`, s.`resource_id`) AS `source_resource_id`,
             v.`field_count`,
             v.`baseline_data`,
             v.`ai_candidate_data`,
             v.`change_summary`,
             v.`change_log`,
+            v.`submitter`,
+            v.`submit_time`,
             v.`approved_time`,
             v.`activated_time`,
             CASE WHEN b.`current_version_id` = v.`id` THEN 1 ELSE 0 END AS `is_current_active`,
@@ -265,6 +271,7 @@
             v.`lcu`
         FROM `inspect_config_baseline_version` v
         LEFT JOIN `inspect_config_baseline` b ON b.`id` = v.`baseline_id`
+        LEFT JOIN `inspect_config_snapshot` s ON s.`id` = v.`source_snapshot_id`
         WHERE v.`id` = #{id}
     </select>
 
@@ -277,11 +284,14 @@
             v.`is_frozen`,
             v.`source_type`,
             v.`source_snapshot_id`,
+            COALESCE(v.`source_resource_id`, s.`resource_id`) AS `source_resource_id`,
             v.`field_count`,
             v.`baseline_data`,
             v.`ai_candidate_data`,
             v.`change_summary`,
             v.`change_log`,
+            v.`submitter`,
+            v.`submit_time`,
             v.`approved_time`,
             v.`activated_time`,
             CASE WHEN b.`current_version_id` = v.`id` THEN 1 ELSE 0 END AS `is_current_active`,
@@ -294,6 +304,7 @@
             v.`lcu`
         FROM `inspect_config_baseline_version` v
         LEFT JOIN `inspect_config_baseline` b ON b.`id` = v.`baseline_id`
+        LEFT JOIN `inspect_config_snapshot` s ON s.`id` = v.`source_snapshot_id`
         WHERE v.`baseline_id` = #{baselineId}
         ORDER BY v.`fcd` DESC, v.`id` DESC
     </select>
@@ -509,12 +520,12 @@
 
     <insert id="insertBaselineVersion" parameterType="neatlogic.module.inspect.dto.InspectConfigBaselineVersionVo">
         INSERT INTO `inspect_config_baseline_version` (
-            `id`, `baseline_id`, `version`, `status`, `is_frozen`, `source_type`, `source_snapshot_id`, `field_count`,
-            `baseline_data`, `ai_candidate_data`, `change_summary`, `change_log`, `approved_time`, `activated_time`,
+            `id`, `baseline_id`, `version`, `status`, `is_frozen`, `source_type`, `source_snapshot_id`, `source_resource_id`, `field_count`,
+            `baseline_data`, `ai_candidate_data`, `change_summary`, `change_log`, `submitter`, `submit_time`, `approved_time`, `activated_time`,
             `fcd`, `fcu`, `lcd`, `lcu`
         ) VALUES (
-            #{id}, #{baselineId}, #{version}, #{status}, #{isFrozen}, #{sourceType}, #{sourceSnapshotId}, #{fieldCount},
-            #{baselineData}, #{aiCandidateData}, #{changeSummary}, #{changeLog}, #{approvedTime}, #{activatedTime},
+            #{id}, #{baselineId}, #{version}, #{status}, #{isFrozen}, #{sourceType}, #{sourceSnapshotId}, #{sourceResourceId}, #{fieldCount},
+            #{baselineData}, #{aiCandidateData}, #{changeSummary}, #{changeLog}, #{submitter}, #{submitTime}, #{approvedTime}, #{activatedTime},
             NOW(3), #{fcu}, NOW(3), #{lcu}
         )
     </insert>
@@ -546,6 +557,8 @@
         SET `status` = #{status},
             `approved_time` = #{approvedTime},
             `activated_time` = #{activatedTime},
+            `submitter` = #{submitter},
+            `submit_time` = #{submitTime},
             `approval_status` = #{approvalStatus},
             `approver` = #{approver},
             `approval_comment` = #{approvalComment},

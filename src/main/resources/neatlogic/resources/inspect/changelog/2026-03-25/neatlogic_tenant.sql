@@ -44,11 +44,14 @@ CREATE TABLE IF NOT EXISTS `inspect_config_baseline_version` (
   `is_frozen` tinyint(1) NOT NULL DEFAULT '0' COMMENT '是否冻结',
   `source_type` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '来源类型：snapshot/promote/manual',
   `source_snapshot_id` bigint DEFAULT NULL COMMENT '来源快照ID',
+  `source_resource_id` bigint DEFAULT NULL COMMENT '来源资产ID',
   `field_count` int DEFAULT NULL COMMENT '基线字段数',
   `baseline_data` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci COMMENT '基线数据',
   `ai_candidate_data` mediumtext CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci COMMENT 'AI候选筛选结果',
   `change_summary` mediumtext CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci COMMENT '变更摘要',
   `change_log` mediumtext CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci COMMENT '变更日志',
+  `submitter` char(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '提交人',
+  `submit_time` timestamp(3) NULL DEFAULT NULL COMMENT '提交时间',
   `approval_status` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '审批状态：pending/approved/rejected',
   `approver` char(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '审批人',
   `approval_comment` text CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci COMMENT '审批意见',
@@ -61,9 +64,11 @@ CREATE TABLE IF NOT EXISTS `inspect_config_baseline_version` (
   PRIMARY KEY (`id`) USING BTREE,
   UNIQUE KEY `uk_baseline_version` (`baseline_id`,`version`) USING BTREE,
   KEY `idx_status` (`status`) USING BTREE,
+  KEY `idx_submitter` (`submitter`) USING BTREE,
   KEY `idx_approval_status` (`approval_status`) USING BTREE,
   KEY `idx_approver` (`approver`) USING BTREE,
-  KEY `idx_source_snapshot_id` (`source_snapshot_id`) USING BTREE
+  KEY `idx_source_snapshot_id` (`source_snapshot_id`) USING BTREE,
+  KEY `idx_source_resource_id` (`source_resource_id`) USING BTREE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='巡检配置比对基线版本';
 
 CREATE TABLE IF NOT EXISTS `inspect_config_snapshot` (

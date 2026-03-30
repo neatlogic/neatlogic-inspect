@@ -14,6 +14,8 @@ public class InspectConfigBaselineVersionVo extends BasePageVo {
     private Integer isFrozen;
     private String sourceType;
     private Long sourceSnapshotId;
+    private Long sourceResourceId;
+    private String sourceIp;
     private Integer fieldCount;
     private String baselineData;
     private String aiCandidateData;
@@ -22,6 +24,9 @@ public class InspectConfigBaselineVersionVo extends BasePageVo {
     private Date approvedTime;
     private Date activatedTime;
     private Integer isCurrentActive;
+    private String submitter;
+    private Date submitTime;
+    private UserVo submitterVo;
     private String approvalStatus;
     private String approver;
     private String approvalComment;
@@ -91,6 +96,22 @@ public class InspectConfigBaselineVersionVo extends BasePageVo {
         this.sourceSnapshotId = sourceSnapshotId;
     }
 
+    public Long getSourceResourceId() {
+        return sourceResourceId;
+    }
+
+    public void setSourceResourceId(Long sourceResourceId) {
+        this.sourceResourceId = sourceResourceId;
+    }
+
+    public String getSourceIp() {
+        return sourceIp;
+    }
+
+    public void setSourceIp(String sourceIp) {
+        this.sourceIp = sourceIp;
+    }
+
     public Integer getFieldCount() {
         return fieldCount;
     }
@@ -153,6 +174,30 @@ public class InspectConfigBaselineVersionVo extends BasePageVo {
 
     public void setIsCurrentActive(Integer isCurrentActive) {
         this.isCurrentActive = isCurrentActive;
+    }
+
+    public String getSubmitter() {
+        return submitter;
+    }
+
+    public void setSubmitter(String submitter) {
+        this.submitter = submitter;
+    }
+
+    public Date getSubmitTime() {
+        return submitTime;
+    }
+
+    public void setSubmitTime(Date submitTime) {
+        this.submitTime = submitTime;
+    }
+
+    public UserVo getSubmitterVo() {
+        return submitterVo;
+    }
+
+    public void setSubmitterVo(UserVo submitterVo) {
+        this.submitterVo = submitterVo;
     }
 
     public String getApprovalStatus() {
