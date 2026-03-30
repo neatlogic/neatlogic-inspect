@@ -149,12 +149,19 @@ CREATE TABLE IF NOT EXISTS `inspect_config_compare_detail` (
   `reason` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '差异原因',
   `source_value` mediumtext CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci COMMENT '源值',
   `target_value` mediumtext CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci COMMENT '目标值',
+  `ai_analysis` mediumtext CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci COMMENT 'AI风险与修复建议',
+  `ai_status` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT 'AI分析状态：pending/running/retrying/succeed/failed',
+  `ai_retry_count` int NOT NULL DEFAULT '0' COMMENT 'AI重试次数',
+  `ai_next_retry_time` timestamp(3) NULL DEFAULT NULL COMMENT 'AI下次重试时间',
+  `ai_last_error` mediumtext CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci COMMENT 'AI最后一次错误',
   `sort` int DEFAULT NULL COMMENT '排序',
   PRIMARY KEY (`id`) USING BTREE,
   KEY `idx_task_id` (`task_id`) USING BTREE,
   KEY `idx_layer` (`layer`) USING BTREE,
   KEY `idx_path` (`path`) USING BTREE,
-  KEY `idx_risk_level` (`risk_level`) USING BTREE
+  KEY `idx_risk_level` (`risk_level`) USING BTREE,
+  KEY `idx_ai_status` (`ai_status`) USING BTREE,
+  KEY `idx_ai_next_retry_time` (`ai_next_retry_time`) USING BTREE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='巡检配置比对明细';
 
 CREATE TABLE IF NOT EXISTS `inspect_config_rule` (

@@ -739,6 +739,7 @@ public class InspectReportServiceImpl implements InspectReportService {
         for (int i = 0; i < fieldArray.size(); i++) {
             JSONObject field = fieldArray.getJSONObject(i);
             if (field != null && Objects.equals(field.getString("name"), "CONFIG_COMPARE_ISSUES")) {
+                ensureConfigCompareFieldSubset(field);
                 return;
             }
         }
@@ -746,17 +747,36 @@ public class InspectReportServiceImpl implements InspectReportService {
         field.put("name", "CONFIG_COMPARE_ISSUES");
         field.put("desc", "配置基线差异");
         field.put("type", "JsonArray");
-        JSONArray subset = new JSONArray();
-        subset.add(buildSubsetField("layer", "层级", "String"));
-        subset.add(buildSubsetField("label", "字段", "String"));
-        subset.add(buildSubsetField("status", "状态", "String"));
-        subset.add(buildSubsetField("riskLevel", "风险", "String"));
-        subset.add(buildSubsetField("baselineVersion", "基线版本", "String"));
-        subset.add(buildSubsetField("baselineValue", "基线值", "String"));
-        subset.add(buildSubsetField("currentValue", "当前值", "String"));
-        subset.add(buildSubsetField("reason", "说明", "String"));
-        field.put("subset", subset);
+        ensureConfigCompareFieldSubset(field);
         fieldArray.add(field);
+    }
+
+    private void ensureConfigCompareFieldSubset(JSONObject field) {
+        JSONArray subset = field.getJSONArray("subset");
+        if (subset == null) {
+            subset = new JSONArray();
+            field.put("subset", subset);
+        }
+        ensureSubsetField(subset, "layer", "层级", "String");
+        ensureSubsetField(subset, "label", "字段", "String");
+        ensureSubsetField(subset, "status", "状态", "String");
+        ensureSubsetField(subset, "riskLevel", "风险", "String");
+        ensureSubsetField(subset, "baselineVersion", "基线版本", "String");
+        ensureSubsetField(subset, "baselineValue", "基线值", "String");
+        ensureSubsetField(subset, "currentValue", "当前值", "String");
+        ensureSubsetField(subset, "reason", "说明", "String");
+        ensureSubsetField(subset, "aiRiskReason", "AI风险说明", "String");
+        ensureSubsetField(subset, "aiRepairSuggestion", "AI修复建议", "String");
+    }
+
+    private void ensureSubsetField(JSONArray subset, String name, String desc, String type) {
+        for (int i = 0; i < subset.size(); i++) {
+            JSONObject item = subset.getJSONObject(i);
+            if (item != null && Objects.equals(item.getString("name"), name)) {
+                return;
+            }
+        }
+        subset.add(buildSubsetField(name, desc, type));
     }
 
     private JSONObject buildSubsetField(String name, String desc, String type) {

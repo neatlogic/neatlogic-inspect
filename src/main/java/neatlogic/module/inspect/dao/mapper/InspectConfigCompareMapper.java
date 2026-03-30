@@ -78,7 +78,18 @@ public interface InspectConfigCompareMapper {
 
     void updateCompareTask(InspectConfigCompareTaskVo taskVo);
 
+    InspectConfigCompareTaskVo getCompareTaskById(Long id);
+
+    InspectConfigCompareTaskVo getLatestCompareTask(@Param("compareType") String compareType,
+                                                    @Param("baselineVersionId") Long baselineVersionId,
+                                                    @Param("sourceSnapshotId") Long sourceSnapshotId,
+                                                    @Param("targetSnapshotId") Long targetSnapshotId);
+
     void insertCompareDetail(InspectConfigCompareDetailVo detailVo);
 
     List<InspectConfigCompareDetailVo> getCompareDetailListByTaskId(Long taskId);
+
+    List<InspectConfigCompareDetailVo> getCompareDetailListByIdList(List<Long> idList);
+
+    void updateCompareDetailAiInfo(InspectConfigCompareDetailVo detailVo);
 }

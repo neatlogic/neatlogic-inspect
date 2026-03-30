@@ -129,6 +129,11 @@
         <result column="reason" property="reason"/>
         <result column="source_value" property="sourceValue"/>
         <result column="target_value" property="targetValue"/>
+        <result column="ai_analysis" property="aiAnalysis"/>
+        <result column="ai_status" property="aiStatus"/>
+        <result column="ai_retry_count" property="aiRetryCount"/>
+        <result column="ai_next_retry_time" property="aiNextRetryTime"/>
+        <result column="ai_last_error" property="aiLastError"/>
         <result column="sort" property="sort"/>
     </resultMap>
 
@@ -357,7 +362,9 @@
                     AND `env_id` IS NULL
                 </otherwise>
             </choose>
-            AND `resource_id` = #{resourceId}
+            <if test="resourceId != null">
+                AND `resource_id` = #{resourceId}
+            </if>
             <choose>
                 <when test="typeId != null">
                     AND `type_id` = #{typeId}
@@ -411,7 +418,9 @@
                     AND `env_id` IS NULL
                 </otherwise>
             </choose>
-            AND `resource_id` = #{resourceId}
+            <if test="resourceId != null">
+                AND `resource_id` = #{resourceId}
+            </if>
             <choose>
                 <when test="typeId != null">
                     AND `type_id` = #{typeId}
@@ -680,22 +689,85 @@
         WHERE `id` = #{id}
     </update>
 
+    <select id="getCompareTaskById" parameterType="java.lang.Long" resultMap="compareTaskMap">
+        SELECT
+            `id`, `compare_type`, `baseline_version_id`, `source_snapshot_id`, `target_snapshot_id`, `app_system_id`,
+            `app_module_id`, `env_id`, `status`, `compare_result`, `risk_level`, `is_blocked`, `total_count`,
+            `diff_count`, `high_count`, `medium_count`, `low_count`, `summary`, `ai_summary`, `fcd`, `fcu`, `lcd`, `lcu`
+        FROM `inspect_config_compare_task`
+        WHERE `id` = #{id}
+    </select>
+
+    <select id="getLatestCompareTask" resultMap="compareTaskMap">
+        SELECT
+            `id`, `compare_type`, `baseline_version_id`, `source_snapshot_id`, `target_snapshot_id`, `app_system_id`,
+            `app_module_id`, `env_id`, `status`, `compare_result`, `risk_level`, `is_blocked`, `total_count`,
+            `diff_count`, `high_count`, `medium_count`, `low_count`, `summary`, `ai_summary`, `fcd`, `fcu`, `lcd`, `lcu`
+        FROM `inspect_config_compare_task`
+        WHERE `compare_type` = #{compareType}
+          AND `source_snapshot_id` = #{sourceSnapshotId}
+          <choose>
+              <when test="baselineVersionId != null">
+                  AND `baseline_version_id` = #{baselineVersionId}
+              </when>
+              <otherwise>
+                  AND `baseline_version_id` IS NULL
+              </otherwise>
+          </choose>
+          <choose>
+              <when test="targetSnapshotId != null">
+                  AND `target_snapshot_id` = #{targetSnapshotId}
+              </when>
+              <otherwise>
+                  AND `target_snapshot_id` IS NULL
+              </otherwise>
+          </choose>
+        ORDER BY `fcd` DESC, `id` DESC
+        LIMIT 1
+    </select>
+
     <insert id="insertCompareDetail" parameterType="neatlogic.module.inspect.dto.InspectConfigCompareDetailVo">
         INSERT INTO `inspect_config_compare_detail` (
             `id`, `task_id`, `layer`, `path`, `label`, `compare_mode`, `status`, `risk_level`,
-            `is_blocked`, `reason`, `source_value`, `target_value`, `sort`
+            `is_blocked`, `reason`, `source_value`, `target_value`, `ai_analysis`, `ai_status`,
+            `ai_retry_count`, `ai_next_retry_time`, `ai_last_error`, `sort`
         ) VALUES (
             #{id}, #{taskId}, #{layer}, #{path}, #{label}, #{compareMode}, #{status}, #{riskLevel},
-            #{isBlocked}, #{reason}, #{sourceValue}, #{targetValue}, #{sort}
+            #{isBlocked}, #{reason}, #{sourceValue}, #{targetValue}, #{aiAnalysis}, #{aiStatus},
+            #{aiRetryCount}, #{aiNextRetryTime}, #{aiLastError}, #{sort}
         )
     </insert>
 
     <select id="getCompareDetailListByTaskId" parameterType="java.lang.Long" resultMap="compareDetailMap">
         SELECT
             `id`, `task_id`, `layer`, `path`, `label`, `compare_mode`, `status`, `risk_level`,
-            `is_blocked`, `reason`, `source_value`, `target_value`, `sort`
+            `is_blocked`, `reason`, `source_value`, `target_value`, `ai_analysis`, `ai_status`,
+            `ai_retry_count`, `ai_next_retry_time`, `ai_last_error`, `sort`
         FROM `inspect_config_compare_detail`
         WHERE `task_id` = #{taskId}
         ORDER BY `sort` ASC, `id` ASC
     </select>
+
+    <select id="getCompareDetailListByIdList" resultMap="compareDetailMap">
+        SELECT
+            `id`, `task_id`, `layer`, `path`, `label`, `compare_mode`, `status`, `risk_level`,
+            `is_blocked`, `reason`, `source_value`, `target_value`, `ai_analysis`, `ai_status`,
+            `ai_retry_count`, `ai_next_retry_time`, `ai_last_error`, `sort`
+        FROM `inspect_config_compare_detail`
+        WHERE `id` IN
+        <foreach collection="list" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+        ORDER BY `sort` ASC, `id` ASC
+    </select>
+
+    <update id="updateCompareDetailAiInfo" parameterType="neatlogic.module.inspect.dto.InspectConfigCompareDetailVo">
+        UPDATE `inspect_config_compare_detail`
+        SET `ai_analysis` = #{aiAnalysis},
+            `ai_status` = #{aiStatus},
+            `ai_retry_count` = #{aiRetryCount},
+            `ai_next_retry_time` = #{aiNextRetryTime},
+            `ai_last_error` = #{aiLastError}
+        WHERE `id` = #{id}
+    </update>
 </mapper>

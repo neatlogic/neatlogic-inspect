@@ -24,6 +24,7 @@ public class InspectConfigSnapshotVo extends BasePageVo {
     private String aiCandidateData;
     private String aiDraftData;
     private String summary;
+    private String resourceIp;
     private Date fcd;
     private String fcu;
     private Date lcd;
@@ -174,6 +175,14 @@ public class InspectConfigSnapshotVo extends BasePageVo {
 
     public void setSummary(String summary) {
         this.summary = summary;
+    }
+
+    public String getResourceIp() {
+        return resourceIp;
+    }
+
+    public void setResourceIp(String resourceIp) {
+        this.resourceIp = resourceIp;
     }
 
     public Date getFcd() {

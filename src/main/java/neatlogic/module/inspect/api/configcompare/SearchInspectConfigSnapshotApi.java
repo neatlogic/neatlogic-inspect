@@ -43,7 +43,7 @@ public class SearchInspectConfigSnapshotApi extends PrivateApiComponentBase {
             @Param(name = "appModuleId", type = ApiParamType.LONG, desc = "应用模块id"),
             @Param(name = "envId", type = ApiParamType.LONG, desc = "环境id"),
             @Param(name = "typeId", type = ApiParamType.LONG, desc = "资源模型id"),
-            @Param(name = "resourceId", type = ApiParamType.LONG, isRequired = true, desc = "资源id"),
+            @Param(name = "resourceId", type = ApiParamType.LONG, desc = "资源id"),
             @Param(name = "schemaName", type = ApiParamType.STRING, isRequired = true, desc = "采集维度"),
             @Param(name = "currentPage", type = ApiParamType.INTEGER, desc = "当前页"),
             @Param(name = "pageSize", type = ApiParamType.INTEGER, desc = "每页条数")

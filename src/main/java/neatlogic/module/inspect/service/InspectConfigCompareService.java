@@ -17,6 +17,7 @@ import neatlogic.framework.ai.dao.mapper.AiModelMapper;
 import neatlogic.framework.ai.dto.model.AiModelVo;
 import neatlogic.framework.ai.enums.AiModelType;
 import neatlogic.framework.ai.model.core.AiModelFactory;
+import neatlogic.framework.asynchronization.taskmanager.AsyncTaskManager;
 import neatlogic.framework.asynchronization.threadlocal.UserContext;
 import neatlogic.framework.cmdb.crossover.IResourceBuildSqlCrossoverService;
 import neatlogic.framework.cmdb.crossover.IResourceCenterResourceCrossoverService;
@@ -65,6 +66,15 @@ public class InspectConfigCompareService {
     private static final String AI_CALL_MODE_CHAT = "chat";
     private static final String AI_CALL_MODE_STREAM = "stream";
     private static final int AI_FIELD_LIMIT = 80;
+    private static final String AI_ANALYSIS_STATUS_PENDING = "pending";
+    private static final String AI_ANALYSIS_STATUS_RUNNING = "running";
+    private static final String AI_ANALYSIS_STATUS_RETRYING = "retrying";
+    private static final String AI_ANALYSIS_STATUS_SUCCEED = "succeed";
+    private static final String AI_ANALYSIS_STATUS_FAILED = "failed";
+    private static final int AI_ANALYSIS_BATCH_SIZE = 10;
+    private static final int AI_ANALYSIS_MAX_WORKERS = 2;
+    private static final int AI_ANALYSIS_MAX_RETRY = 3;
+    private static final int[] AI_ANALYSIS_RETRY_DELAY_SECONDS = new int[]{60, 300, 900};
     private static final String DEFAULT_AI_CANDIDATE_SYSTEM_PROMPT = "你是巡检配置基线候选筛选器。"
             + "你只能从输入字段中选择已有字段，不得编造字段，不得修改字段值。"
             + "保留以下类型："
@@ -78,6 +88,12 @@ public class InspectConfigCompareService {
             + "\"excluded\":[{\"path\":\"字段name\",\"reason\":\"排除原因\"}],"
             + "\"summary\":\"一句话总结\"}。"
             + "如果不确定，也不要编造，宁可放到excluded。";
+    private static final String DEFAULT_AI_ANALYSIS_SYSTEM_PROMPT = "你是巡检配置基线差异风险与修复建议分析器。"
+            + "你会收到多条已经由规则引擎识别出的配置差异。"
+            + "请逐条给出风险等级、风险原因、影响、修复建议、验证建议，并返回严格JSON。"
+            + "不要编造输入中不存在的字段，不要修改detailId。"
+            + "输出格式必须为："
+            + "{\"items\":[{\"detailId\":1,\"riskLevel\":\"high|medium|low\",\"riskReason\":\"一句话\",\"impact\":\"一句话\",\"repairSuggestion\":\"一句话\",\"verifySuggestion\":\"一句话\",\"isNoise\":0,\"blockSuggestion\":0}]}";
 
     private static final Set<String> IGNORE_FIELD_SET = new HashSet<>(Arrays.asList(
             "HOSTNAME", "MGMT_IP", "MGMT_PORT", "STATE", "AVAILABILITY", "RESPONSE_TIME", "ERROR_MESSAGE",
@@ -119,6 +135,18 @@ public class InspectConfigCompareService {
     @Resource
     private AiModelMapper aiModelMapper;
 
+    private AsyncTaskManager<InspectConfigAiAnalysisTask> aiAnalysisTaskManager;
+
+    private static class InspectConfigAiAnalysisTask {
+        private final Long taskId;
+        private final List<Long> detailIdList;
+
+        private InspectConfigAiAnalysisTask(Long taskId, List<Long> detailIdList) {
+            this.taskId = taskId;
+            this.detailIdList = detailIdList;
+        }
+    }
+
     public List<InspectConfigBaselineVo> searchBaselineList(Long appSystemId, Long appModuleId, Long envId, String schemaName) {
         InspectConfigBaselineVo searchVo = new InspectConfigBaselineVo();
         searchVo.setAppSystemId(appSystemId);
@@ -128,6 +156,17 @@ public class InspectConfigCompareService {
         List<InspectConfigBaselineVo> baselineList = inspectConfigCompareMapper.getBaselineList(searchVo);
         fillBaselineUserVo(baselineList);
         return baselineList;
+    }
+
+    private AsyncTaskManager<InspectConfigAiAnalysisTask> getAiAnalysisTaskManager() {
+        if (aiAnalysisTaskManager == null) {
+            synchronized (this) {
+                if (aiAnalysisTaskManager == null) {
+                    aiAnalysisTaskManager = AsyncTaskManager.getInstance("INSPECT-CONFIG-AI-ANALYSIS", AI_ANALYSIS_MAX_WORKERS, this::handleAiAnalysisTask);
+                }
+            }
+        }
+        return aiAnalysisTaskManager;
     }
 
     public JSONObject getAiSettingData() {
@@ -400,7 +439,40 @@ public class InspectConfigCompareService {
         if (rowNum == 0) {
             return Collections.emptyList();
         }
-        return inspectConfigCompareMapper.getSnapshotList(searchVo);
+        List<InspectConfigSnapshotVo> snapshotList = inspectConfigCompareMapper.getSnapshotList(searchVo);
+        fillSnapshotResourceInfo(snapshotList);
+        return snapshotList;
+    }
+
+    private void fillSnapshotResourceInfo(List<InspectConfigSnapshotVo> snapshotList) {
+        if (CollectionUtils.isEmpty(snapshotList)) {
+            return;
+        }
+        Set<Long> resourceIdSet = new HashSet<>();
+        for (InspectConfigSnapshotVo snapshotVo : snapshotList) {
+            if (snapshotVo != null && snapshotVo.getResourceId() != null) {
+                resourceIdSet.add(snapshotVo.getResourceId());
+            }
+        }
+        if (CollectionUtils.isEmpty(resourceIdSet)) {
+            return;
+        }
+        IResourceCenterResourceCrossoverService resourceService = CrossoverServiceFactory.getApi(IResourceCenterResourceCrossoverService.class);
+        List<ResourceVo> resourceList = resourceService.getResourceListByIdList(new ArrayList<>(resourceIdSet), Arrays.asList("id", "ip"));
+        if (CollectionUtils.isEmpty(resourceList)) {
+            return;
+        }
+        Map<Long, String> resourceIpMap = new HashMap<>();
+        for (ResourceVo resourceVo : resourceList) {
+            if (resourceVo != null && resourceVo.getId() != null) {
+                resourceIpMap.put(resourceVo.getId(), resourceVo.getIp());
+            }
+        }
+        for (InspectConfigSnapshotVo snapshotVo : snapshotList) {
+            if (snapshotVo != null && snapshotVo.getResourceId() != null) {
+                snapshotVo.setResourceIp(resourceIpMap.get(snapshotVo.getResourceId()));
+            }
+        }
     }
 
     public JSONObject getSnapshotDetail(Long snapshotId) {
@@ -640,7 +712,64 @@ public class InspectConfigCompareService {
         if (versionVo == null) {
             throw new ParamNotExistsException("baselineVersion");
         }
+        InspectConfigCompareTaskVo taskVo = inspectConfigCompareMapper.getLatestCompareTask("baseline", versionVo.getId(), snapshotVo.getId(), null);
+        if (taskVo != null) {
+            List<InspectConfigCompareDetailVo> detailList = inspectConfigCompareMapper.getCompareDetailListByTaskId(taskVo.getId());
+            submitDueAiAnalysisTask(detailList);
+            detailList = inspectConfigCompareMapper.getCompareDetailListByTaskId(taskVo.getId());
+            JSONObject result = new JSONObject(true);
+            result.put("task", taskVo);
+            result.put("summary", StringUtils.isNotBlank(taskVo.getSummary()) ? JSONObject.parseObject(taskVo.getSummary()) : new JSONObject(true));
+            result.put("diffList", buildCompareDetailJsonArray(detailList));
+            result.put("sourceSnapshot", snapshotVo);
+            result.put("sourceData", JSONObject.parseObject(snapshotVo.getNormalizedData()));
+            result.put("baselineVersion", versionVo);
+            result.put("targetData", JSONObject.parseObject(versionVo.getBaselineData()));
+            result.put("aiGenerating", isAiGenerating(detailList) ? 1 : 0);
+            return result;
+        }
         return doCompare("baseline", snapshotVo.getAppSystemId(), snapshotVo.getAppModuleId(), snapshotVo.getEnvId(), snapshotVo, versionVo, null);
+    }
+
+    public JSONObject compareSnapshotPeer(Long snapshotId, Long targetSnapshotId) {
+        if (snapshotId == null) {
+            throw new ParamNotExistsException("snapshotId");
+        }
+        if (targetSnapshotId == null) {
+            throw new ParamNotExistsException("targetSnapshotId");
+        }
+        InspectConfigSnapshotVo sourceSnapshot = inspectConfigCompareMapper.getSnapshotById(snapshotId);
+        InspectConfigSnapshotVo targetSnapshot = inspectConfigCompareMapper.getSnapshotById(targetSnapshotId);
+        if (sourceSnapshot == null) {
+            throw new ParamNotExistsException("sourceSnapshot");
+        }
+        if (targetSnapshot == null) {
+            throw new ParamNotExistsException("targetSnapshot");
+        }
+        if (!Objects.equals(sourceSnapshot.getAppSystemId(), targetSnapshot.getAppSystemId())
+                || !Objects.equals(sourceSnapshot.getAppModuleId(), targetSnapshot.getAppModuleId())
+                || !Objects.equals(sourceSnapshot.getEnvId(), targetSnapshot.getEnvId())
+                || !Objects.equals(sourceSnapshot.getTypeId(), targetSnapshot.getTypeId())
+                || !Objects.equals(sourceSnapshot.getSchemaName(), targetSnapshot.getSchemaName())) {
+            throw new ApiRuntimeException("仅允许对比同应用、模块、环境下的同维度快照");
+        }
+        InspectConfigCompareTaskVo taskVo = inspectConfigCompareMapper.getLatestCompareTask("peer", null, sourceSnapshot.getId(), targetSnapshot.getId());
+        if (taskVo != null) {
+            List<InspectConfigCompareDetailVo> detailList = inspectConfigCompareMapper.getCompareDetailListByTaskId(taskVo.getId());
+            submitDueAiAnalysisTask(detailList);
+            detailList = inspectConfigCompareMapper.getCompareDetailListByTaskId(taskVo.getId());
+            JSONObject result = new JSONObject(true);
+            result.put("task", taskVo);
+            result.put("summary", StringUtils.isNotBlank(taskVo.getSummary()) ? JSONObject.parseObject(taskVo.getSummary()) : new JSONObject(true));
+            result.put("diffList", buildCompareDetailJsonArray(detailList));
+            result.put("sourceSnapshot", sourceSnapshot);
+            result.put("sourceData", JSONObject.parseObject(sourceSnapshot.getNormalizedData()));
+            result.put("targetSnapshot", targetSnapshot);
+            result.put("targetData", JSONObject.parseObject(targetSnapshot.getNormalizedData()));
+            result.put("aiGenerating", isAiGenerating(detailList) ? 1 : 0);
+            return result;
+        }
+        return doCompare("peer", sourceSnapshot.getAppSystemId(), sourceSnapshot.getAppModuleId(), sourceSnapshot.getEnvId(), sourceSnapshot, null, targetSnapshot);
     }
 
     public JSONObject compareReportWithBaseline(Long resourceId, String schemaName, JSONObject reportJson) {
@@ -780,6 +909,69 @@ public class InspectConfigCompareService {
         return doCompare("peer", appSystemId, appModuleId, envId, sourceSnapshot, null, targetSnapshot);
     }
 
+    public JSONObject getCompareTaskData(Long taskId) {
+        if (taskId == null) {
+            throw new ParamNotExistsException("taskId");
+        }
+        InspectConfigCompareTaskVo taskVo = inspectConfigCompareMapper.getCompareTaskById(taskId);
+        if (taskVo == null) {
+            throw new ParamNotExistsException("task");
+        }
+        List<InspectConfigCompareDetailVo> detailList = inspectConfigCompareMapper.getCompareDetailListByTaskId(taskId);
+        submitDueAiAnalysisTask(detailList);
+        detailList = inspectConfigCompareMapper.getCompareDetailListByTaskId(taskId);
+        JSONObject result = new JSONObject(true);
+        result.put("task", taskVo);
+        result.put("summary", StringUtils.isNotBlank(taskVo.getSummary()) ? JSONObject.parseObject(taskVo.getSummary()) : new JSONObject(true));
+        result.put("diffList", buildCompareDetailJsonArray(detailList));
+        result.put("aiGenerating", isAiGenerating(detailList) ? 1 : 0);
+        return result;
+    }
+
+    @Transactional
+    public JSONObject triggerCompareTaskAiAnalysis(Long taskId) {
+        if (taskId == null) {
+            throw new ParamNotExistsException("taskId");
+        }
+        InspectConfigCompareTaskVo taskVo = inspectConfigCompareMapper.getCompareTaskById(taskId);
+        if (taskVo == null) {
+            throw new ParamNotExistsException("task");
+        }
+        List<InspectConfigCompareDetailVo> detailList = inspectConfigCompareMapper.getCompareDetailListByTaskId(taskId);
+        if (CollectionUtils.isEmpty(detailList)) {
+            JSONObject result = new JSONObject(true);
+            result.put("task", taskVo);
+            result.put("aiGenerating", 0);
+            return result;
+        }
+        boolean aiGenerating = isAiGenerating(detailList);
+        List<InspectConfigCompareDetailVo> pendingList = new ArrayList<>();
+        for (InspectConfigCompareDetailVo detailVo : detailList) {
+            if (detailVo == null || detailVo.getId() == null) {
+                continue;
+            }
+            if (Objects.equals(AI_ANALYSIS_STATUS_SUCCEED, detailVo.getAiStatus())
+                    || Objects.equals(AI_ANALYSIS_STATUS_RUNNING, detailVo.getAiStatus())
+                    || Objects.equals(AI_ANALYSIS_STATUS_PENDING, detailVo.getAiStatus())) {
+                continue;
+            }
+            detailVo.setAiAnalysis(null);
+            detailVo.setAiStatus(AI_ANALYSIS_STATUS_PENDING);
+            detailVo.setAiRetryCount(0);
+            detailVo.setAiNextRetryTime(null);
+            detailVo.setAiLastError(null);
+            inspectConfigCompareMapper.updateCompareDetailAiInfo(detailVo);
+            pendingList.add(detailVo);
+        }
+        if (CollectionUtils.isNotEmpty(pendingList)) {
+            submitAiAnalysisTask(taskId, pendingList);
+        }
+        JSONObject result = new JSONObject(true);
+        result.put("task", taskVo);
+        result.put("aiGenerating", aiGenerating || CollectionUtils.isNotEmpty(pendingList) ? 1 : 0);
+        return result;
+    }
+
     private JSONObject doCompare(String compareType, Long appSystemId, Long appModuleId, Long envId, InspectConfigSnapshotVo sourceSnapshot, InspectConfigBaselineVersionVo baselineVersion, InspectConfigSnapshotVo targetSnapshot) {
         JSONObject sourceData = JSONObject.parseObject(sourceSnapshot.getNormalizedData());
         JSONObject targetData = baselineVersion != null ? JSONObject.parseObject(baselineVersion.getBaselineData()) : JSONObject.parseObject(targetSnapshot.getNormalizedData());
@@ -818,6 +1010,7 @@ public class InspectConfigCompareService {
         taskVo.setLcu(userUuid);
         inspectConfigCompareMapper.insertCompareTask(taskVo);
 
+        List<InspectConfigCompareDetailVo> detailVoList = new ArrayList<>();
         for (int i = 0; i < diffList.size(); i++) {
             JSONObject diff = diffList.getJSONObject(i);
             InspectConfigCompareDetailVo detailVo = new InspectConfigCompareDetailVo();
@@ -834,11 +1027,12 @@ public class InspectConfigCompareService {
             detailVo.setTargetValue(JSON.toJSONString(diff.get("targetValue")));
             detailVo.setSort(i + 1);
             inspectConfigCompareMapper.insertCompareDetail(detailVo);
+            detailVoList.add(detailVo);
         }
 
         JSONObject result = new JSONObject();
         result.put("task", taskVo);
-        result.put("diffList", diffList);
+        result.put("diffList", buildCompareDetailJsonArray(detailVoList));
         result.put("sourceSnapshot", sourceSnapshot);
         result.put("sourceData", sourceData);
         if (baselineVersion != null) {
@@ -849,7 +1043,371 @@ public class InspectConfigCompareService {
             result.put("targetData", targetData);
         }
         result.put("summary", summary);
+        result.put("aiGenerating", 0);
         return result;
+    }
+
+    private void submitAiAnalysisTask(Long taskId, List<InspectConfigCompareDetailVo> detailList) {
+        if (taskId == null || CollectionUtils.isEmpty(detailList)) {
+            return;
+        }
+        List<InspectConfigAiAnalysisTask> taskList = new ArrayList<>();
+        List<Long> batchIdList = new ArrayList<>();
+        for (InspectConfigCompareDetailVo detailVo : detailList) {
+            if (detailVo == null || detailVo.getId() == null) {
+                continue;
+            }
+            batchIdList.add(detailVo.getId());
+            if (batchIdList.size() >= AI_ANALYSIS_BATCH_SIZE) {
+                taskList.add(new InspectConfigAiAnalysisTask(taskId, new ArrayList<>(batchIdList)));
+                batchIdList.clear();
+            }
+        }
+        if (CollectionUtils.isNotEmpty(batchIdList)) {
+            taskList.add(new InspectConfigAiAnalysisTask(taskId, new ArrayList<>(batchIdList)));
+        }
+        if (CollectionUtils.isNotEmpty(taskList)) {
+            getAiAnalysisTaskManager().submitTask(taskList);
+        }
+    }
+
+    private void submitDueAiAnalysisTask(List<InspectConfigCompareDetailVo> detailList) {
+        if (CollectionUtils.isEmpty(detailList)) {
+            return;
+        }
+        Date now = new Date();
+        Map<Long, List<InspectConfigCompareDetailVo>> taskDetailMap = new LinkedHashMap<>();
+        for (InspectConfigCompareDetailVo detailVo : detailList) {
+            if (detailVo == null || detailVo.getId() == null || detailVo.getTaskId() == null) {
+                continue;
+            }
+            if (!Objects.equals(AI_ANALYSIS_STATUS_RETRYING, detailVo.getAiStatus())) {
+                continue;
+            }
+            if (detailVo.getAiNextRetryTime() == null || detailVo.getAiNextRetryTime().after(now)) {
+                continue;
+            }
+            taskDetailMap.computeIfAbsent(detailVo.getTaskId(), key -> new ArrayList<>()).add(detailVo);
+        }
+        for (Map.Entry<Long, List<InspectConfigCompareDetailVo>> entry : taskDetailMap.entrySet()) {
+            for (InspectConfigCompareDetailVo detailVo : entry.getValue()) {
+                detailVo.setAiStatus(AI_ANALYSIS_STATUS_PENDING);
+                detailVo.setAiNextRetryTime(null);
+                inspectConfigCompareMapper.updateCompareDetailAiInfo(detailVo);
+            }
+            submitAiAnalysisTask(entry.getKey(), entry.getValue());
+        }
+    }
+
+    private void handleAiAnalysisTask(InspectConfigAiAnalysisTask analysisTask) {
+        if (analysisTask == null || analysisTask.taskId == null || CollectionUtils.isEmpty(analysisTask.detailIdList)) {
+            return;
+        }
+        List<InspectConfigCompareDetailVo> detailList = inspectConfigCompareMapper.getCompareDetailListByIdList(analysisTask.detailIdList);
+        if (CollectionUtils.isEmpty(detailList)) {
+            return;
+        }
+        Date now = new Date();
+        for (InspectConfigCompareDetailVo detailVo : detailList) {
+            detailVo.setAiStatus(AI_ANALYSIS_STATUS_RUNNING);
+            detailVo.setAiNextRetryTime(null);
+            detailVo.setAiLastError(null);
+            inspectConfigCompareMapper.updateCompareDetailAiInfo(detailVo);
+        }
+        try {
+            AiModelVo modelVo = resolveAiAnalysisModel();
+            if (modelVo == null) {
+                throw new ApiRuntimeException("未配置可用AI模型");
+            }
+            List<ChatMessage> messageList = new ArrayList<>();
+            messageList.add(SystemMessage.from(DEFAULT_AI_ANALYSIS_SYSTEM_PROMPT));
+            messageList.add(UserMessage.from(buildAiAnalysisUserPrompt(detailList)));
+            JSONObject aiInvokeResult = executeAiPrompt(modelVo.getId(), messageList);
+            JSONObject aiResult = parseAiCandidateResult(aiInvokeResult != null ? aiInvokeResult.getString("text") : null);
+            if (aiResult == null) {
+                throw new ApiRuntimeException("AI返回结果不是合法JSON");
+            }
+            JSONArray itemList = aiResult != null ? aiResult.getJSONArray("items") : null;
+            Map<Long, JSONObject> aiItemMap = new HashMap<>();
+            if (CollectionUtils.isNotEmpty(itemList)) {
+                for (int i = 0; i < itemList.size(); i++) {
+                    JSONObject item = itemList.getJSONObject(i);
+                    if (item != null && item.getLong("detailId") != null) {
+                        aiItemMap.put(item.getLong("detailId"), item);
+                    }
+                }
+            }
+            for (InspectConfigCompareDetailVo detailVo : detailList) {
+                JSONObject aiItem = aiItemMap.get(detailVo.getId());
+                if (aiItem == null) {
+                    aiItem = buildFallbackAiAnalysis(detailVo, "AI未返回该差异的分析结果");
+                }
+                detailVo.setAiAnalysis(aiItem.toJSONString());
+                detailVo.setAiStatus(AI_ANALYSIS_STATUS_SUCCEED);
+                detailVo.setAiLastError(null);
+                detailVo.setAiNextRetryTime(null);
+                inspectConfigCompareMapper.updateCompareDetailAiInfo(detailVo);
+            }
+        } catch (Exception ex) {
+            logger.error(ex.getMessage(), ex);
+            for (InspectConfigCompareDetailVo detailVo : detailList) {
+                Integer retryCount = detailVo.getAiRetryCount() != null ? detailVo.getAiRetryCount() : 0;
+                retryCount++;
+                detailVo.setAiRetryCount(retryCount);
+                detailVo.setAiLastError(StringUtils.left(StringUtils.defaultIfBlank(ex.getMessage(), ex.getClass().getSimpleName()), 500));
+                if (retryCount >= AI_ANALYSIS_MAX_RETRY) {
+                    detailVo.setAiStatus(AI_ANALYSIS_STATUS_FAILED);
+                    detailVo.setAiNextRetryTime(null);
+                } else {
+                    detailVo.setAiStatus(AI_ANALYSIS_STATUS_RETRYING);
+                    int delaySecond = AI_ANALYSIS_RETRY_DELAY_SECONDS[Math.min(retryCount - 1, AI_ANALYSIS_RETRY_DELAY_SECONDS.length - 1)];
+                    detailVo.setAiNextRetryTime(new Date(now.getTime() + delaySecond * 1000L));
+                }
+                inspectConfigCompareMapper.updateCompareDetailAiInfo(detailVo);
+            }
+        }
+        refreshReportCompareProjection(analysisTask.taskId);
+    }
+
+    private AiModelVo resolveAiAnalysisModel() {
+        InspectConfigAiSettingVo settingVo = inspectConfigCompareMapper.getAiSetting();
+        if (settingVo != null && settingVo.getModelId() != null) {
+            AiModelVo modelVo = aiModelMapper.getAiModelById(settingVo.getModelId());
+            if (modelVo != null && Objects.equals(modelVo.getModelType(), AiModelType.CHAT.getValue())) {
+                return modelVo;
+            }
+        }
+        AiModelVo query = new AiModelVo();
+        query.setModelType(AiModelType.CHAT.getValue());
+        List<AiModelVo> modelList = aiModelMapper.searchAiModel(query);
+        if (CollectionUtils.isNotEmpty(modelList)) {
+            return modelList.get(0);
+        }
+        return null;
+    }
+
+    private String buildAiAnalysisUserPrompt(List<InspectConfigCompareDetailVo> detailList) {
+        JSONArray itemList = new JSONArray();
+        for (InspectConfigCompareDetailVo detailVo : detailList) {
+            if (detailVo == null || detailVo.getId() == null) {
+                continue;
+            }
+            JSONObject item = new JSONObject(true);
+            item.put("detailId", detailVo.getId());
+            item.put("layer", detailVo.getLayer());
+            item.put("label", detailVo.getLabel());
+            item.put("path", detailVo.getPath());
+            item.put("status", detailVo.getStatus());
+            item.put("compareMode", detailVo.getCompareMode());
+            item.put("baselineValue", parseJsonValue(detailVo.getTargetValue()));
+            item.put("currentValue", parseJsonValue(detailVo.getSourceValue()));
+            itemList.add(item);
+        }
+        JSONObject payload = new JSONObject(true);
+        payload.put("items", itemList);
+        return "请基于以下配置基线差异列表生成风险与修复建议，仅返回JSON。\n" + payload.toJSONString();
+    }
+
+    private JSONObject executeAiPrompt(Long modelId, List<ChatMessage> messageList) throws Exception {
+        ChatModel chatModel = AiModelFactory.getChatModel(modelId);
+        if (chatModel != null) {
+            try {
+                ChatResponse response = chatModel.chat(ChatRequest.builder().messages(messageList).build());
+                JSONObject result = new JSONObject(true);
+                result.put("callMode", AI_CALL_MODE_CHAT);
+                result.put("text", response != null && response.aiMessage() != null ? response.aiMessage().text() : "");
+                return result;
+            } catch (Exception ex) {
+                if (!isStreamOnlyModelError(ex)) {
+                    throw ex;
+                }
+            }
+        }
+        StreamingChatModel streamingChatModel = AiModelFactory.getStreamingChatModel(modelId);
+        if (streamingChatModel == null) {
+            return null;
+        }
+        return executeStreamingAiCandidatePrompt(streamingChatModel, messageList);
+    }
+
+    private JSONObject buildFallbackAiAnalysis(InspectConfigCompareDetailVo detailVo, String message) {
+        JSONObject aiItem = new JSONObject(true);
+        aiItem.put("detailId", detailVo.getId());
+        aiItem.put("riskLevel", detailVo.getRiskLevel());
+        aiItem.put("riskReason", StringUtils.defaultIfBlank(message, "AI暂未返回风险分析"));
+        aiItem.put("impact", "请结合基线值与当前值确认实际影响");
+        aiItem.put("repairSuggestion", "请根据基线值调整当前配置，并重新执行巡检验证");
+        aiItem.put("verifySuggestion", "修复后重新执行巡检并确认该差异消失");
+        aiItem.put("isNoise", 0);
+        aiItem.put("blockSuggestion", Objects.equals(detailVo.getIsBlocked(), 1) ? 1 : 0);
+        return aiItem;
+    }
+
+    private boolean isAiGenerating(List<InspectConfigCompareDetailVo> detailList) {
+        if (CollectionUtils.isEmpty(detailList)) {
+            return false;
+        }
+        for (InspectConfigCompareDetailVo detailVo : detailList) {
+            if (Objects.equals(AI_ANALYSIS_STATUS_PENDING, detailVo.getAiStatus())
+                    || Objects.equals(AI_ANALYSIS_STATUS_RUNNING, detailVo.getAiStatus())) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private JSONArray buildCompareDetailJsonArray(List<InspectConfigCompareDetailVo> detailList) {
+        JSONArray result = new JSONArray();
+        if (CollectionUtils.isEmpty(detailList)) {
+            return result;
+        }
+        for (InspectConfigCompareDetailVo detailVo : detailList) {
+            JSONObject item = new JSONObject(true);
+            item.put("id", detailVo.getId());
+            item.put("taskId", detailVo.getTaskId());
+            item.put("layer", detailVo.getLayer());
+            item.put("path", detailVo.getPath());
+            item.put("label", detailVo.getLabel());
+            item.put("compareMode", detailVo.getCompareMode());
+            item.put("status", detailVo.getStatus());
+            item.put("riskLevel", detailVo.getRiskLevel());
+            item.put("isBlocked", detailVo.getIsBlocked());
+            item.put("reason", detailVo.getReason());
+            item.put("sourceValue", parseJsonValue(detailVo.getSourceValue()));
+            item.put("targetValue", parseJsonValue(detailVo.getTargetValue()));
+            item.put("aiStatus", detailVo.getAiStatus());
+            JSONObject aiAnalysis = parseJsonObject(detailVo.getAiAnalysis());
+            if (aiAnalysis != null) {
+                item.put("aiRiskLevel", aiAnalysis.getString("riskLevel"));
+                item.put("aiRiskReason", aiAnalysis.getString("riskReason"));
+                item.put("aiImpact", aiAnalysis.getString("impact"));
+                item.put("aiRepairSuggestion", aiAnalysis.getString("repairSuggestion"));
+                item.put("aiVerifySuggestion", aiAnalysis.getString("verifySuggestion"));
+                item.put("aiBlockSuggestion", aiAnalysis.getInteger("blockSuggestion"));
+            }
+            result.add(item);
+        }
+        return result;
+    }
+
+    private Object parseJsonValue(String value) {
+        if (StringUtils.isBlank(value)) {
+            return null;
+        }
+        String text = value.trim();
+        try {
+            return JSON.parse(text);
+        } catch (Exception ignored) {
+            // ignored
+        }
+        return value;
+    }
+
+    private void refreshReportCompareProjection(Long taskId) {
+        if (taskId == null) {
+            return;
+        }
+        InspectConfigCompareTaskVo taskVo = inspectConfigCompareMapper.getCompareTaskById(taskId);
+        if (taskVo == null || taskVo.getSourceSnapshotId() == null) {
+            return;
+        }
+        InspectConfigSnapshotVo snapshotVo = inspectConfigCompareMapper.getSnapshotById(taskVo.getSourceSnapshotId());
+        if (snapshotVo == null || !Objects.equals("inspect_report", snapshotVo.getSource())) {
+            return;
+        }
+        List<InspectConfigCompareDetailVo> detailList = inspectConfigCompareMapper.getCompareDetailListByTaskId(taskId);
+        InspectConfigBaselineVersionVo baselineVersion = taskVo.getBaselineVersionId() != null ? inspectConfigCompareMapper.getBaselineVersionById(taskVo.getBaselineVersionId()) : null;
+        JSONObject configCompareResult = buildReportConfigCompareResult(taskVo, detailList, baselineVersion, snapshotVo.getSchemaName());
+        if (MapUtils.isEmpty(configCompareResult)) {
+            return;
+        }
+        JSONArray issueList = configCompareResult.getJSONArray("issueList");
+        updateReportCompareProjection("INSPECT_REPORTS", snapshotVo.getResourceId(), null, snapshotVo.getSchemaName(), configCompareResult, issueList);
+        if (snapshotVo.getJobId() != null) {
+            updateReportCompareProjection("INSPECT_REPORTS_HIS", snapshotVo.getResourceId(), snapshotVo.getJobId(), snapshotVo.getSchemaName(), configCompareResult, issueList);
+        }
+    }
+
+    private void updateReportCompareProjection(String collectionName, Long resourceId, Long jobId, String schemaName, JSONObject configCompareResult, JSONArray issueList) {
+        if (StringUtils.isBlank(collectionName) || resourceId == null || MapUtils.isEmpty(configCompareResult)) {
+            return;
+        }
+        MongoCollection<Document> collection = mongoTemplate.getDb().getCollection(collectionName);
+        Document queryDoc = new Document("RESOURCE_ID", resourceId);
+        if (jobId != null) {
+            queryDoc.put("_jobid", String.valueOf(jobId));
+        }
+        FindIterable<Document> iterable = collection.find(queryDoc);
+        for (Document reportDoc : iterable) {
+            appendConfigCompareField(reportDoc);
+            Document setDoc = new Document("_config_compare_result", Document.parse(configCompareResult.toJSONString()))
+                    .append("fields", JSON.parseArray(JSON.toJSONString(reportDoc.get("fields"))));
+            if (issueList != null) {
+                setDoc.append("CONFIG_COMPARE_ISSUES", JSON.parseArray(issueList.toJSONString()));
+            }
+            collection.updateOne(new Document("_id", reportDoc.getObjectId("_id")), new Document("$set", setDoc));
+        }
+    }
+
+    private void appendConfigCompareField(Document reportDoc) {
+        if (reportDoc == null) {
+            return;
+        }
+        JSONArray fieldArray = reportDoc.get("fields") instanceof JSONArray ? (JSONArray) reportDoc.get("fields") : JSON.parseArray(JSON.toJSONString(reportDoc.get("fields")));
+        if (fieldArray == null) {
+            fieldArray = new JSONArray();
+        }
+        for (int i = 0; i < fieldArray.size(); i++) {
+            JSONObject field = fieldArray.getJSONObject(i);
+            if (field != null && Objects.equals(field.getString("name"), "CONFIG_COMPARE_ISSUES")) {
+                ensureConfigCompareFieldSubset(field);
+                reportDoc.put("fields", fieldArray);
+                return;
+            }
+        }
+        JSONObject field = new JSONObject(true);
+        field.put("name", "CONFIG_COMPARE_ISSUES");
+        field.put("desc", "配置基线差异");
+        field.put("type", "JsonArray");
+        ensureConfigCompareFieldSubset(field);
+        fieldArray.add(field);
+        reportDoc.put("fields", fieldArray);
+    }
+
+    private void ensureConfigCompareFieldSubset(JSONObject field) {
+        JSONArray subset = field.getJSONArray("subset");
+        if (subset == null) {
+            subset = new JSONArray();
+            field.put("subset", subset);
+        }
+        ensureSubsetField(subset, "layer", "层级", "String");
+        ensureSubsetField(subset, "label", "字段", "String");
+        ensureSubsetField(subset, "status", "状态", "String");
+        ensureSubsetField(subset, "riskLevel", "风险", "String");
+        ensureSubsetField(subset, "baselineVersion", "基线版本", "String");
+        ensureSubsetField(subset, "baselineValue", "基线值", "String");
+        ensureSubsetField(subset, "currentValue", "当前值", "String");
+        ensureSubsetField(subset, "reason", "说明", "String");
+        ensureSubsetField(subset, "aiRiskReason", "AI风险说明", "String");
+        ensureSubsetField(subset, "aiRepairSuggestion", "AI修复建议", "String");
+    }
+
+    private void ensureSubsetField(JSONArray subset, String name, String desc, String type) {
+        for (int i = 0; i < subset.size(); i++) {
+            JSONObject item = subset.getJSONObject(i);
+            if (item != null && Objects.equals(item.getString("name"), name)) {
+                return;
+            }
+        }
+        subset.add(buildSubsetField(name, desc, type));
+    }
+
+    private JSONObject buildSubsetField(String name, String desc, String type) {
+        JSONObject field = new JSONObject(true);
+        field.put("name", name);
+        field.put("desc", desc);
+        field.put("type", type);
+        return field;
     }
 
     private JSONObject getLatestCollectJson(Long resourceId, String schemaName) {
@@ -1255,25 +1813,7 @@ public class InspectConfigCompareService {
     }
 
     private JSONObject executeAiCandidatePrompt(Long modelId, List<ChatMessage> messageList) throws Exception {
-        ChatModel chatModel = AiModelFactory.getChatModel(modelId);
-        if (chatModel != null) {
-            try {
-                ChatResponse response = chatModel.chat(ChatRequest.builder().messages(messageList).build());
-                JSONObject result = new JSONObject(true);
-                result.put("callMode", AI_CALL_MODE_CHAT);
-                result.put("text", response != null && response.aiMessage() != null ? response.aiMessage().text() : "");
-                return result;
-            } catch (Exception ex) {
-                if (!isStreamOnlyModelError(ex)) {
-                    throw ex;
-                }
-            }
-        }
-        StreamingChatModel streamingChatModel = AiModelFactory.getStreamingChatModel(modelId);
-        if (streamingChatModel == null) {
-            return null;
-        }
-        return executeStreamingAiCandidatePrompt(streamingChatModel, messageList);
+        return executeAiPrompt(modelId, messageList);
     }
 
     private JSONObject executeStreamingAiCandidatePrompt(StreamingChatModel streamingChatModel, List<ChatMessage> messageList) throws Exception {
@@ -1782,57 +2322,115 @@ public class InspectConfigCompareService {
         if (MapUtils.isEmpty(compareData)) {
             return null;
         }
-        JSONObject summary = compareData.getJSONObject("summary");
+        InspectConfigCompareTaskVo taskVo = compareData.get("task") instanceof InspectConfigCompareTaskVo ? (InspectConfigCompareTaskVo) compareData.get("task") : null;
         JSONArray diffList = compareData.getJSONArray("diffList");
-        if (summary == null || diffList == null) {
+        if (taskVo == null || diffList == null) {
             return null;
         }
-        JSONObject result = new JSONObject(true);
-        result.put("schemaName", baselineVersion != null ? "os" : null);
-        result.put("baselineVersionId", baselineVersion != null ? baselineVersion.getId() : null);
-        result.put("baselineVersion", baselineVersion != null ? baselineVersion.getVersion() : null);
-        result.put("summary", summary);
-        JSONArray issueList = new JSONArray();
+        List<InspectConfigCompareDetailVo> detailList = new ArrayList<>();
         for (int i = 0; i < diffList.size(); i++) {
             JSONObject diff = diffList.getJSONObject(i);
             if (diff == null) {
                 continue;
             }
+            InspectConfigCompareDetailVo detailVo = new InspectConfigCompareDetailVo();
+            detailVo.setId(diff.getLong("id"));
+            detailVo.setTaskId(taskVo.getId());
+            detailVo.setLayer(diff.getString("layer"));
+            detailVo.setPath(diff.getString("path"));
+            detailVo.setLabel(diff.getString("label"));
+            detailVo.setCompareMode(diff.getString("compareMode"));
+            detailVo.setStatus(diff.getString("status"));
+            detailVo.setRiskLevel(diff.getString("riskLevel"));
+            detailVo.setIsBlocked(diff.getInteger("isBlocked"));
+            detailVo.setReason(diff.getString("reason"));
+            detailVo.setSourceValue(JSON.toJSONString(diff.get("sourceValue")));
+            detailVo.setTargetValue(JSON.toJSONString(diff.get("targetValue")));
+            detailVo.setAiStatus(diff.getString("aiStatus"));
+            JSONObject aiAnalysis = new JSONObject(true);
+            aiAnalysis.put("riskLevel", diff.getString("aiRiskLevel"));
+            aiAnalysis.put("riskReason", diff.getString("aiRiskReason"));
+            aiAnalysis.put("impact", diff.getString("aiImpact"));
+            aiAnalysis.put("repairSuggestion", diff.getString("aiRepairSuggestion"));
+            aiAnalysis.put("verifySuggestion", diff.getString("aiVerifySuggestion"));
+            aiAnalysis.put("blockSuggestion", diff.getInteger("aiBlockSuggestion"));
+            detailVo.setAiAnalysis(aiAnalysis.toJSONString());
+            detailList.add(detailVo);
+        }
+        InspectConfigSnapshotVo sourceSnapshot = compareData.get("sourceSnapshot") instanceof InspectConfigSnapshotVo ? (InspectConfigSnapshotVo) compareData.get("sourceSnapshot") : null;
+        String schemaName = sourceSnapshot != null ? sourceSnapshot.getSchemaName() : null;
+        return buildReportConfigCompareResult(taskVo, detailList, baselineVersion, schemaName);
+    }
+
+    private JSONObject buildReportConfigCompareResult(InspectConfigCompareTaskVo taskVo, List<InspectConfigCompareDetailVo> detailList, InspectConfigBaselineVersionVo baselineVersion, String schemaName) {
+        if (taskVo == null) {
+            return null;
+        }
+        JSONObject summary = StringUtils.isNotBlank(taskVo.getSummary()) ? JSONObject.parseObject(taskVo.getSummary()) : new JSONObject(true);
+        JSONObject result = new JSONObject(true);
+        result.put("schemaName", schemaName);
+        result.put("taskId", taskVo.getId());
+        result.put("baselineVersionId", baselineVersion != null ? baselineVersion.getId() : null);
+        result.put("baselineVersion", baselineVersion != null ? baselineVersion.getVersion() : null);
+        result.put("summary", summary);
+        JSONArray issueList = new JSONArray();
+        if (CollectionUtils.isEmpty(detailList)) {
+            result.put("issueList", issueList);
+            return result;
+        }
+        for (InspectConfigCompareDetailVo detailVo : detailList) {
+            if (detailVo == null) {
+                continue;
+            }
+            JSONObject aiAnalysis = parseJsonObject(detailVo.getAiAnalysis());
             JSONObject issue = new JSONObject(true);
-            issue.put("path", diff.getString("path"));
-            issue.put("label", diff.getString("label"));
-            issue.put("layer", diff.getString("layer"));
-            issue.put("status", diff.getString("status"));
-            issue.put("riskLevel", diff.getString("riskLevel"));
-            issue.put("isBlocked", diff.getInteger("isBlocked"));
-            issue.put("reason", diff.getString("reason"));
+            issue.put("detailId", detailVo.getId());
+            issue.put("path", detailVo.getPath());
+            issue.put("label", detailVo.getLabel());
+            issue.put("layer", detailVo.getLayer());
+            issue.put("status", detailVo.getStatus());
+            issue.put("riskLevel", detailVo.getRiskLevel());
+            issue.put("isBlocked", detailVo.getIsBlocked());
+            issue.put("reason", detailVo.getReason());
+            issue.put("aiStatus", detailVo.getAiStatus());
             issue.put("baselineVersion", baselineVersion != null ? baselineVersion.getVersion() : null);
-            issue.put("baselineValue", formatCompareValue(diff.get("targetValue")));
-            issue.put("currentValue", formatCompareValue(diff.get("sourceValue")));
-            issue.put("alertLevel", toAlertLevel(diff.getString("riskLevel")));
-            issue.put("alertTips", StringUtils.defaultIfBlank(diff.getString("label"), diff.getString("path")) + " 配置基线差异");
-            issue.put("alertValue", formatCompareValue(diff.get("sourceValue")));
-            issue.put("alertObject", buildCompareAlertObject(diff, baselineVersion));
+            issue.put("baselineValue", formatCompareValue(parseJsonValue(detailVo.getTargetValue())));
+            issue.put("currentValue", formatCompareValue(parseJsonValue(detailVo.getSourceValue())));
+            issue.put("alertLevel", toAlertLevel(detailVo.getRiskLevel()));
+            issue.put("alertTips", StringUtils.defaultIfBlank(detailVo.getLabel(), detailVo.getPath()) + " 配置基线差异");
+            issue.put("alertValue", formatCompareValue(parseJsonValue(detailVo.getSourceValue())));
+            issue.put("alertObject", buildCompareAlertObject(detailVo, baselineVersion));
             issue.put("ruleSeq", "CONFIG_BASELINE");
             issue.put("ruleName", baselineVersion != null ? "配置基线(" + baselineVersion.getVersion() + ")" : "配置基线");
             issue.put("collectionName", "CONFIG_BASELINE");
             issue.put("flag", "configBaseline");
             issue.put("appSystemName", baselineVersion != null ? baselineVersion.getVersion() : "-");
+            if (Objects.equals(AI_ANALYSIS_STATUS_SUCCEED, detailVo.getAiStatus()) && aiAnalysis != null) {
+                issue.put("aiRiskReason", aiAnalysis.getString("riskReason"));
+                issue.put("aiRepairSuggestion", aiAnalysis.getString("repairSuggestion"));
+            } else if (Objects.equals(AI_ANALYSIS_STATUS_PENDING, detailVo.getAiStatus())
+                    || Objects.equals(AI_ANALYSIS_STATUS_RUNNING, detailVo.getAiStatus())) {
+                issue.put("aiRiskReason", "生成中，请稍后");
+                issue.put("aiRepairSuggestion", "生成中，请稍后");
+            } else {
+                issue.put("aiRiskReason", "-");
+                issue.put("aiRepairSuggestion", "-");
+            }
             issueList.add(issue);
         }
         result.put("issueList", issueList);
         return result;
     }
 
-    private String buildCompareAlertObject(JSONObject diff, InspectConfigBaselineVersionVo baselineVersion) {
+    private String buildCompareAlertObject(InspectConfigCompareDetailVo detailVo, InspectConfigBaselineVersionVo baselineVersion) {
         StringBuilder sb = new StringBuilder();
-        sb.append("层级=").append(StringUtils.defaultIfBlank(diff.getString("layer"), "-"));
-        sb.append("\r\n字段=").append(StringUtils.defaultIfBlank(diff.getString("label"), diff.getString("path")));
+        sb.append("层级=").append(StringUtils.defaultIfBlank(detailVo.getLayer(), "-"));
+        sb.append("\r\n字段=").append(StringUtils.defaultIfBlank(detailVo.getLabel(), detailVo.getPath()));
         if (baselineVersion != null) {
             sb.append("\r\n基线版本=").append(StringUtils.defaultIfBlank(baselineVersion.getVersion(), "-"));
         }
-        sb.append("\r\n基线值=").append(formatCompareValue(diff.get("targetValue")));
-        sb.append("\r\n当前值=").append(formatCompareValue(diff.get("sourceValue")));
+        sb.append("\r\n基线值=").append(formatCompareValue(parseJsonValue(detailVo.getTargetValue())));
+        sb.append("\r\n当前值=").append(formatCompareValue(parseJsonValue(detailVo.getSourceValue())));
         return sb.toString();
     }
 

@@ -3,6 +3,8 @@ package neatlogic.module.inspect.dto;
 import neatlogic.framework.common.dto.BasePageVo;
 import neatlogic.framework.util.SnowflakeUtil;
 
+import java.util.Date;
+
 public class InspectConfigCompareDetailVo extends BasePageVo {
     private Long id;
     private Long taskId;
@@ -16,6 +18,11 @@ public class InspectConfigCompareDetailVo extends BasePageVo {
     private String reason;
     private String sourceValue;
     private String targetValue;
+    private String aiAnalysis;
+    private String aiStatus;
+    private Integer aiRetryCount;
+    private Date aiNextRetryTime;
+    private String aiLastError;
     private Integer sort;
 
     public Long getId() {
@@ -115,6 +122,46 @@ public class InspectConfigCompareDetailVo extends BasePageVo {
 
     public void setTargetValue(String targetValue) {
         this.targetValue = targetValue;
+    }
+
+    public String getAiAnalysis() {
+        return aiAnalysis;
+    }
+
+    public void setAiAnalysis(String aiAnalysis) {
+        this.aiAnalysis = aiAnalysis;
+    }
+
+    public String getAiStatus() {
+        return aiStatus;
+    }
+
+    public void setAiStatus(String aiStatus) {
+        this.aiStatus = aiStatus;
+    }
+
+    public Integer getAiRetryCount() {
+        return aiRetryCount;
+    }
+
+    public void setAiRetryCount(Integer aiRetryCount) {
+        this.aiRetryCount = aiRetryCount;
+    }
+
+    public Date getAiNextRetryTime() {
+        return aiNextRetryTime;
+    }
+
+    public void setAiNextRetryTime(Date aiNextRetryTime) {
+        this.aiNextRetryTime = aiNextRetryTime;
+    }
+
+    public String getAiLastError() {
+        return aiLastError;
+    }
+
+    public void setAiLastError(String aiLastError) {
+        this.aiLastError = aiLastError;
     }
 
     public Integer getSort() {
