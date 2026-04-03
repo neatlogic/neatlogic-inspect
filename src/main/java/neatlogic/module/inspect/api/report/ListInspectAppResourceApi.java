@@ -63,7 +63,7 @@ public class ListInspectAppResourceApi extends PrivateApiComponentBase {
             @Param(name = "appSystemId", type = ApiParamType.LONG, desc = "应用id"),
             @Param(name = "appModuleId", type = ApiParamType.LONG, desc = "应用模块id"),
             @Param(name = "envId", type = ApiParamType.LONG, desc = "环境id,envId=-2时表示无配置环境"),
-            @Param(name = "viewName", type = ApiParamType.LONG, desc = "视图名"),
+            @Param(name = "viewName", type = ApiParamType.STRING, desc = "视图名"),
             @Param(name = "inspectStatusList", type = ApiParamType.JSONARRAY, desc = "巡检状态列表"),
             @Param(name = "currentPage", type = ApiParamType.INTEGER, desc = "当前页"),
             @Param(name = "pageSize", type = ApiParamType.INTEGER, desc = "每页数据条目"),
