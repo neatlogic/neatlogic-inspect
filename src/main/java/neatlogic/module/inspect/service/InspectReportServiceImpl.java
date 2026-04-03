@@ -31,6 +31,8 @@ import neatlogic.framework.cmdb.resourcecenter.datasource.core.IResourceCenterDa
 import neatlogic.framework.cmdb.resourcecenter.datasource.core.ResourceCenterDataSourceFactory;
 import neatlogic.framework.common.constvalue.InspectStatus;
 import neatlogic.framework.crossover.CrossoverServiceFactory;
+import neatlogic.framework.inspect.report.extrainfo.core.IInspectReportExtraInfoHandler;
+import neatlogic.framework.inspect.report.extrainfo.core.InspectReportExtraInfoHandlerFactory;
 import neatlogic.framework.inspect.dao.mapper.InspectMapper;
 import neatlogic.framework.inspect.dto.InspectAlertEverydayVo;
 import neatlogic.framework.inspect.dto.InspectResourceScriptVo;
@@ -105,6 +107,16 @@ public class InspectReportServiceImpl implements InspectReportService {
                 CollectionVo collectionVo = mongoTemplate.findOne(new Query(Criteria.where("name").is(name)), CollectionVo.class, "_dictionary");
                 if (collectionVo != null) {
                     reportDoc.put("fields", collectionVo.getFields());
+                }
+                //补充巡检报告额外信息
+                for (IInspectReportExtraInfoHandler handler : InspectReportExtraInfoHandlerFactory.getHandlerList()) {
+                    try {
+                        if (handler != null) {
+                            handler.getInspectReport(resourceId, id, jobId, reportDoc, reportJson, inspectResult);
+                        }
+                    } catch (Exception ex) {
+                        logger.error("invoke inspect report extra info handler failed", ex);
+                    }
                 }
             }
             //补充inspectStatus
@@ -238,7 +250,7 @@ public class InspectReportServiceImpl implements InspectReportService {
                             JSONObject threholdJson;
                             if (MapUtils.isNotEmpty(thresholds) && MapUtils.isNotEmpty(threholdJson = thresholds.getJSONObject(alert.getString("ruleSeq")))) {
                                 dataMap.put("ruleSeq", alert.getString("ruleSeq"));
-                                dataMap.put("collectionName",inspectResult.getString("name"));
+                                dataMap.put("collectionName", inspectResult.getString("name"));
                                 dataMap.put("appSystemId", threholdJson.getLong("appSystemId"));
                                 dataMap.put("alertLevel", threholdJson.getString("level"));
                                 dataMap.put("alertTips", threholdJson.getString("name"));
@@ -252,6 +264,16 @@ public class InspectReportServiceImpl implements InspectReportService {
                             dataMap.put("alertValue", alert.getString("fieldValue"));
 
                             resourceAlertArray.add(dataMap);
+                        }
+                    }
+                    //补充额外信息
+                    for (IInspectReportExtraInfoHandler handler : InspectReportExtraInfoHandlerFactory.getHandlerList()) {
+                        try {
+                            if (handler != null) {
+                                handler.getInspectReportDetail(reportJson, resourceAlertArray);
+                            }
+                        } catch (Exception ex) {
+                            logger.error("invoke inspect report detail extra info handler failed", ex);
                         }
                     }
                 }

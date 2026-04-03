@@ -62,6 +62,7 @@ public class InspectCollectServiceImpl implements InspectCollectService {
         }
         returnObject.put("label", collectionObj.getString("label"));
         returnObject.put("name", collectionObj.getString("name"));
+        returnObject.put("collection", collectionObj.getString("collection"));
 
         JSONArray dictionaryArray = collectionObj.getJSONArray("fields");
 
@@ -141,6 +142,7 @@ public class InspectCollectServiceImpl implements InspectCollectService {
 
             returnObject.put("label", dictionaryJson.getString("label"));
             returnObject.put("name", dictionaryJson.getString("name"));
+            returnObject.put("collection", dictionaryJson.getString("collection"));
 
             //字典数组
             JSONArray dictionaryArray = dictionaryJson.getJSONArray("fields");
