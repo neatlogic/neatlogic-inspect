@@ -30,6 +30,7 @@ import org.springframework.stereotype.Component;
 
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 @Component
@@ -53,11 +54,12 @@ public class UpdateNodesByOtherHandler implements IUpdateNodes {
             searchVo.setInspectStatusList(inspectStatusList.toJavaList(String.class));
             IAutoexecJobCrossoverService autoexecJobCrossoverService = CrossoverServiceFactory.getApi(IAutoexecJobCrossoverService.class);
             IResourceCenterDataSource resourceCenterDataSource = ResourceCenterDataSourceFactory.getResourceCenterDataSource();
-            List<ResourceEntityVo> appViewList = resourceCenterDataSource.getAppViewList();
-            if (CollectionUtils.isNotEmpty(appViewList)) {
+//            List<ResourceEntityVo> appViewList = resourceCenterDataSource.getAppViewList();
+            Map<String, List<String>> viewName2FieldListMap = resourceCenterDataSource.getApplicationListDisplayViewName2FieldListMap();
+            if (MapUtils.isNotEmpty(viewName2FieldListMap)) {
                 Set<Long> resourceIdSet = new HashSet<>();
-                for (ResourceEntityVo resourceEntityVo : appViewList) {
-                    searchVo.setViewName(resourceEntityVo.getName());
+                for (Map.Entry<String, List<String>> entry : viewName2FieldListMap.entrySet()) {
+                    searchVo.setViewName(entry.getKey());
                     searchVo.setCurrentPage(1);
                     searchVo.setPageSize(100);
                     List<ResourceVo> resourceList = resourceCenterDataSource.getAppResourceList(searchVo, true);
