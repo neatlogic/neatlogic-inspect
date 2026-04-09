@@ -16,6 +16,7 @@ import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import neatlogic.framework.auth.core.AuthAction;
 import neatlogic.framework.cmdb.auth.label.CMDB;
+import neatlogic.framework.cmdb.dto.ci.CiVo;
 import neatlogic.framework.cmdb.dto.resourcecenter.AppEnvVo;
 import neatlogic.framework.cmdb.resourcecenter.datasource.core.IResourceCenterDataSource;
 import neatlogic.framework.cmdb.resourcecenter.datasource.core.ResourceCenterDataSourceFactory;
@@ -24,10 +25,13 @@ import neatlogic.framework.restful.annotation.*;
 import neatlogic.framework.restful.constvalue.OperationTypeEnum;
 import neatlogic.framework.restful.core.privateapi.PrivateApiComponentBase;
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Service
 @AuthAction(action = CMDB.class)
@@ -57,6 +61,7 @@ public class ListInspectAppModuleEnvApi extends PrivateApiComponentBase {
     @Input({
             @Param(name = "appSystemId", type = ApiParamType.LONG, isRequired = true, desc = "term.cmdb.appsystemid"),
             @Param(name = "appModuleId", type = ApiParamType.LONG, isRequired = true, desc = "term.cmdb.appmoduleid"),
+            @Param(name = "viewName", type = ApiParamType.STRING, desc = "操作系统入口视图名"),
             @Param(name = "inspectStatusList", type = ApiParamType.JSONARRAY, desc = "巡检状态列表")
     })
     @Output({
@@ -75,13 +80,38 @@ public class ListInspectAppModuleEnvApi extends PrivateApiComponentBase {
         }
         IResourceCenterDataSource resourceCenterDataSource = ResourceCenterDataSourceFactory.getResourceCenterDataSource();
         List<AppEnvVo> appEnvList = resourceCenterDataSource.getAppEnvListByAppSystemIdAndAppModuleIdAndInspectStatusList(appSystemId, appModuleId, inspectStatusList);
+        String viewName = StringUtils.trimToNull(paramObj.getString("viewName"));
+        Set<Long> targetTypeIdSet = null;
+        if (viewName != null) {
+            targetTypeIdSet = new HashSet<>(resourceCenterDataSource
+                    .getAppResourceTypeIdListByAppSystemIdAndAppModuleIdAndEnvIdAndInspectStatusList(appSystemId, appModuleId, null, inspectStatusList)
+                    .getOrDefault(viewName, new ArrayList<>()));
+        }
         for (AppEnvVo appEnvVo : appEnvList) {
+            if (appEnvVo == null || CollectionUtils.isEmpty(appEnvVo.getAppModuleList()) || appEnvVo.getAppModuleList().get(0) == null) {
+                continue;
+            }
+            List<CiVo> ciVoList = appEnvVo.getAppModuleList().get(0).getCiList();
+            if (targetTypeIdSet != null) {
+                List<CiVo> filterCiVoList = new ArrayList<>();
+                if (CollectionUtils.isNotEmpty(ciVoList)) {
+                    for (CiVo ciVo : ciVoList) {
+                        if (ciVo != null && targetTypeIdSet.contains(ciVo.getId())) {
+                            filterCiVoList.add(ciVo);
+                        }
+                    }
+                }
+                if (CollectionUtils.isEmpty(filterCiVoList)) {
+                    continue;
+                }
+                ciVoList = filterCiVoList;
+            }
             JSONObject returnObj = new JSONObject();
             JSONObject jsonObj = new JSONObject();
             jsonObj.put("id", appEnvVo.getId());
             jsonObj.put("name", appEnvVo.getName());
             returnObj.put("env", jsonObj);
-            returnObj.put("ciVoList", appEnvVo.getAppModuleList().get(0).getCiList());
+            returnObj.put("ciVoList", ciVoList);
             returnArray.add(returnObj);
         }
 //        List<ResourceVo> envResourceList = new ArrayList<>();

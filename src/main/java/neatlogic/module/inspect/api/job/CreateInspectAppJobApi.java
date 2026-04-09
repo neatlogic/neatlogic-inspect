@@ -27,14 +27,12 @@ import neatlogic.framework.autoexec.dto.job.AutoexecJobVo;
 import neatlogic.framework.autoexec.dto.node.AutoexecNodeVo;
 import neatlogic.framework.autoexec.job.action.core.AutoexecJobActionHandlerFactory;
 import neatlogic.framework.autoexec.job.action.core.IAutoexecJobActionHandler;
-import neatlogic.framework.batch.BatchRunner;
 import neatlogic.framework.cmdb.crossover.ICiCrossoverMapper;
 import neatlogic.framework.cmdb.crossover.IResourceCrossoverMapper;
 import neatlogic.framework.cmdb.dto.ci.CiVo;
 import neatlogic.framework.cmdb.dto.resourcecenter.AppModuleVo;
 import neatlogic.framework.cmdb.dto.resourcecenter.ResourceSearchVo;
 import neatlogic.framework.cmdb.dto.resourcecenter.ResourceVo;
-import neatlogic.framework.cmdb.dto.resourcecenter.config.ResourceEntityVo;
 import neatlogic.framework.cmdb.exception.resourcecenter.AppSystemNotFoundException;
 import neatlogic.framework.cmdb.resourcecenter.datasource.core.IResourceCenterDataSource;
 import neatlogic.framework.cmdb.resourcecenter.datasource.core.ResourceCenterDataSourceFactory;
@@ -49,6 +47,7 @@ import neatlogic.framework.restful.constvalue.OperationTypeEnum;
 import neatlogic.framework.restful.core.privateapi.PrivateApiComponentBase;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.MapUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -86,6 +85,7 @@ public class CreateInspectAppJobApi extends PrivateApiComponentBase {
     @Input({
             @Param(name = "appSystemId", type = ApiParamType.LONG, isRequired = true, desc = "组合工具ID"),
             @Param(name = "envList", type = ApiParamType.JSONARRAY, isRequired = true, minSize = 1, desc = "环境列表"),
+            @Param(name = "viewName", type = ApiParamType.STRING, desc = "操作系统入口视图名"),
             @Param(name = "inspectStatusList", type = ApiParamType.JSONARRAY, desc = "巡检状态列表")
     })
     @Output({})
@@ -104,6 +104,7 @@ public class CreateInspectAppJobApi extends PrivateApiComponentBase {
         if (CollectionUtils.isNotEmpty(inspectStatusArray)) {
             inspectStatusList = inspectStatusArray.toJavaList(String.class);
         }
+        String viewName = StringUtils.trimToNull(paramObj.getString("viewName"));
 //        inspectStatusList.add("warn");
 //        inspectStatusList.add("critical");
 //        inspectStatusList.add("fatal");
@@ -131,9 +132,15 @@ public class CreateInspectAppJobApi extends PrivateApiComponentBase {
                 }
                 Set<Long> typeIdSet = new HashSet<>();
                 Map<String, List<Long>> viewName2TypeIdListMap = resourceCenterDataSource.getAppResourceTypeIdListByAppSystemIdAndAppModuleIdAndEnvIdAndInspectStatusList(appSystemId, appModuleId, envId, inspectStatusList);
-                for (Map.Entry<String, List<Long>> entry : viewName2TypeIdListMap.entrySet()) {
-                    typeIdSet.addAll(entry.getValue());
-                    allResourceTypeIdSet.addAll(entry.getValue());
+                if (viewName != null) {
+                    List<Long> typeIdList = viewName2TypeIdListMap.getOrDefault(viewName, Collections.emptyList());
+                    typeIdSet.addAll(typeIdList);
+                    allResourceTypeIdSet.addAll(typeIdList);
+                } else {
+                    for (Map.Entry<String, List<Long>> entry : viewName2TypeIdListMap.entrySet()) {
+                        typeIdSet.addAll(entry.getValue());
+                        allResourceTypeIdSet.addAll(entry.getValue());
+                    }
                 }
                 ResourceSearchVo searchVo = new ResourceSearchVo();
                 searchVo.setAppSystemId(appSystemId);
@@ -172,6 +179,7 @@ public class CreateInspectAppJobApi extends PrivateApiComponentBase {
             if (CollectionUtils.isNotEmpty(searchVo.getTypeIdList())) {
                 for (Long typeId : searchVo.getTypeIdList()) {
                     JSONObject jsonObj = new JSONObject(new LinkedHashMap<>());
+                    jsonObj.put("isCreateJobSuccess", 0);
                     jsonObj.put("appSystemId", searchVo.getAppSystemId());
                     jsonObj.put("appSystemName", appSystemVo.getName());
                     jsonObj.put("appSystemAbbrName", appSystemVo.getAbbrName());
@@ -209,7 +217,7 @@ public class CreateInspectAppJobApi extends PrivateApiComponentBase {
                                 filter.put("appModuleId", searchVo.getAppModuleId());
                                 filter.put("appSystemId", searchVo.getAppSystemId());
                                 filter.put("inspectStatusList", inspectStatusList);
-                                List<AutoexecNodeVo> autoexecNodeList = getAutoexecNodeList(filter);
+                                List<AutoexecNodeVo> autoexecNodeList = getAutoexecNodeList(filter, viewName);
                                 jsonObj.put("执行目标列表", autoexecNodeList);
                                 executeNodeConfig.setOtherFilter(filter);
                                 executeConfig.setExecuteNodeConfig(executeNodeConfig);
@@ -218,18 +226,19 @@ public class CreateInspectAppJobApi extends PrivateApiComponentBase {
                                 jsonObj.put("jobId", jobVo.getId());
                                 jsonObj.put("jobName", jobVo.getName());
                             } else {
-                                jsonObj.put("message", "combopId找不到对应的组合工具，请重新设置组合工具，不发起作业");
+                                jsonObj.put("message", "在巡检定义中设置的组合工具已失效，请重新设置组合工具");
                             }
                         } else {
-                            jsonObj.put("message", "对应的模型设置组合工具，不发起作业");
+                            jsonObj.put("message", "在巡检定义中没设置组合工具");
                         }
                     } else {
-                        jsonObj.put("message", "typeId找不到对应的模型，不发起作业");
+                        jsonObj.put("message", "找不到模型："+typeId);
                     }
                     resultList.add(jsonObj);
                 }
             } else {
                 JSONObject jsonObj = new JSONObject(new LinkedHashMap<>());
+                jsonObj.put("isCreateJobSuccess", 0);
                 jsonObj.put("appSystemId", searchVo.getAppSystemId());
                 jsonObj.put("appSystemName", appSystemVo.getName());
                 jsonObj.put("appSystemAbbrName", appSystemVo.getAbbrName());
@@ -246,9 +255,8 @@ public class CreateInspectAppJobApi extends PrivateApiComponentBase {
         }
         JSONObject resultObj = new JSONObject();
         if (CollectionUtils.isNotEmpty(autoexecJobList)) {
-            ConcurrentMap<Long, Object> concurrentMap = new ConcurrentHashMap<>();
-            BatchRunner<AutoexecJobVo> runner = new BatchRunner<>();
-            runner.execute(autoexecJobList, 1, (threadIndex, dataIndex, jobVo) -> {
+            ConcurrentMap<Long, JSONObject> concurrentMap = new ConcurrentHashMap<>();
+            for (AutoexecJobVo jobVo : autoexecJobList) {
                 try {
                     IAutoexecJobActionCrossoverService autoexecJobActionCrossoverService = CrossoverServiceFactory.getApi(IAutoexecJobActionCrossoverService.class);
                     autoexecJobActionCrossoverService.validateAndCreateJobFromCombop(jobVo);
@@ -257,20 +265,26 @@ public class CreateInspectAppJobApi extends PrivateApiComponentBase {
                     fireAction.doService(jobVo);
                 } catch (Exception e) {
                     logger.error(e.getMessage(), e);
-                    concurrentMap.put(jobVo.getId(), ExceptionUtils.getStackFrames(e));
+                    JSONObject errorObj = new JSONObject();
+                    errorObj.put("errorMsg", StringUtils.defaultIfBlank(e.getMessage(), e.getClass().getName()));
+                    errorObj.put("stackTrace", ExceptionUtils.getStackFrames(e));
+                    concurrentMap.put(jobVo.getId(), errorObj);
                 }
-            }, "INSPECT-APP-JOB-MULTI-CREATE");
-            if (MapUtils.isNotEmpty(concurrentMap)) {
-                for (Map.Entry<Long, Object> entry : concurrentMap.entrySet()) {
-                    for (int i = 0; i < resultList.size(); i++) {
-                        JSONObject jsonObj = resultList.getJSONObject(i);
-                        Long jobId = jsonObj.getLong("jobId");
-                        if (Objects.equals(jobId, entry.getKey())) {
-                            jsonObj.put("message", "创建作业失败");
-                            jsonObj.put("stackTrace", entry.getValue());
-                            break;
-                        }
-                    }
+            }
+            for (int i = 0; i < resultList.size(); i++) {
+                JSONObject jsonObj = resultList.getJSONObject(i);
+                Long jobId = jsonObj.getLong("jobId");
+                if (jobId == null) {
+                    continue;
+                }
+                JSONObject errorObj = concurrentMap.get(jobId);
+                if (errorObj == null) {
+                    jsonObj.put("isCreateJobSuccess", 1);
+                } else {
+                    jsonObj.put("isCreateJobSuccess", 0);
+                    jsonObj.put("message", "创建作业失败");
+                    jsonObj.put("errorMsg", errorObj.getString("errorMsg"));
+                    jsonObj.put("stackTrace", errorObj.get("stackTrace"));
                 }
             }
         }
@@ -283,7 +297,7 @@ public class CreateInspectAppJobApi extends PrivateApiComponentBase {
         return "inspect/app/job/create";
     }
 
-    private List<AutoexecNodeVo> getAutoexecNodeList(JSONObject otherFilter) {
+    private List<AutoexecNodeVo> getAutoexecNodeList(JSONObject otherFilter, String viewName) {
         List<AutoexecNodeVo> resultList = new ArrayList<>();
         Long appSystemId = otherFilter.getLong("appSystemId");
         Long appModuleId = otherFilter.getLong("appModuleId");
@@ -302,6 +316,9 @@ public class CreateInspectAppJobApi extends PrivateApiComponentBase {
         if (MapUtils.isNotEmpty(viewName2FieldListMap)) {
             Set<Long> resourceIdSet = new HashSet<>();
             for (Map.Entry<String, List<String>> entry : viewName2FieldListMap.entrySet()) {
+                if (StringUtils.isNotBlank(viewName) && !StringUtils.equals(viewName, entry.getKey())) {
+                    continue;
+                }
                 searchVo.setViewName(entry.getKey());
                 searchVo.setCurrentPage(1);
                 searchVo.setPageSize(100);
