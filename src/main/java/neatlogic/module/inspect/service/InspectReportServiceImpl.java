@@ -31,8 +31,8 @@ import neatlogic.framework.cmdb.resourcecenter.datasource.core.IResourceCenterDa
 import neatlogic.framework.cmdb.resourcecenter.datasource.core.ResourceCenterDataSourceFactory;
 import neatlogic.framework.common.constvalue.InspectStatus;
 import neatlogic.framework.crossover.CrossoverServiceFactory;
-import neatlogic.framework.inspect.report.extrainfo.core.IInspectReportExtraInfoHandler;
-import neatlogic.framework.inspect.report.extrainfo.core.InspectReportExtraInfoHandlerFactory;
+import neatlogic.framework.inspect.report.extrainfo.core.IInspectExtraHandler;
+import neatlogic.framework.inspect.report.extrainfo.core.InspectExtraHandlerFactory;
 import neatlogic.framework.inspect.dao.mapper.InspectMapper;
 import neatlogic.framework.inspect.dto.InspectAlertEverydayVo;
 import neatlogic.framework.inspect.dto.InspectResourceScriptVo;
@@ -109,7 +109,7 @@ public class InspectReportServiceImpl implements InspectReportService {
                     reportDoc.put("fields", collectionVo.getFields());
                 }
                 //补充巡检报告额外信息
-                for (IInspectReportExtraInfoHandler handler : InspectReportExtraInfoHandlerFactory.getHandlerList()) {
+                for (IInspectExtraHandler handler : InspectExtraHandlerFactory.getHandlerList()) {
                     try {
                         if (handler != null) {
                             handler.getInspectReport(resourceId, id, jobId, reportDoc, reportJson, inspectResult);
@@ -267,7 +267,7 @@ public class InspectReportServiceImpl implements InspectReportService {
                         }
                     }
                     //补充额外信息
-                    for (IInspectReportExtraInfoHandler handler : InspectReportExtraInfoHandlerFactory.getHandlerList()) {
+                    for (IInspectExtraHandler handler : InspectExtraHandlerFactory.getHandlerList()) {
                         try {
                             if (handler != null) {
                                 handler.getInspectReportDetail(reportJson, resourceAlertArray);

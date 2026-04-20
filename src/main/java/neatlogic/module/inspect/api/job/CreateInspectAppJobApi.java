@@ -42,6 +42,8 @@ import neatlogic.framework.crossover.CrossoverServiceFactory;
 import neatlogic.framework.inspect.constvalue.JobSource;
 import neatlogic.framework.inspect.dao.mapper.InspectMapper;
 import neatlogic.framework.inspect.dto.InspectCiCombopVo;
+import neatlogic.framework.inspect.report.extrainfo.core.IInspectExtraHandler;
+import neatlogic.framework.inspect.report.extrainfo.core.InspectExtraHandlerFactory;
 import neatlogic.framework.restful.annotation.*;
 import neatlogic.framework.restful.constvalue.OperationTypeEnum;
 import neatlogic.framework.restful.core.privateapi.PrivateApiComponentBase;
@@ -86,6 +88,7 @@ public class CreateInspectAppJobApi extends PrivateApiComponentBase {
             @Param(name = "appSystemId", type = ApiParamType.LONG, isRequired = true, desc = "组合工具ID"),
             @Param(name = "envList", type = ApiParamType.JSONARRAY, isRequired = true, minSize = 1, desc = "环境列表"),
             @Param(name = "viewName", type = ApiParamType.STRING, desc = "操作系统入口视图名"),
+            @Param(name = "baselineId", type = ApiParamType.LONG, desc = "基线ID"),
             @Param(name = "inspectStatusList", type = ApiParamType.JSONARRAY, desc = "巡检状态列表")
     })
     @Output({})
@@ -205,7 +208,8 @@ public class CreateInspectAppJobApi extends PrivateApiComponentBase {
                                 jobVo.setOperationId(combopId);
                                 jobVo.setOperationType(CombopOperationType.COMBOP.getValue());
                                 jobVo.setSource(JobSource.INSPECT_APP.getValue());
-                                jobVo.setParam(new JSONObject());
+                                JSONObject jobParam = new JSONObject();
+                                jobVo.setParam(jobParam);
                                 jobVo.setName(ciVo.getLabel() + "(" + ciVo.getName() + ")");
                                 jobVo.setInvokeId(typeId);
                                 jobVo.setRouteId(appSystemId.toString());
@@ -280,6 +284,7 @@ public class CreateInspectAppJobApi extends PrivateApiComponentBase {
                 JSONObject errorObj = concurrentMap.get(jobId);
                 if (errorObj == null) {
                     jsonObj.put("isCreateJobSuccess", 1);
+                    notifyInspectAppJobCreated(jsonObj,paramObj);
                 } else {
                     jsonObj.put("isCreateJobSuccess", 0);
                     jsonObj.put("message", "创建作业失败");
@@ -295,6 +300,28 @@ public class CreateInspectAppJobApi extends PrivateApiComponentBase {
     @Override
     public String getToken() {
         return "inspect/app/job/create";
+    }
+
+    private void notifyInspectAppJobCreated(JSONObject jobObj, JSONObject paramObj) {
+        if (jobObj == null || jobObj.getLong("jobId") == null) {
+            return;
+        }
+        JSONObject jobContext = new JSONObject(true);
+        jobContext.putAll(paramObj);
+        jobContext.put("jobId", jobObj.getLong("jobId"));
+        jobContext.put("appSystemId", jobObj.getLong("appSystemId"));
+        jobContext.put("appModuleId", jobObj.getLong("appModuleId"));
+        jobContext.put("envId", jobObj.getLong("envId"));
+        jobContext.put("typeId", jobObj.getLong("typeId"));
+        for (IInspectExtraHandler handler : InspectExtraHandlerFactory.getHandlerList()) {
+            try {
+                if (handler != null) {
+                    handler.afterInspectAppJobCreated(jobContext);
+                }
+            } catch (Exception ex) {
+                logger.error("invoke inspect app job created callback failed", ex);
+            }
+        }
     }
 
     private List<AutoexecNodeVo> getAutoexecNodeList(JSONObject otherFilter, String viewName) {
