@@ -45,12 +45,32 @@ public class UpdateNodesByOtherHandler implements IUpdateNodes {
             Long appModuleId = otherFilter.getLong("appModuleId");
             Long envId = otherFilter.getLong("envId");
             Long typeId = otherFilter.getLong("typeId");
+            JSONArray appSystemIdList = otherFilter.getJSONArray("appSystemIdList");
+            JSONArray appModuleIdList = otherFilter.getJSONArray("appModuleIdList");
+            JSONArray envIdList = otherFilter.getJSONArray("envIdList");
+            JSONArray typeIdList = otherFilter.getJSONArray("typeIdList");
             JSONArray inspectStatusList = otherFilter.getJSONArray("inspectStatusList");
             ResourceSearchVo searchVo = new ResourceSearchVo();
-            searchVo.setAppSystemId(appSystemId);
-            searchVo.setAppModuleId(appModuleId);
-            searchVo.setEnvId(envId);
-            searchVo.setTypeId(typeId);
+            if (CollectionUtils.isNotEmpty(appSystemIdList)) {
+                searchVo.setAppSystemIdList(appSystemIdList.toJavaList(Long.class));
+            } else {
+                searchVo.setAppSystemId(appSystemId);
+            }
+            if (CollectionUtils.isNotEmpty(appModuleIdList)) {
+                searchVo.setAppModuleIdList(appModuleIdList.toJavaList(Long.class));
+            } else {
+                searchVo.setAppModuleId(appModuleId);
+            }
+            if (CollectionUtils.isNotEmpty(envIdList)) {
+                searchVo.setEnvIdList(envIdList.toJavaList(Long.class));
+            } else {
+                searchVo.setEnvId(envId);
+            }
+            if (CollectionUtils.isNotEmpty(typeIdList)) {
+                searchVo.setTypeIdList(typeIdList.toJavaList(Long.class));
+            } else {
+                searchVo.setTypeId(typeId);
+            }
             searchVo.setInspectStatusList(inspectStatusList.toJavaList(String.class));
             IAutoexecJobCrossoverService autoexecJobCrossoverService = CrossoverServiceFactory.getApi(IAutoexecJobCrossoverService.class);
             IResourceCenterDataSource resourceCenterDataSource = ResourceCenterDataSourceFactory.getResourceCenterDataSource();
