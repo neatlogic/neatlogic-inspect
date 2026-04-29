@@ -28,6 +28,7 @@ import javax.annotation.Resource;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -58,7 +59,13 @@ public class ScheduleInspectJobSourceHandler implements IAutoexecJobSource {
         }
         List<AutoexecJobRouteVo> resultList = new ArrayList<>();
         List<InspectScheduleVo> list = inspectScheduleMapper.getInspectScheduleListByIdList(idList);
-        Set<Long> ciIdSet = list.stream().map(InspectScheduleVo::getCiId).collect(Collectors.toSet());
+        if (CollectionUtils.isEmpty(list)) {
+            return resultList;
+        }
+        Set<Long> ciIdSet = list.stream().map(InspectScheduleVo::getCiId).filter(Objects::nonNull).collect(Collectors.toSet());
+        if (CollectionUtils.isEmpty(ciIdSet)) {
+            return resultList;
+        }
         ICiCrossoverMapper ciCrossoverMapper = CrossoverServiceFactory.getApi(ICiCrossoverMapper.class);
         List<CiVo> ciList = ciCrossoverMapper.getCiByIdList(new ArrayList<>(ciIdSet));
         Map<Long, CiVo> ciMap = ciList.stream().collect(Collectors.toMap(e -> e.getId(), e -> e));

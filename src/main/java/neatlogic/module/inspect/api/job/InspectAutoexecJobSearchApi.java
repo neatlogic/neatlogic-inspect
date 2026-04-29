@@ -22,12 +22,14 @@ import neatlogic.framework.crossover.CrossoverServiceFactory;
 import neatlogic.framework.inspect.auth.INSPECT_EXECUTE;
 import neatlogic.framework.inspect.auth.INSPECT_SCHEDULE_EXECUTE;
 import neatlogic.framework.inspect.constvalue.JobSource;
+import neatlogic.framework.inspect.job.source.IInspectAutoexecJobSourceProvider;
 import neatlogic.framework.restful.annotation.*;
 import neatlogic.framework.restful.constvalue.OperationTypeEnum;
 import neatlogic.framework.restful.core.privateapi.PrivateApiComponentBase;
 import neatlogic.framework.util.TableResultUtil;
 import neatlogic.framework.util.TimeUtil;
 import org.apache.commons.collections4.MapUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -42,6 +44,9 @@ import java.util.List;
 @AuthAction(action = INSPECT_EXECUTE.class)
 @OperationType(type = OperationTypeEnum.SEARCH)
 public class InspectAutoexecJobSearchApi extends PrivateApiComponentBase {
+    @Autowired(required = false)
+    private List<IInspectAutoexecJobSourceProvider> inspectAutoexecJobSourceProviderList;
+
     @Override
     public String getName() {
         return "查询巡检作业列表";
@@ -91,6 +96,11 @@ public class InspectAutoexecJobSearchApi extends PrivateApiComponentBase {
         sourceList.add(JobSource.INSPECT_APP.getValue());
         sourceList.add(JobSource.SCHEDULE_INSPECT.getValue());
         sourceList.add(JobSource.SCHEDULE_INSPECT_APP.getValue());
+        if (inspectAutoexecJobSourceProviderList != null) {
+            for (IInspectAutoexecJobSourceProvider provider : inspectAutoexecJobSourceProviderList) {
+                sourceList.addAll(provider.getSourceList());
+            }
+        }
         jobVo.setSourceList(sourceList);
         IAutoexecJobCrossoverService iAutoexecJobCrossoverService = CrossoverServiceFactory.getApi(IAutoexecJobCrossoverService.class);
         return TableResultUtil.getResult(iAutoexecJobCrossoverService.searchJob(jobVo), jobVo);

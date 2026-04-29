@@ -29,6 +29,7 @@ import javax.annotation.Resource;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -58,7 +59,13 @@ public class ScheduleInspectAppJobSourceHandler implements IAutoexecJobSource {
         }
         List<AutoexecJobRouteVo> resultList = new ArrayList<>();
         List<InspectAppSystemScheduleVo> list = inspectScheduleMapper.getInspectAppSystemScheduleListByIdList(idList);
-        Set<Long> appSystemIdSet = list.stream().map(InspectAppSystemScheduleVo::getAppSystemId).collect(Collectors.toSet());
+        if (CollectionUtils.isEmpty(list)) {
+            return resultList;
+        }
+        Set<Long> appSystemIdSet = list.stream().map(InspectAppSystemScheduleVo::getAppSystemId).filter(Objects::nonNull).collect(Collectors.toSet());
+        if (CollectionUtils.isEmpty(appSystemIdSet)) {
+            return resultList;
+        }
         IResourceCrossoverMapper resourceCrossoverMapper = CrossoverServiceFactory.getApi(IResourceCrossoverMapper.class);
         List<AppSystemVo> appSystemList = resourceCrossoverMapper.getAppSystemListByIdList(new ArrayList<>(appSystemIdSet));
         Map<Long, AppSystemVo> appSystemMap = appSystemList.stream().collect(Collectors.toMap(e -> e.getId(), e -> e));
