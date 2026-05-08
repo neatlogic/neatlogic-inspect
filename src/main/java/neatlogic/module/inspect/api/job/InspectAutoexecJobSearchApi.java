@@ -19,8 +19,7 @@ import neatlogic.framework.autoexec.dto.job.AutoexecJobVo;
 import neatlogic.framework.common.constvalue.ApiParamType;
 import neatlogic.framework.common.dto.BasePageVo;
 import neatlogic.framework.crossover.CrossoverServiceFactory;
-import neatlogic.framework.inspect.auth.INSPECT_EXECUTE;
-import neatlogic.framework.inspect.auth.INSPECT_SCHEDULE_EXECUTE;
+import neatlogic.framework.inspect.auth.INSPECT_BASE;
 import neatlogic.framework.inspect.constvalue.JobSource;
 import neatlogic.framework.inspect.job.source.IInspectAutoexecJobSourceProvider;
 import neatlogic.framework.restful.annotation.*;
@@ -40,8 +39,7 @@ import java.util.List;
  * @date 2022/1/24 5:54 下午
  */
 @Service
-@AuthAction(action = INSPECT_SCHEDULE_EXECUTE.class)
-@AuthAction(action = INSPECT_EXECUTE.class)
+@AuthAction(action = INSPECT_BASE.class)
 @OperationType(type = OperationTypeEnum.SEARCH)
 public class InspectAutoexecJobSearchApi extends PrivateApiComponentBase {
     @Autowired(required = false)
