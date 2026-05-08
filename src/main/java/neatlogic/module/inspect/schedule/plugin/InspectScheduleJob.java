@@ -55,6 +55,11 @@ import java.util.Objects;
 @Component
 @DisallowConcurrentExecution
 public class InspectScheduleJob extends JobBase {
+    @Override
+    public String getName() {
+        return "资产巡检定时执行";
+    }
+
 
     @Resource
     InspectScheduleMapper inspectScheduleMapper;

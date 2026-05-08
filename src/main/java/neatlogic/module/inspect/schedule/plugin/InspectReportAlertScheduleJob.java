@@ -29,6 +29,11 @@ import javax.annotation.Resource;
 @Deprecated
 @DisallowConcurrentExecution
 public class InspectReportAlertScheduleJob extends JobBase {
+    @Override
+    public String getName() {
+        return "巡检报告告警定时检查";
+    }
+
     private static final String CRON_EXPRESSION = "0 0 0 * * ?";//每天凌晨0点跑
 
     @Resource

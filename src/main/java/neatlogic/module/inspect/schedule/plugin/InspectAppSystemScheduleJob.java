@@ -59,6 +59,11 @@ import java.util.*;
 @Component
 @DisallowConcurrentExecution
 public class InspectAppSystemScheduleJob extends JobBase {
+    @Override
+    public String getName() {
+        return "应用巡检定时执行";
+    }
+
 
     private Logger logger = LoggerFactory.getLogger(InspectAppSystemScheduleJob.class);
 
