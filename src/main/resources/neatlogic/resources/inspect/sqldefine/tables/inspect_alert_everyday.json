@@ -1,0 +1,67 @@
+{
+  "moduleId": "inspect",
+  "name": "inspect_alert_everyday",
+  "label": "巡检告警统计表",
+  "description": "巡检告警统计表 可用于巡检相关的关联查询等报表查询场景。",
+  "fields": [
+    {
+      "name": "report_time",
+      "type": "date",
+      "description": "巡检时间，作为当前表记录的主键或唯一定位字段。"
+    },
+    {
+      "name": "resource_id",
+      "type": "bigint",
+      "description": "资产ID，作为当前表记录的主键或唯一定位字段。"
+    },
+    {
+      "name": "alert_level",
+      "type": "varchar(20)",
+      "description": "告警等级，已建立普通索引，适合用于过滤、关联或排序查询。"
+    },
+    {
+      "name": "alert_object",
+      "type": "text",
+      "description": "告警对象，作为当前表记录的主键或唯一定位字段。"
+    },
+    {
+      "name": "alert_rule",
+      "type": "varchar(255)",
+      "description": "告警规则。"
+    },
+    {
+      "name": "alert_tips",
+      "type": "varchar(255)",
+      "description": "告警提示。"
+    },
+    {
+      "name": "alert_value",
+      "type": "varchar(200)",
+      "description": "告警值。"
+    }
+  ],
+  "indexes": [
+    {
+      "name": "PRIMARY",
+      "type": "BTREE",
+      "unique": true,
+      "primary": true,
+      "columns": [
+        "resource_id",
+        "report_time",
+        "alert_object"
+      ],
+      "description": "主键索引，覆盖 resource_id、report_time、alert_object 字段，适合用于唯一定位记录和主表关联查询。"
+    },
+    {
+      "name": "idx_alertlevel",
+      "type": "BTREE",
+      "unique": false,
+      "primary": false,
+      "columns": [
+        "alert_level"
+      ],
+      "description": "普通索引，覆盖 alert_level 字段，适合用于过滤、关联或排序查询。"
+    }
+  ]
+}

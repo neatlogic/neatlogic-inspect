@@ -1,0 +1,60 @@
+{
+  "moduleId": "inspect",
+  "name": "inspect_config_file_path",
+  "label": "巡检资源配置文件路径",
+  "description": "巡检资源配置文件路径 可用于巡检相关的关联查询等报表查询场景。",
+  "fields": [
+    {
+      "name": "id",
+      "type": "bigint",
+      "description": "唯一标识，作为当前表记录的主键或唯一定位字段。"
+    },
+    {
+      "name": "resource_id",
+      "type": "bigint",
+      "description": "资源id，已建立普通索引，适合用于过滤、关联或排序查询。"
+    },
+    {
+      "name": "path",
+      "type": "text",
+      "description": "路径。"
+    },
+    {
+      "name": "md5",
+      "type": "varchar(100)",
+      "description": "最新配置文件MD5。"
+    },
+    {
+      "name": "inspect_time",
+      "type": "timestamp(3)",
+      "description": "最近修改时间。"
+    },
+    {
+      "name": "file_id",
+      "type": "bigint",
+      "description": "文件id。"
+    }
+  ],
+  "indexes": [
+    {
+      "name": "PRIMARY",
+      "type": "BTREE",
+      "unique": true,
+      "primary": true,
+      "columns": [
+        "id"
+      ],
+      "description": "主键索引，覆盖 id 字段，适合用于唯一定位记录和主表关联查询。"
+    },
+    {
+      "name": "idx_resource_id",
+      "type": "BTREE",
+      "unique": false,
+      "primary": false,
+      "columns": [
+        "resource_id"
+      ],
+      "description": "普通索引，覆盖 resource_id 字段，适合用于过滤、关联或排序查询。"
+    }
+  ]
+}

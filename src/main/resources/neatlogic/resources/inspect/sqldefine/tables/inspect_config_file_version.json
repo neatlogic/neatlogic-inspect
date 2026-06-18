@@ -1,0 +1,75 @@
+{
+  "moduleId": "inspect",
+  "name": "inspect_config_file_version",
+  "label": "巡检资源配置文件版本",
+  "description": "巡检资源配置文件版本 可用于巡检相关的关联查询等报表查询场景。",
+  "fields": [
+    {
+      "name": "id",
+      "type": "bigint",
+      "description": "唯一标识，作为当前表记录的主键或唯一定位字段。"
+    },
+    {
+      "name": "md5",
+      "type": "varchar(100)",
+      "description": "MD5。"
+    },
+    {
+      "name": "inspect_time",
+      "type": "timestamp(3)",
+      "description": "巡检时间。"
+    },
+    {
+      "name": "file_id",
+      "type": "bigint",
+      "description": "配置文件id。"
+    },
+    {
+      "name": "audit_id",
+      "type": "bigint",
+      "description": "巡检记录id，已建立普通索引，适合用于过滤、关联或排序查询。"
+    },
+    {
+      "name": "path_id",
+      "type": "bigint",
+      "description": "路径id，已建立普通索引，适合用于过滤、关联或排序查询。"
+    },
+    {
+      "name": "job_id",
+      "type": "bigint",
+      "description": "作业ID。"
+    }
+  ],
+  "indexes": [
+    {
+      "name": "PRIMARY",
+      "type": "BTREE",
+      "unique": true,
+      "primary": true,
+      "columns": [
+        "id"
+      ],
+      "description": "主键索引，覆盖 id 字段，适合用于唯一定位记录和主表关联查询。"
+    },
+    {
+      "name": "idx_path_id",
+      "type": "BTREE",
+      "unique": false,
+      "primary": false,
+      "columns": [
+        "path_id"
+      ],
+      "description": "普通索引，覆盖 path_id 字段，适合用于过滤、关联或排序查询。"
+    },
+    {
+      "name": "idx_record_id",
+      "type": "BTREE",
+      "unique": false,
+      "primary": false,
+      "columns": [
+        "audit_id"
+      ],
+      "description": "普通索引，覆盖 audit_id 字段，适合用于过滤、关联或排序查询。"
+    }
+  ]
+}

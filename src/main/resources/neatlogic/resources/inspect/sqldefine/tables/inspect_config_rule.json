@@ -1,0 +1,131 @@
+{
+  "moduleId": "inspect",
+  "name": "inspect_config_rule",
+  "label": "巡检配置比对规则",
+  "description": "巡检配置比对规则 可用于巡检相关的时间维度统计、关联查询等报表查询场景。",
+  "fields": [
+    {
+      "name": "id",
+      "type": "bigint",
+      "description": "唯一标识，作为当前表记录的主键或唯一定位字段。"
+    },
+    {
+      "name": "baseline_id",
+      "type": "bigint",
+      "description": "基线ID，0代表全局规则，已建立普通索引，适合用于过滤、关联或排序查询。"
+    },
+    {
+      "name": "layer",
+      "type": "varchar(50)",
+      "description": "层级：hardware/kernel/os/application，已建立普通索引，适合用于过滤、关联或排序查询。"
+    },
+    {
+      "name": "path_hash",
+      "type": "char(32)",
+      "description": "路径哈希。"
+    },
+    {
+      "name": "path",
+      "type": "varchar(500)",
+      "description": "字段路径。"
+    },
+    {
+      "name": "name",
+      "type": "varchar(255)",
+      "description": "字段名称。"
+    },
+    {
+      "name": "compare_mode",
+      "type": "varchar(50)",
+      "description": "比对模式：exact/set/object_by_key/kv_map/regex/range，已建立普通索引，适合用于过滤、关联或排序查询。"
+    },
+    {
+      "name": "is_required",
+      "type": "tinyint(1)",
+      "description": "是否必选。"
+    },
+    {
+      "name": "is_ignore",
+      "type": "tinyint(1)",
+      "description": "是否忽略。"
+    },
+    {
+      "name": "risk_weight",
+      "type": "int",
+      "description": "风险权重。"
+    },
+    {
+      "name": "sort",
+      "type": "int",
+      "description": "排序。"
+    },
+    {
+      "name": "config",
+      "type": "mediumtext",
+      "description": "规则配置。"
+    },
+    {
+      "name": "fcd",
+      "type": "timestamp(3)",
+      "description": "创建时间。"
+    },
+    {
+      "name": "fcu",
+      "type": "char(32)",
+      "description": "创建人。"
+    },
+    {
+      "name": "lcd",
+      "type": "timestamp(3)",
+      "description": "修改时间。"
+    },
+    {
+      "name": "lcu",
+      "type": "char(32)",
+      "description": "修改人。"
+    }
+  ],
+  "indexes": [
+    {
+      "name": "PRIMARY",
+      "type": "BTREE",
+      "unique": true,
+      "primary": true,
+      "columns": [
+        "id"
+      ],
+      "description": "主键索引，覆盖 id 字段，适合用于唯一定位记录和主表关联查询。"
+    },
+    {
+      "name": "idx_compare_mode",
+      "type": "BTREE",
+      "unique": false,
+      "primary": false,
+      "columns": [
+        "compare_mode"
+      ],
+      "description": "普通索引，覆盖 compare_mode 字段，适合用于过滤、关联或排序查询。"
+    },
+    {
+      "name": "idx_layer",
+      "type": "BTREE",
+      "unique": false,
+      "primary": false,
+      "columns": [
+        "layer"
+      ],
+      "description": "普通索引，覆盖 layer 字段，适合用于过滤、关联或排序查询。"
+    },
+    {
+      "name": "uk_baseline_path_hash",
+      "type": "BTREE",
+      "unique": true,
+      "primary": false,
+      "columns": [
+        "baseline_id",
+        "path_hash"
+      ],
+      "description": "唯一索引，覆盖 baseline_id、path_hash 字段，适合用于精确检索、唯一性判断和去重查询。"
+    }
+  ]
+}

@@ -1,0 +1,170 @@
+{
+  "moduleId": "inspect",
+  "name": "inspect_baseline_compare_detail",
+  "label": "巡检配置比对明细",
+  "description": "巡检配置比对明细 可用于巡检相关的状态跟踪、关联查询等报表查询场景。",
+  "fields": [
+    {
+      "name": "id",
+      "type": "bigint",
+      "description": "唯一标识，作为当前表记录的主键或唯一定位字段。"
+    },
+    {
+      "name": "task_id",
+      "type": "bigint",
+      "description": "比对任务ID，已建立普通索引，适合用于过滤、关联或排序查询。"
+    },
+    {
+      "name": "layer",
+      "type": "varchar(50)",
+      "description": "层级：hardware/kernel/os/application，已建立普通索引，适合用于过滤、关联或排序查询。"
+    },
+    {
+      "name": "path",
+      "type": "varchar(500)",
+      "description": "字段路径，已建立普通索引，适合用于过滤、关联或排序查询。"
+    },
+    {
+      "name": "label",
+      "type": "varchar(255)",
+      "description": "字段名称。"
+    },
+    {
+      "name": "compare_mode",
+      "type": "varchar(50)",
+      "description": "比对模式：exact/set/object_by_key/kv_map/regex/range。"
+    },
+    {
+      "name": "status",
+      "type": "varchar(50)",
+      "description": "明细状态：different/missing/additional/ignored。"
+    },
+    {
+      "name": "risk_level",
+      "type": "varchar(50)",
+      "description": "风险等级，已建立普通索引，适合用于过滤、关联或排序查询。"
+    },
+    {
+      "name": "is_blocked",
+      "type": "tinyint(1)",
+      "description": "是否阻断。"
+    },
+    {
+      "name": "reason",
+      "type": "varchar(500)",
+      "description": "差异原因。"
+    },
+    {
+      "name": "source_value",
+      "type": "mediumtext",
+      "description": "源值。"
+    },
+    {
+      "name": "target_value",
+      "type": "mediumtext",
+      "description": "目标值。"
+    },
+    {
+      "name": "ai_analysis",
+      "type": "mediumtext",
+      "description": "AI风险与修复建议。"
+    },
+    {
+      "name": "ai_status",
+      "type": "varchar(50)",
+      "description": "AI分析状态，已建立普通索引，适合用于过滤、关联或排序查询。"
+    },
+    {
+      "name": "ai_retry_count",
+      "type": "int",
+      "description": "AI重试次数。"
+    },
+    {
+      "name": "ai_next_retry_time",
+      "type": "timestamp(3)",
+      "description": "AI下次重试时间，已建立普通索引，适合用于过滤、关联或排序查询。"
+    },
+    {
+      "name": "ai_last_error",
+      "type": "mediumtext",
+      "description": "AI最后一次错误信息。"
+    },
+    {
+      "name": "sort",
+      "type": "int",
+      "description": "排序。"
+    }
+  ],
+  "indexes": [
+    {
+      "name": "PRIMARY",
+      "type": "BTREE",
+      "unique": true,
+      "primary": true,
+      "columns": [
+        "id"
+      ],
+      "description": "主键索引，覆盖 id 字段，适合用于唯一定位记录和主表关联查询。"
+    },
+    {
+      "name": "idx_ai_next_retry_time",
+      "type": "BTREE",
+      "unique": false,
+      "primary": false,
+      "columns": [
+        "ai_next_retry_time"
+      ],
+      "description": "普通索引，覆盖 ai_next_retry_time 字段，适合用于过滤、关联或排序查询。"
+    },
+    {
+      "name": "idx_ai_status",
+      "type": "BTREE",
+      "unique": false,
+      "primary": false,
+      "columns": [
+        "ai_status"
+      ],
+      "description": "普通索引，覆盖 ai_status 字段，适合用于过滤、关联或排序查询。"
+    },
+    {
+      "name": "idx_layer",
+      "type": "BTREE",
+      "unique": false,
+      "primary": false,
+      "columns": [
+        "layer"
+      ],
+      "description": "普通索引，覆盖 layer 字段，适合用于过滤、关联或排序查询。"
+    },
+    {
+      "name": "idx_path",
+      "type": "BTREE",
+      "unique": false,
+      "primary": false,
+      "columns": [
+        "path"
+      ],
+      "description": "普通索引，覆盖 path 字段，适合用于过滤、关联或排序查询。"
+    },
+    {
+      "name": "idx_risk_level",
+      "type": "BTREE",
+      "unique": false,
+      "primary": false,
+      "columns": [
+        "risk_level"
+      ],
+      "description": "普通索引，覆盖 risk_level 字段，适合用于过滤、关联或排序查询。"
+    },
+    {
+      "name": "idx_task_id",
+      "type": "BTREE",
+      "unique": false,
+      "primary": false,
+      "columns": [
+        "task_id"
+      ],
+      "description": "普通索引，覆盖 task_id 字段，适合用于过滤、关联或排序查询。"
+    }
+  ]
+}

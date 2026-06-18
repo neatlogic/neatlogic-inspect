@@ -1,0 +1,35 @@
+{
+  "moduleId": "inspect",
+  "name": "inspect_accessendpoint_script",
+  "label": "资产清单的脚本关联表",
+  "description": "资产清单的脚本关联表 可用于巡检相关的关联查询等报表查询场景。",
+  "fields": [
+    {
+      "name": "resource_id",
+      "type": "bigint",
+      "description": "资源id，作为当前表记录的主键或唯一定位字段。"
+    },
+    {
+      "name": "script_id",
+      "type": "bigint",
+      "description": "脚本id。"
+    },
+    {
+      "name": "config",
+      "type": "text",
+      "description": "拓展配置。"
+    }
+  ],
+  "indexes": [
+    {
+      "name": "PRIMARY",
+      "type": "BTREE",
+      "unique": true,
+      "primary": true,
+      "columns": [
+        "resource_id"
+      ],
+      "description": "主键索引，覆盖 resource_id 字段，适合用于唯一定位记录和主表关联查询。"
+    }
+  ]
+}

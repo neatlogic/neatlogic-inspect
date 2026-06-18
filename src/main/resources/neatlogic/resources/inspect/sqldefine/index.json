@@ -1,0 +1,140 @@
+{
+  "moduleId": "inspect",
+  "tables": [
+    {
+      "name": "inspect_accessendpoint_script",
+      "label": "资产清单的脚本关联表",
+      "description": "资产清单的脚本关联表 可用于巡检相关的关联查询等报表查询场景。"
+    },
+    {
+      "name": "inspect_alert_everyday",
+      "label": "巡检告警统计表",
+      "description": "巡检告警统计表 可用于巡检相关的关联查询等报表查询场景。"
+    },
+    {
+      "name": "inspect_appsystem_schedule",
+      "label": "定时巡检",
+      "description": "定时巡检 可用于巡检相关的启用状态筛选、时间维度统计、关联查询等报表查询场景。"
+    },
+    {
+      "name": "inspect_baseline",
+      "label": "巡检配置比对基线",
+      "description": "巡检配置比对基线 可用于巡检相关的状态跟踪、时间维度统计等报表查询场景。"
+    },
+    {
+      "name": "inspect_baseline_ai_setting",
+      "label": "巡检配置比对AI智能体设置",
+      "description": "巡检配置比对AI智能体设置 可用于巡检相关的时间维度统计、关联查询等报表查询场景。"
+    },
+    {
+      "name": "inspect_baseline_compare_detail",
+      "label": "巡检配置比对明细",
+      "description": "巡检配置比对明细 可用于巡检相关的状态跟踪、关联查询等报表查询场景。"
+    },
+    {
+      "name": "inspect_baseline_compare_task",
+      "label": "巡检配置比对任务",
+      "description": "巡检配置比对任务 可用于巡检相关的状态跟踪、时间维度统计、关联查询等报表查询场景。"
+    },
+    {
+      "name": "inspect_baseline_job",
+      "label": "巡检作业基线关系",
+      "description": "巡检作业基线关系 可用于巡检相关的时间维度统计、关联查询等报表查询场景。"
+    },
+    {
+      "name": "inspect_baseline_job_source",
+      "label": "巡检作业来源",
+      "description": "巡检作业来源 可用于巡检相关的时间维度统计、关联查询等报表查询场景。"
+    },
+    {
+      "name": "inspect_baseline_job_task",
+      "label": "标签基线巡检任务",
+      "description": "标签基线巡检任务 可用于巡检相关的状态跟踪、时间维度统计等报表查询场景。"
+    },
+    {
+      "name": "inspect_baseline_job_task_source",
+      "label": "标签基线巡检任务来源",
+      "description": "标签基线巡检任务来源 可用于巡检相关的时间维度统计、关联查询等报表查询场景。"
+    },
+    {
+      "name": "inspect_baseline_schedule",
+      "label": "基线定时巡检作业",
+      "description": "基线定时巡检作业 可用于巡检相关的启用状态筛选、时间维度统计等报表查询场景。"
+    },
+    {
+      "name": "inspect_baseline_snapshot",
+      "label": "巡检配置比对快照",
+      "description": "巡检配置比对快照 可用于巡检相关的时间维度统计、关联查询等报表查询场景。"
+    },
+    {
+      "name": "inspect_baseline_snapshot_source",
+      "label": "巡检配置快照来源",
+      "description": "巡检配置快照来源 可用于巡检相关的时间维度统计、关联查询等报表查询场景。"
+    },
+    {
+      "name": "inspect_baseline_source",
+      "label": "巡检基线来源",
+      "description": "巡检基线来源 可用于巡检相关的时间维度统计、关联查询等报表查询场景。"
+    },
+    {
+      "name": "inspect_baseline_tag",
+      "label": "基线管理已选标签",
+      "description": "基线管理已选标签 可用于巡检相关的时间维度统计、关联查询等报表查询场景。"
+    },
+    {
+      "name": "inspect_baseline_template",
+      "label": "基线模板层级",
+      "description": "基线模板层级 可用于巡检相关的时间维度统计、关联查询等报表查询场景。"
+    },
+    {
+      "name": "inspect_baseline_template_auth",
+      "label": "基线模板层级编辑授权",
+      "description": "基线模板层级编辑授权 可用于巡检相关的时间维度统计、关联查询等报表查询场景。"
+    },
+    {
+      "name": "inspect_baseline_template_param",
+      "label": "基线模板参数",
+      "description": "基线模板参数 可用于巡检相关的时间维度统计、关联查询等报表查询场景。"
+    },
+    {
+      "name": "inspect_ci_combop",
+      "label": "巡检配置组合",
+      "description": "巡检配置组合 可用于巡检相关的关联查询等报表查询场景。"
+    },
+    {
+      "name": "inspect_config_file_audit",
+      "label": "巡检资源配置文件记录",
+      "description": "巡检资源配置文件记录 可用于巡检相关的关联查询等报表查询场景。"
+    },
+    {
+      "name": "inspect_config_file_last_change_time",
+      "label": "巡检资产最近变更时间",
+      "description": "巡检资产最近变更时间 可用于巡检相关的关联查询等报表查询场景。"
+    },
+    {
+      "name": "inspect_config_file_path",
+      "label": "巡检资源配置文件路径",
+      "description": "巡检资源配置文件路径 可用于巡检相关的关联查询等报表查询场景。"
+    },
+    {
+      "name": "inspect_config_file_version",
+      "label": "巡检资源配置文件版本",
+      "description": "巡检资源配置文件版本 可用于巡检相关的关联查询等报表查询场景。"
+    },
+    {
+      "name": "inspect_config_rule",
+      "label": "巡检配置比对规则",
+      "description": "巡检配置比对规则 可用于巡检相关的时间维度统计、关联查询等报表查询场景。"
+    },
+    {
+      "name": "inspect_new_problem_customview",
+      "label": "巡检报告个人视图",
+      "description": "巡检报告个人视图 可用于巡检相关数据的查询、筛选和报表展示。"
+    },
+    {
+      "name": "inspect_schedule",
+      "label": "定时巡检",
+      "description": "定时巡检 可用于巡检相关的启用状态筛选、时间维度统计、关联查询等报表查询场景。"
+    }
+  ]
+}

@@ -1,0 +1,30 @@
+{
+  "moduleId": "inspect",
+  "name": "inspect_ci_combop",
+  "label": "巡检配置组合",
+  "description": "巡检配置组合 可用于巡检相关的关联查询等报表查询场景。",
+  "fields": [
+    {
+      "name": "ci_id",
+      "type": "bigint",
+      "description": "ciType，作为当前表记录的主键或唯一定位字段。"
+    },
+    {
+      "name": "combop_id",
+      "type": "bigint",
+      "description": "组合工具id。"
+    }
+  ],
+  "indexes": [
+    {
+      "name": "PRIMARY",
+      "type": "BTREE",
+      "unique": true,
+      "primary": true,
+      "columns": [
+        "ci_id"
+      ],
+      "description": "主键索引，覆盖 ci_id 字段，适合用于唯一定位记录和主表关联查询。"
+    }
+  ]
+}

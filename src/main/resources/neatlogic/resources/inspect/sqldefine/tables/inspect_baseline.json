@@ -1,0 +1,115 @@
+{
+  "moduleId": "inspect",
+  "name": "inspect_baseline",
+  "label": "巡检配置比对基线",
+  "description": "巡检配置比对基线 可用于巡检相关的状态跟踪、时间维度统计等报表查询场景。",
+  "fields": [
+    {
+      "name": "id",
+      "type": "bigint",
+      "description": "唯一标识，作为当前表记录的主键或唯一定位字段。"
+    },
+    {
+      "name": "name",
+      "type": "varchar(100)",
+      "description": "基线名称。"
+    },
+    {
+      "name": "description",
+      "type": "text",
+      "description": "说明。"
+    },
+    {
+      "name": "status",
+      "type": "varchar(50)",
+      "description": "状态：draft/pending_approval/approved/active/rejected/archived，已建立普通索引，适合用于过滤、关联或排序查询。"
+    },
+    {
+      "name": "baseline_data",
+      "type": "longtext",
+      "description": "基线数据，key=value纯文本格式。"
+    },
+    {
+      "name": "data_hash",
+      "type": "char(32)",
+      "description": "基线数据HASH。"
+    },
+    {
+      "name": "submitter",
+      "type": "char(32)",
+      "description": "提交人。"
+    },
+    {
+      "name": "submit_time",
+      "type": "timestamp(3)",
+      "description": "提交时间。"
+    },
+    {
+      "name": "approval_status",
+      "type": "varchar(50)",
+      "description": "审批状态：pending/approved/rejected。"
+    },
+    {
+      "name": "approver",
+      "type": "char(32)",
+      "description": "审批人。"
+    },
+    {
+      "name": "approval_comment",
+      "type": "mediumtext",
+      "description": "审批意见。"
+    },
+    {
+      "name": "approved_time",
+      "type": "timestamp(3)",
+      "description": "审批时间。"
+    },
+    {
+      "name": "activated_time",
+      "type": "timestamp(3)",
+      "description": "发布时间。"
+    },
+    {
+      "name": "fcd",
+      "type": "timestamp(3)",
+      "description": "创建时间。"
+    },
+    {
+      "name": "fcu",
+      "type": "char(32)",
+      "description": "创建人。"
+    },
+    {
+      "name": "lcd",
+      "type": "timestamp(3)",
+      "description": "修改时间。"
+    },
+    {
+      "name": "lcu",
+      "type": "char(32)",
+      "description": "修改人。"
+    }
+  ],
+  "indexes": [
+    {
+      "name": "PRIMARY",
+      "type": "BTREE",
+      "unique": true,
+      "primary": true,
+      "columns": [
+        "id"
+      ],
+      "description": "主键索引，覆盖 id 字段，适合用于唯一定位记录和主表关联查询。"
+    },
+    {
+      "name": "idx_status",
+      "type": "BTREE",
+      "unique": false,
+      "primary": false,
+      "columns": [
+        "status"
+      ],
+      "description": "普通索引，覆盖 status 字段，适合用于过滤、关联或排序查询。"
+    }
+  ]
+}

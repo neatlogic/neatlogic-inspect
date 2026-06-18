@@ -1,0 +1,75 @@
+{
+  "moduleId": "inspect",
+  "name": "inspect_baseline_tag",
+  "label": "基线管理已选标签",
+  "description": "基线管理已选标签 可用于巡检相关的时间维度统计、关联查询等报表查询场景。",
+  "fields": [
+    {
+      "name": "id",
+      "type": "bigint",
+      "description": "唯一标识，作为当前表记录的主键或唯一定位字段。"
+    },
+    {
+      "name": "tag_id",
+      "type": "bigint",
+      "description": "标签ID，数据库中要求唯一，适合用于精确查询和去重判断。"
+    },
+    {
+      "name": "sort",
+      "type": "int",
+      "description": "排序，已建立普通索引，适合用于过滤、关联或排序查询。"
+    },
+    {
+      "name": "fcd",
+      "type": "timestamp(3)",
+      "description": "创建时间。"
+    },
+    {
+      "name": "fcu",
+      "type": "char(32)",
+      "description": "创建人。"
+    },
+    {
+      "name": "lcd",
+      "type": "timestamp(3)",
+      "description": "修改时间。"
+    },
+    {
+      "name": "lcu",
+      "type": "char(32)",
+      "description": "修改人。"
+    }
+  ],
+  "indexes": [
+    {
+      "name": "PRIMARY",
+      "type": "BTREE",
+      "unique": true,
+      "primary": true,
+      "columns": [
+        "id"
+      ],
+      "description": "主键索引，覆盖 id 字段，适合用于唯一定位记录和主表关联查询。"
+    },
+    {
+      "name": "idx_sort",
+      "type": "BTREE",
+      "unique": false,
+      "primary": false,
+      "columns": [
+        "sort"
+      ],
+      "description": "普通索引，覆盖 sort 字段，适合用于过滤、关联或排序查询。"
+    },
+    {
+      "name": "uk_tag_id",
+      "type": "BTREE",
+      "unique": true,
+      "primary": false,
+      "columns": [
+        "tag_id"
+      ],
+      "description": "唯一索引，覆盖 tag_id 字段，适合用于精确检索、唯一性判断和去重查询。"
+    }
+  ]
+}

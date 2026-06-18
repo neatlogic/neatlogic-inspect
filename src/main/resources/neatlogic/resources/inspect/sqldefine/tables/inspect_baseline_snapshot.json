@@ -1,0 +1,100 @@
+{
+  "moduleId": "inspect",
+  "name": "inspect_baseline_snapshot",
+  "label": "巡检配置比对快照",
+  "description": "巡检配置比对快照 可用于巡检相关的时间维度统计、关联查询等报表查询场景。",
+  "fields": [
+    {
+      "name": "id",
+      "type": "bigint",
+      "description": "唯一标识，作为当前表记录的主键或唯一定位字段。"
+    },
+    {
+      "name": "resource_id",
+      "type": "bigint",
+      "description": "资源ID，已建立普通索引，适合用于过滤、关联或排序查询。"
+    },
+    {
+      "name": "type_id",
+      "type": "bigint",
+      "description": "资源模型ID。"
+    },
+    {
+      "name": "job_id",
+      "type": "bigint",
+      "description": "采集作业ID，已建立普通索引，适合用于过滤、关联或排序查询。"
+    },
+    {
+      "name": "collect_time",
+      "type": "timestamp(3)",
+      "description": "采集时间，已建立普通索引，适合用于过滤、关联或排序查询。"
+    },
+    {
+      "name": "raw_data",
+      "type": "longtext",
+      "description": "原始采集数据。"
+    },
+    {
+      "name": "normalized_data",
+      "type": "longtext",
+      "description": "规范化快照数据。"
+    },
+    {
+      "name": "data_hash",
+      "type": "char(32)",
+      "description": "快照数据HASH。"
+    },
+    {
+      "name": "fcd",
+      "type": "timestamp(3)",
+      "description": "创建时间。"
+    },
+    {
+      "name": "fcu",
+      "type": "char(32)",
+      "description": "创建人。"
+    }
+  ],
+  "indexes": [
+    {
+      "name": "PRIMARY",
+      "type": "BTREE",
+      "unique": true,
+      "primary": true,
+      "columns": [
+        "id"
+      ],
+      "description": "主键索引，覆盖 id 字段，适合用于唯一定位记录和主表关联查询。"
+    },
+    {
+      "name": "idx_collect_time",
+      "type": "BTREE",
+      "unique": false,
+      "primary": false,
+      "columns": [
+        "collect_time"
+      ],
+      "description": "普通索引，覆盖 collect_time 字段，适合用于过滤、关联或排序查询。"
+    },
+    {
+      "name": "idx_job_id",
+      "type": "BTREE",
+      "unique": false,
+      "primary": false,
+      "columns": [
+        "job_id"
+      ],
+      "description": "普通索引，覆盖 job_id 字段，适合用于过滤、关联或排序查询。"
+    },
+    {
+      "name": "idx_resource_id",
+      "type": "BTREE",
+      "unique": false,
+      "primary": false,
+      "columns": [
+        "resource_id"
+      ],
+      "description": "普通索引，覆盖 resource_id 字段，适合用于过滤、关联或排序查询。"
+    }
+  ]
+}

@@ -1,0 +1,90 @@
+{
+  "moduleId": "inspect",
+  "name": "inspect_baseline_job_task",
+  "label": "标签基线巡检任务",
+  "description": "标签基线巡检任务 可用于巡检相关的状态跟踪、时间维度统计等报表查询场景。",
+  "fields": [
+    {
+      "name": "id",
+      "type": "bigint",
+      "description": "唯一标识，作为当前表记录的主键或唯一定位字段。"
+    },
+    {
+      "name": "status",
+      "type": "varchar(50)",
+      "description": "任务状态，已建立普通索引，适合用于过滤、关联或排序查询。"
+    },
+    {
+      "name": "param",
+      "type": "mediumtext",
+      "description": "请求参数。"
+    },
+    {
+      "name": "result",
+      "type": "mediumtext",
+      "description": "执行结果。"
+    },
+    {
+      "name": "error",
+      "type": "text",
+      "description": "异常信息。"
+    },
+    {
+      "name": "resource_count",
+      "type": "int",
+      "description": "资源数。"
+    },
+    {
+      "name": "target_count",
+      "type": "int",
+      "description": "巡检对象数。"
+    },
+    {
+      "name": "group_count",
+      "type": "int",
+      "description": "类型分组数。"
+    },
+    {
+      "name": "fcd",
+      "type": "timestamp(3)",
+      "description": "创建时间，已建立普通索引，适合用于过滤、关联或排序查询。"
+    },
+    {
+      "name": "fcu",
+      "type": "char(32)",
+      "description": "创建人。"
+    }
+  ],
+  "indexes": [
+    {
+      "name": "PRIMARY",
+      "type": "BTREE",
+      "unique": true,
+      "primary": true,
+      "columns": [
+        "id"
+      ],
+      "description": "主键索引，覆盖 id 字段，适合用于唯一定位记录和主表关联查询。"
+    },
+    {
+      "name": "idx_fcd",
+      "type": "BTREE",
+      "unique": false,
+      "primary": false,
+      "columns": [
+        "fcd"
+      ],
+      "description": "普通索引，覆盖 fcd 字段，适合用于过滤、关联或排序查询。"
+    },
+    {
+      "name": "idx_status",
+      "type": "BTREE",
+      "unique": false,
+      "primary": false,
+      "columns": [
+        "status"
+      ],
+      "description": "普通索引，覆盖 status 字段，适合用于过滤、关联或排序查询。"
+    }
+  ]
+}

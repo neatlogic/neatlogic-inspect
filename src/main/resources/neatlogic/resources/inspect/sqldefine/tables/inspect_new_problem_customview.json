@@ -1,0 +1,56 @@
+{
+  "moduleId": "inspect",
+  "name": "inspect_new_problem_customview",
+  "label": "巡检报告个人视图",
+  "description": "巡检报告个人视图 可用于巡检相关数据的查询、筛选和报表展示。",
+  "fields": [
+    {
+      "name": "id",
+      "type": "bigint",
+      "description": "id，作为当前表记录的主键或唯一定位字段。"
+    },
+    {
+      "name": "name",
+      "type": "varchar(50)",
+      "description": "名称，已建立普通索引，适合用于过滤、关联或排序查询。"
+    },
+    {
+      "name": "user_uuid",
+      "type": "char(32)",
+      "description": "所属用户。"
+    },
+    {
+      "name": "condition_config",
+      "type": "mediumtext",
+      "description": "搜索条件配置。"
+    },
+    {
+      "name": "sort",
+      "type": "int",
+      "description": "排序。"
+    }
+  ],
+  "indexes": [
+    {
+      "name": "PRIMARY",
+      "type": "BTREE",
+      "unique": true,
+      "primary": true,
+      "columns": [
+        "id"
+      ],
+      "description": "主键索引，覆盖 id 字段，适合用于唯一定位记录和主表关联查询。"
+    },
+    {
+      "name": "idx_name_user",
+      "type": "BTREE",
+      "unique": true,
+      "primary": false,
+      "columns": [
+        "name",
+        "user_uuid"
+      ],
+      "description": "唯一索引，覆盖 name、user_uuid 字段，适合用于精确检索、唯一性判断和去重查询。"
+    }
+  ]
+}

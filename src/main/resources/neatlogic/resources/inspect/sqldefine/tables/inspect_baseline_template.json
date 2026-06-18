@@ -1,0 +1,137 @@
+{
+  "moduleId": "inspect",
+  "name": "inspect_baseline_template",
+  "label": "基线模板层级",
+  "description": "基线模板层级 可用于巡检相关的时间维度统计、关联查询等报表查询场景。",
+  "fields": [
+    {
+      "name": "id",
+      "type": "bigint",
+      "description": "唯一标识，作为当前表记录的主键或唯一定位字段。"
+    },
+    {
+      "name": "parent_id",
+      "type": "bigint",
+      "description": "父层级ID，已建立普通索引，适合用于过滤、关联或排序查询。"
+    },
+    {
+      "name": "name",
+      "type": "varchar(100)",
+      "description": "层级名称。"
+    },
+    {
+      "name": "description",
+      "type": "text",
+      "description": "层级描述。"
+    },
+    {
+      "name": "sort",
+      "type": "int",
+      "description": "排序，已建立普通索引，适合用于过滤、关联或排序查询。"
+    },
+    {
+      "name": "lft",
+      "type": "int",
+      "description": "左编码，已建立普通索引，适合用于过滤、关联或排序查询。"
+    },
+    {
+      "name": "rht",
+      "type": "int",
+      "description": "右编码，已建立普通索引，适合用于过滤、关联或排序查询。"
+    },
+    {
+      "name": "upward_id_path",
+      "type": "varchar(768)",
+      "description": "所有父节点id路径。"
+    },
+    {
+      "name": "upward_name_path",
+      "type": "varchar(768)",
+      "description": "所有父节点名称路径，已建立普通索引，适合用于过滤、关联或排序查询。"
+    },
+    {
+      "name": "fcd",
+      "type": "timestamp(3)",
+      "description": "创建时间。"
+    },
+    {
+      "name": "fcu",
+      "type": "char(32)",
+      "description": "创建人。"
+    },
+    {
+      "name": "lcd",
+      "type": "timestamp(3)",
+      "description": "修改时间。"
+    },
+    {
+      "name": "lcu",
+      "type": "char(32)",
+      "description": "修改人。"
+    }
+  ],
+  "indexes": [
+    {
+      "name": "PRIMARY",
+      "type": "BTREE",
+      "unique": true,
+      "primary": true,
+      "columns": [
+        "id"
+      ],
+      "description": "主键索引，覆盖 id 字段，适合用于唯一定位记录和主表关联查询。"
+    },
+    {
+      "name": "idx_lftrht",
+      "type": "BTREE",
+      "unique": false,
+      "primary": false,
+      "columns": [
+        "lft",
+        "rht"
+      ],
+      "description": "普通索引，覆盖 lft、rht 字段，适合用于过滤、关联或排序查询。"
+    },
+    {
+      "name": "idx_parent_id",
+      "type": "BTREE",
+      "unique": false,
+      "primary": false,
+      "columns": [
+        "parent_id"
+      ],
+      "description": "普通索引，覆盖 parent_id 字段，适合用于过滤、关联或排序查询。"
+    },
+    {
+      "name": "idx_rhtlft",
+      "type": "BTREE",
+      "unique": false,
+      "primary": false,
+      "columns": [
+        "rht",
+        "lft"
+      ],
+      "description": "普通索引，覆盖 rht、lft 字段，适合用于过滤、关联或排序查询。"
+    },
+    {
+      "name": "idx_sort",
+      "type": "BTREE",
+      "unique": false,
+      "primary": false,
+      "columns": [
+        "sort"
+      ],
+      "description": "普通索引，覆盖 sort 字段，适合用于过滤、关联或排序查询。"
+    },
+    {
+      "name": "idx_upwardnamepath",
+      "type": "BTREE",
+      "unique": false,
+      "primary": false,
+      "columns": [
+        "upward_name_path"
+      ],
+      "description": "普通索引，覆盖 upward_name_path 字段，适合用于过滤、关联或排序查询。"
+    }
+  ]
+}

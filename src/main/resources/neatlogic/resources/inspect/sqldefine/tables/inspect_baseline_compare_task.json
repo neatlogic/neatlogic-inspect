@@ -1,0 +1,160 @@
+{
+  "moduleId": "inspect",
+  "name": "inspect_baseline_compare_task",
+  "label": "巡检配置比对任务",
+  "description": "巡检配置比对任务 可用于巡检相关的状态跟踪、时间维度统计、关联查询等报表查询场景。",
+  "fields": [
+    {
+      "name": "id",
+      "type": "bigint",
+      "description": "唯一标识，作为当前表记录的主键或唯一定位字段。"
+    },
+    {
+      "name": "compare_type",
+      "type": "varchar(50)",
+      "description": "比对类型：baseline/peer。"
+    },
+    {
+      "name": "baseline_id",
+      "type": "bigint",
+      "description": "基线版本ID，已建立普通索引，适合用于过滤、关联或排序查询。"
+    },
+    {
+      "name": "source_snapshot_id",
+      "type": "bigint",
+      "description": "源快照ID，已建立普通索引，适合用于过滤、关联或排序查询。"
+    },
+    {
+      "name": "target_snapshot_id",
+      "type": "bigint",
+      "description": "目标快照ID，已建立普通索引，适合用于过滤、关联或排序查询。"
+    },
+    {
+      "name": "source_data_hash",
+      "type": "char(32)",
+      "description": "源数据HASH。"
+    },
+    {
+      "name": "target_data_hash",
+      "type": "char(32)",
+      "description": "目标数据HASH。"
+    },
+    {
+      "name": "status",
+      "type": "varchar(50)",
+      "description": "任务状态：pending/running/succeed/failed，已建立普通索引，适合用于过滤、关联或排序查询。"
+    },
+    {
+      "name": "compare_result",
+      "type": "varchar(50)",
+      "description": "结果：compliant/noncompliant。"
+    },
+    {
+      "name": "risk_level",
+      "type": "varchar(50)",
+      "description": "风险等级。"
+    },
+    {
+      "name": "is_blocked",
+      "type": "tinyint(1)",
+      "description": "是否阻断。"
+    },
+    {
+      "name": "total_count",
+      "type": "int",
+      "description": "总项数。"
+    },
+    {
+      "name": "diff_count",
+      "type": "int",
+      "description": "差异项数。"
+    },
+    {
+      "name": "high_count",
+      "type": "int",
+      "description": "高风险差异数。"
+    },
+    {
+      "name": "medium_count",
+      "type": "int",
+      "description": "中风险差异数。"
+    },
+    {
+      "name": "low_count",
+      "type": "int",
+      "description": "低风险差异数。"
+    },
+    {
+      "name": "fcd",
+      "type": "timestamp(3)",
+      "description": "创建时间。"
+    },
+    {
+      "name": "fcu",
+      "type": "char(32)",
+      "description": "创建人。"
+    },
+    {
+      "name": "lcd",
+      "type": "timestamp(3)",
+      "description": "修改时间。"
+    },
+    {
+      "name": "lcu",
+      "type": "char(32)",
+      "description": "修改人。"
+    }
+  ],
+  "indexes": [
+    {
+      "name": "PRIMARY",
+      "type": "BTREE",
+      "unique": true,
+      "primary": true,
+      "columns": [
+        "id"
+      ],
+      "description": "主键索引，覆盖 id 字段，适合用于唯一定位记录和主表关联查询。"
+    },
+    {
+      "name": "idx_baseline_version_id",
+      "type": "BTREE",
+      "unique": false,
+      "primary": false,
+      "columns": [
+        "baseline_id"
+      ],
+      "description": "普通索引，覆盖 baseline_id 字段，适合用于过滤、关联或排序查询。"
+    },
+    {
+      "name": "idx_source_snapshot_id",
+      "type": "BTREE",
+      "unique": false,
+      "primary": false,
+      "columns": [
+        "source_snapshot_id"
+      ],
+      "description": "普通索引，覆盖 source_snapshot_id 字段，适合用于过滤、关联或排序查询。"
+    },
+    {
+      "name": "idx_status",
+      "type": "BTREE",
+      "unique": false,
+      "primary": false,
+      "columns": [
+        "status"
+      ],
+      "description": "普通索引，覆盖 status 字段，适合用于过滤、关联或排序查询。"
+    },
+    {
+      "name": "idx_target_snapshot_id",
+      "type": "BTREE",
+      "unique": false,
+      "primary": false,
+      "columns": [
+        "target_snapshot_id"
+      ],
+      "description": "普通索引，覆盖 target_snapshot_id 字段，适合用于过滤、关联或排序查询。"
+    }
+  ]
+}
