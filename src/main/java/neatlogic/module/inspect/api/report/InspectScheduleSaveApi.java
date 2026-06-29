@@ -20,6 +20,7 @@ import neatlogic.framework.restful.core.privateapi.PrivateApiComponentBase;
 import neatlogic.framework.scheduler.core.IJob;
 import neatlogic.framework.scheduler.core.SchedulerManager;
 import neatlogic.framework.scheduler.dto.JobObject;
+import neatlogic.framework.scheduler.enums.JobLoadTriggerType;
 import neatlogic.framework.scheduler.exception.ScheduleHandlerNotFoundException;
 import neatlogic.framework.scheduler.exception.ScheduleIllegalParameterException;
 import neatlogic.framework.util.SnowflakeUtil;
@@ -105,9 +106,10 @@ public class InspectScheduleSaveApi extends PrivateApiComponentBase {
                 .setType("private")
                 .build();
         if (scheduleVo.getIsActive() == 1) {
-            schedulerManager.loadJob(jobObject);
+            schedulerManager.loadJob(jobObject, JobLoadTriggerType.INITIAL_CREATE);
         } else {
             schedulerManager.unloadJob(jobObject);
+            schedulerManager.saveJobSource(jobObject);
         }
         return null;
     }

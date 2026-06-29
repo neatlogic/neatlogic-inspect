@@ -17,6 +17,7 @@ import neatlogic.framework.restful.core.privateapi.PrivateApiComponentBase;
 import neatlogic.framework.scheduler.core.IJob;
 import neatlogic.framework.scheduler.core.SchedulerManager;
 import neatlogic.framework.scheduler.dto.JobObject;
+import neatlogic.framework.scheduler.enums.JobLoadTriggerType;
 import neatlogic.framework.scheduler.exception.ScheduleHandlerNotFoundException;
 import neatlogic.module.inspect.schedule.plugin.InspectScheduleJob;
 import com.alibaba.fastjson.JSONObject;
@@ -76,9 +77,10 @@ public class InspectScheduleStatusUpdateApi extends PrivateApiComponentBase {
                 .setType("private")
                 .build();
         if (scheduleVo.getIsActive() == 1) {
-            schedulerManager.loadJob(jobObject);
+            schedulerManager.loadJob(jobObject, JobLoadTriggerType.INITIAL_CREATE);
         } else {
             schedulerManager.unloadJob(jobObject);
+            schedulerManager.saveJobSource(jobObject);
         }
         return null;
     }
