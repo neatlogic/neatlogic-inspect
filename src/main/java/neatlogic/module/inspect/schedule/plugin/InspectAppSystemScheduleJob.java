@@ -41,6 +41,7 @@ import neatlogic.framework.inspect.dao.mapper.InspectScheduleMapper;
 import neatlogic.framework.inspect.dto.InspectAppSystemScheduleVo;
 import neatlogic.framework.scheduler.core.JobBase;
 import neatlogic.framework.scheduler.dto.JobObject;
+import neatlogic.framework.scheduler.enums.JobLoadTriggerType;
 import neatlogic.framework.service.AuthenticationInfoService;
 import org.apache.commons.lang3.StringUtils;
 import org.quartz.DisallowConcurrentExecution;
@@ -96,7 +97,7 @@ public class InspectAppSystemScheduleJob extends JobBase {
     }
 
     @Override
-    public void reloadJob(JobObject jobObject) {
+    public void reloadJob(JobObject jobObject, JobLoadTriggerType triggerType) {
         String tenantUuid = jobObject.getTenantUuid();
         TenantContext.get().switchTenant(tenantUuid);
         String idStr = jobObject.getJobName();
@@ -107,7 +108,7 @@ public class InspectAppSystemScheduleJob extends JobBase {
                     .withCron(scheduleVo.getCron()).withBeginTime(scheduleVo.getBeginTime())
                     .withEndTime(scheduleVo.getEndTime())
                     .build();
-            schedulerManager.loadJob(newJobObjectBuilder);
+            schedulerManager.loadJob(newJobObjectBuilder, triggerType);
         }
 
     }
@@ -129,7 +130,7 @@ public class InspectAppSystemScheduleJob extends JobBase {
                 JobObject.Builder jobObjectBuilder = new JobObject
                         .Builder(vo.getId().toString(), this.getGroupName(), this.getClassName(), TenantContext.get().getTenantUuid());
                 JobObject jobObject = jobObjectBuilder.build();
-                this.reloadJob(jobObject);
+                this.reloadJob(jobObject, JobLoadTriggerType.SERVER_RESTART);
             }
         }
     }

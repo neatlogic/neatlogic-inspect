@@ -15,6 +15,7 @@ package neatlogic.module.inspect.schedule.plugin;
 import neatlogic.framework.asynchronization.threadlocal.TenantContext;
 import neatlogic.framework.scheduler.core.JobBase;
 import neatlogic.framework.scheduler.dto.JobObject;
+import neatlogic.framework.scheduler.enums.JobLoadTriggerType;
 import neatlogic.module.inspect.service.InspectReportService;
 import org.quartz.DisallowConcurrentExecution;
 import org.quartz.JobExecutionContext;
@@ -50,16 +51,16 @@ public class InspectReportAlertScheduleJob extends JobBase {
     }
 
     @Override
-    public void reloadJob(JobObject jobObject) {
+    public void reloadJob(JobObject jobObject, JobLoadTriggerType triggerType) {
         String tenantUuid = jobObject.getTenantUuid();
         JobObject newJobObject = new JobObject.Builder("1", this.getGroupName(), this.getClassName(), tenantUuid).withCron(CRON_EXPRESSION).build();
-        schedulerManager.loadJob(newJobObject);
+        schedulerManager.loadJob(newJobObject, triggerType);
     }
 
     @Override
     public void initJob(String tenantUuid) {
         JobObject newJobObject = new JobObject.Builder("1", this.getGroupName(), this.getClassName(), tenantUuid).withCron(CRON_EXPRESSION).build();
-        schedulerManager.loadJob(newJobObject);
+        schedulerManager.loadJob(newJobObject, JobLoadTriggerType.SERVER_RESTART);
     }
 
     @Override
