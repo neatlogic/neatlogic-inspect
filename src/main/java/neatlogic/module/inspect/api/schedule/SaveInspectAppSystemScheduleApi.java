@@ -20,6 +20,7 @@ import neatlogic.framework.auth.core.AuthAction;
 import neatlogic.framework.cmdb.crossover.IResourceCrossoverMapper;
 import neatlogic.framework.cmdb.dto.resourcecenter.ResourceVo;
 import neatlogic.framework.cmdb.exception.resourcecenter.AppSystemNotFoundException;
+import neatlogic.framework.common.config.Config;
 import neatlogic.framework.common.constvalue.ApiParamType;
 import neatlogic.framework.crossover.CrossoverServiceFactory;
 import neatlogic.framework.inspect.auth.INSPECT_SCHEDULE_EXECUTE;
@@ -31,7 +32,9 @@ import neatlogic.framework.restful.constvalue.OperationTypeEnum;
 import neatlogic.framework.restful.core.privateapi.PrivateApiComponentBase;
 import neatlogic.framework.scheduler.core.IJob;
 import neatlogic.framework.scheduler.core.SchedulerManager;
+import neatlogic.framework.scheduler.dao.mapper.SchedulerMapper;
 import neatlogic.framework.scheduler.dto.JobObject;
+import neatlogic.framework.scheduler.dto.ScheduleJobSourceVo;
 import neatlogic.framework.scheduler.enums.JobLoadTriggerType;
 import neatlogic.framework.scheduler.exception.ScheduleHandlerNotFoundException;
 import neatlogic.framework.scheduler.exception.ScheduleIllegalParameterException;
@@ -39,12 +42,15 @@ import neatlogic.framework.util.SnowflakeUtil;
 import neatlogic.module.inspect.schedule.plugin.InspectAppSystemScheduleJob;
 import org.quartz.CronExpression;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
+import java.util.Objects;
 
 @Service
 @AuthAction(action = INSPECT_SCHEDULE_EXECUTE.class)
 @OperationType(type = OperationTypeEnum.UPDATE)
+@Transactional
 public class SaveInspectAppSystemScheduleApi extends PrivateApiComponentBase {
 
     @Resource
@@ -52,6 +58,9 @@ public class SaveInspectAppSystemScheduleApi extends PrivateApiComponentBase {
 
     @Resource
     private SchedulerManager schedulerManager;
+
+    @Resource
+    private SchedulerMapper schedulerMapper;
 
     @Override
     public String getToken() {
@@ -114,6 +123,10 @@ public class SaveInspectAppSystemScheduleApi extends PrivateApiComponentBase {
                 .withEndTime(scheduleVo.getEndTime())
                 .setType("private")
                 .build();
+        ScheduleJobSourceVo scheduleJobSource = schedulerMapper.getJobSourceByJobNameAndJobGroup(jobObject.getJobName(), jobObject.getJobGroup());
+        if (scheduleJobSource != null && !Objects.equals(scheduleJobSource.getServerGroup(), Config.SCHEDULE_SERVER_GROUP())) {
+            schedulerManager.deleteJobSource(jobObject);
+        }
         if (scheduleVo.getIsActive() == 1) {
             schedulerManager.loadJob(jobObject, JobLoadTriggerType.INITIAL_CREATE);
         } else {
