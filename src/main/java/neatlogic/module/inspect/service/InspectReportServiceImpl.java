@@ -128,6 +128,13 @@ public class InspectReportServiceImpl implements InspectReportService {
     @Override
     public List<InspectResourceVo> getInspectAutoexecJobNodeList(Long jobId, ResourceSearchVo searchVo) {
         List<InspectResourceVo> inspectResourceVoList = null;
+        List<Long> typeIdList = List.of(-1L);
+        ICiCrossoverMapper ciCrossoverMapper = CrossoverServiceFactory.getApi(ICiCrossoverMapper.class);
+        List<CiVo> downwardCiList = ciCrossoverMapper.getDownwardCiListByLR(searchVo.getLft(), searchVo.getRht());
+        if (CollectionUtils.isNotEmpty(downwardCiList)) {
+            typeIdList = downwardCiList.stream().map(CiVo::getId).collect(Collectors.toList());
+        }
+        searchVo.setTypeIdList(typeIdList);
         int resourceCount = inspectService.getInspectAutoexecJobNodeResourceCount(searchVo, jobId);
         if (resourceCount > 0) {
             searchVo.setRowNum(resourceCount);
