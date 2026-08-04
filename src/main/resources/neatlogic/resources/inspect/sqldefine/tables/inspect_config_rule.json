@@ -37,7 +37,7 @@
     {
       "name": "compare_mode",
       "type": "varchar(50)",
-      "description": "比对模式：exact/set/object_by_key/kv_map/regex/range，已建立普通索引，适合用于过滤、关联或排序查询。"
+      "description": "比对模式：exact/set/object_by_key/kv_map/regex/range/conditional，已建立普通索引，适合用于过滤、关联或排序查询。"
     },
     {
       "name": "is_required",
@@ -117,15 +117,16 @@
       "description": "普通索引，覆盖 layer 字段，适合用于过滤、关联或排序查询。"
     },
     {
-      "name": "uk_baseline_path_hash",
+      "name": "uk_baseline_mode_path_hash",
       "type": "BTREE",
       "unique": true,
       "primary": false,
       "columns": [
         "baseline_id",
+        "compare_mode",
         "path_hash"
       ],
-      "description": "唯一索引，覆盖 baseline_id、path_hash 字段，适合用于精确检索、唯一性判断和去重查询。"
+      "description": "唯一索引，覆盖 baseline_id、compare_mode、path_hash 字段，适合用于按比对模式精确检索、唯一性判断和去重查询。"
     }
   ]
 }
