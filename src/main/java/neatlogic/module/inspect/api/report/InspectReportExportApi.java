@@ -18,7 +18,6 @@ package neatlogic.module.inspect.api.report;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import neatlogic.framework.auth.core.AuthAction;
-import neatlogic.framework.asynchronization.threadlocal.RequestContext;
 import neatlogic.framework.cmdb.crossover.IResourceCenterResourceCrossoverService;
 import neatlogic.framework.cmdb.dto.resourcecenter.ResourceVo;
 import neatlogic.framework.common.constvalue.ApiParamType;
@@ -112,7 +111,6 @@ public class InspectReportExportApi extends PrivateBinaryStreamApiComponentBase 
         String id = paramObj.getString("id");
         Long jobId = paramObj.getLong("jobId");
         String type = paramObj.getString("type");
-        boolean isEnglish = isEnglishLocale();
         String noDataText = $.t(TEXT_KEY_PREFIX + "nodata");
         IResourceCenterResourceCrossoverService resourceCenterResourceCrossoverService = CrossoverServiceFactory.getApi(IResourceCenterResourceCrossoverService.class);
         ResourceVo resource = resourceCenterResourceCrossoverService.getResourceById(resourceId);
@@ -132,8 +130,8 @@ public class InspectReportExportApi extends PrivateBinaryStreamApiComponentBase 
                 for (int i = 0; i < fields.size(); i++) {
                     JSONObject obj = fields.getJSONObject(i);
                     String name = obj.getString("name");
-                    translationMap.put(name, getFieldLabel(obj, isEnglish));
-                    recursionForTranslation(translationMap, name, obj.getJSONArray("subset"), isEnglish);
+                    translationMap.put(name, name);
+                    recursionForTranslation(translationMap, name, obj.getJSONArray("subset"));
                 }
             }
             JSONObject alert = null;
@@ -213,18 +211,6 @@ public class InspectReportExportApi extends PrivateBinaryStreamApiComponentBase 
         }
 
         return null;
-    }
-
-    private boolean isEnglishLocale() {
-        Locale locale = RequestContext.get() != null ? RequestContext.get().getLocale() : null;
-        return locale != null && Locale.ENGLISH.getLanguage().equalsIgnoreCase(locale.getLanguage());
-    }
-
-    /**
-     * 巡检字段定义的desc为中文描述，英文环境直接使用稳定的字段name。
-     */
-    private String getFieldLabel(JSONObject field, boolean isEnglish) {
-        return field.getString(isEnglish ? "name" : "desc");
     }
 
     /**
@@ -399,23 +385,23 @@ public class InspectReportExportApi extends PrivateBinaryStreamApiComponentBase 
     }
 
     /**
-     * 递归抽取字段译文，如果存在嵌套数组，则转为链式结构
+     * 递归抽取字段name，如果存在嵌套数组，则转为链式结构
      * 例如：{"name":"DNS_SERVERS","type":"JsonArray","subset":[{"name":"VALUE","type":"String","desc":"IP"}],"desc":"DNS服务器"}
      * 将转为：
-     * "DNS_SERVERS" -> "DNS服务器"
-     * "DNS_SERVERS.VALUE" -> "IP"
+     * "DNS_SERVERS" -> "DNS_SERVERS"
+     * "DNS_SERVERS.VALUE" -> "VALUE"
      *
      * @param translationMap
      * @param name
      * @param subset
      */
-    private void recursionForTranslation(Map<String, String> translationMap, String name, JSONArray subset, boolean isEnglish) {
+    private void recursionForTranslation(Map<String, String> translationMap, String name, JSONArray subset) {
         if (CollectionUtils.isNotEmpty(subset)) {
             for (int i = 0; i < subset.size(); i++) {
                 JSONObject _obj = subset.getJSONObject(i);
                 String _name = _obj.getString("name");
-                translationMap.put(name + "." + _name, getFieldLabel(_obj, isEnglish));
-                recursionForTranslation(translationMap, name + "." + _name, _obj.getJSONArray("subset"), isEnglish);
+                translationMap.put(name + "." + _name, _name);
+                recursionForTranslation(translationMap, name + "." + _name, _obj.getJSONArray("subset"));
             }
         }
     }
