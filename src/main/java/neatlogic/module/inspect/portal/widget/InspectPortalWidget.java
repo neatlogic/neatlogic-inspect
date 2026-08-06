@@ -13,10 +13,10 @@ package neatlogic.module.inspect.portal.widget;
 import neatlogic.framework.portal.widget.core.IPortalWidget;
 
 public enum InspectPortalWidget implements IPortalWidget {
-    inspectRecentIssue("inspectRecentIssue", "近期问题", 1),
-    inspectRunningJob("inspectRunningJob", "执行中巡检", 2),
-    inspectAbnormalAsset("inspectAbnormalAsset", "异常资产", 3),
-    inspectQualityTrend("inspectQualityTrend", "问题趋势与通过率", 4),
+//    inspectRecentIssue("inspectRecentIssue", "近期问题", 1),
+//    inspectRunningJob("inspectRunningJob", "执行中巡检", 2),
+//    inspectAbnormalAsset("inspectAbnormalAsset", "异常资产", 3),
+//    inspectQualityTrend("inspectQualityTrend", "问题趋势与通过率", 4),
     ;
     private final String value;
     private final String text;
