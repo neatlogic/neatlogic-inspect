@@ -71,13 +71,13 @@
         <#assign rowList = DATA.alert.rowList/>
         <#if rowList?? && rowList?size gt 0>
             <tr>
-                <td>${DATA.alertTitle}</td>
+                <td>告警</td>
                 <td>
                     <table class="innerTable">
                         <thead>
                         <tr>
                             <#list headList as head>
-                                <th>${head.title}</th>
+                                <th>${head}</th>
                             </#list>
                         </tr>
                         </thead>
@@ -86,7 +86,7 @@
                             <tr class="${alertLevelClassMap[value["level"]]}">
                                 <#list headList as head>
                                     <td>
-                                        ${value[head.key]}
+                                        ${value[head]}
                                     </td>
                                 </#list>
                             </tr>

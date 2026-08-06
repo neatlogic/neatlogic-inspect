@@ -18,7 +18,6 @@ package neatlogic.module.inspect.api.report;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import neatlogic.framework.auth.core.AuthAction;
-import neatlogic.framework.asynchronization.threadlocal.RequestContext;
 import neatlogic.framework.cmdb.crossover.IResourceCenterResourceCrossoverService;
 import neatlogic.framework.cmdb.dto.resourcecenter.ResourceVo;
 import neatlogic.framework.common.constvalue.ApiParamType;
@@ -36,7 +35,6 @@ import neatlogic.framework.util.DocType;
 import neatlogic.framework.util.ExportUtil;
 import neatlogic.framework.util.FreemarkerUtil;
 import neatlogic.framework.util.TimeUtil;
-import neatlogic.framework.util.$;
 import neatlogic.module.inspect.service.InspectReportService;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.MapUtils;
@@ -63,9 +61,6 @@ public class InspectReportExportApi extends PrivateBinaryStreamApiComponentBase 
 
     static Logger logger = LoggerFactory.getLogger(InspectReportExportApi.class);
 
-    private static final String I18N_KEY_PREFIX = "nmiar.inspectreportexportapi.";
-    private static final String TEXT_KEY_PREFIX = I18N_KEY_PREFIX + "text.";
-
     static String template;
 
     static {
@@ -85,7 +80,7 @@ public class InspectReportExportApi extends PrivateBinaryStreamApiComponentBase 
 
     @Override
     public String getName() {
-        return I18N_KEY_PREFIX + "getname";
+        return "导出巡检报告";
     }
 
     @Override
@@ -100,20 +95,18 @@ public class InspectReportExportApi extends PrivateBinaryStreamApiComponentBase 
 
 
     @Input({
-            @Param(name = "resourceId", type = ApiParamType.LONG, desc = I18N_KEY_PREFIX + "input.param.desc.resourceid", isRequired = true),
-            @Param(name = "id", type = ApiParamType.STRING, desc = I18N_KEY_PREFIX + "input.param.desc.id"),
-            @Param(name = "jobId", type = ApiParamType.STRING, desc = I18N_KEY_PREFIX + "input.param.desc.jobid"),
-            @Param(name = "type", type = ApiParamType.ENUM, rule = "word,pdf", desc = I18N_KEY_PREFIX + "input.param.desc.type", isRequired = true)
+            @Param(name = "resourceId", type = ApiParamType.LONG, desc = "资产id", isRequired = true),
+            @Param(name = "id", type = ApiParamType.STRING, desc = "id"),
+            @Param(name = "jobId", type = ApiParamType.STRING, desc = "作业id"),
+            @Param(name = "type", type = ApiParamType.ENUM, rule = "word,pdf", desc = "类型", isRequired = true)
     })
-    @Description(desc = I18N_KEY_PREFIX + "description")
+    @Description(desc = "导出巡检报告")
     @Override
     public Object myDoService(JSONObject paramObj, HttpServletRequest request, HttpServletResponse response) throws Exception {
         Long resourceId = paramObj.getLong("resourceId");
         String id = paramObj.getString("id");
         Long jobId = paramObj.getLong("jobId");
         String type = paramObj.getString("type");
-        boolean isEnglish = isEnglishLocale();
-        String noDataText = $.t(TEXT_KEY_PREFIX + "nodata");
         IResourceCenterResourceCrossoverService resourceCenterResourceCrossoverService = CrossoverServiceFactory.getApi(IResourceCenterResourceCrossoverService.class);
         ResourceVo resource = resourceCenterResourceCrossoverService.getResourceById(resourceId);
         String fileName = resourceId.toString();
@@ -132,8 +125,9 @@ public class InspectReportExportApi extends PrivateBinaryStreamApiComponentBase 
                 for (int i = 0; i < fields.size(); i++) {
                     JSONObject obj = fields.getJSONObject(i);
                     String name = obj.getString("name");
-                    translationMap.put(name, getFieldLabel(obj, isEnglish));
-                    recursionForTranslation(translationMap, name, obj.getJSONArray("subset"), isEnglish);
+                    String desc = obj.getString("desc");
+                    translationMap.put(name, desc);
+                    recursionForTranslation(translationMap, name, obj.getJSONArray("subset"));
                 }
             }
             JSONObject alert = null;
@@ -146,25 +140,15 @@ public class InspectReportExportApi extends PrivateBinaryStreamApiComponentBase 
                     JSONObject object = inspectStatus.getJSONObject(key);
                     alertLevelClassMap.put(object.getString("value"), object.getString("cssClass"));
                 }
-                alert = getAlert(
-                        reportDoc,
-                        translationMap,
-                        alertMap,
-                        inspectStatus,
-                        $.t(TEXT_KEY_PREFIX + "alertlevel"),
-                        $.t(TEXT_KEY_PREFIX + "alertfield"),
-                        $.t(TEXT_KEY_PREFIX + "alertmessage"),
-                        $.t(TEXT_KEY_PREFIX + "rulenameseparator")
-                );
+                alert = getAlert(reportDoc, translationMap, alertMap, inspectStatus);
             }
 
             JSONArray lineList = new JSONArray();
             JSONArray tableList = new JSONArray();
-            getDataMap(reportDoc, translationMap, alertMap, lineList, tableList, noDataText);
+            getDataMap(reportDoc, translationMap, alertMap, lineList, tableList);
             JSONObject dataObj = new JSONObject();
             if (MapUtils.isNotEmpty(alert)) {
                 dataObj.put("alert", alert);
-                dataObj.put("alertTitle", $.t(TEXT_KEY_PREFIX + "alert"));
             }
             if (!alertLevelClassMap.isEmpty()) {
                 dataObj.put("alertLevelClassMap", alertLevelClassMap);
@@ -188,8 +172,8 @@ public class InspectReportExportApi extends PrivateBinaryStreamApiComponentBase 
             if (reportTime != null) {
                 dataObj.put("reportTime", TimeUtil.convertDateToString(reportTime, TimeUtil.YYYY_MM_DD_HH_MM_SS));
             }
-            dataObj.put("reportName", fileName + "_" + $.t(TEXT_KEY_PREFIX + "reporttitle"));
-            fileName += "_" + $.t(TEXT_KEY_PREFIX + "reportfilesuffix");
+            fileName += "_巡检报告";
+            dataObj.put("reportName", fileName);
             dataObj.put("docType", type);
             String content = FreemarkerUtil.transform(dataObj, template);
             try (OutputStream os = response.getOutputStream()) {
@@ -215,20 +199,9 @@ public class InspectReportExportApi extends PrivateBinaryStreamApiComponentBase 
         return null;
     }
 
-    private boolean isEnglishLocale() {
-        Locale locale = RequestContext.get() != null ? RequestContext.get().getLocale() : null;
-        return locale != null && Locale.ENGLISH.getLanguage().equalsIgnoreCase(locale.getLanguage());
-    }
-
     /**
-     * 巡检字段定义的desc为中文描述，英文环境直接使用稳定的字段name。
-     */
-    private String getFieldLabel(JSONObject field, boolean isEnglish) {
-        return field.getString(isEnglish ? "name" : "desc");
-    }
-
-    /**
-     * 组装告警列表，将jsonpath转换为当前系统语言对应的字段路径。
+     * 组装告警列表，将jsonpath转为中文路径，结构如下：
+     * {"headList":["告警级别","告警字段","告警提示"],"rowList":[{"level":"normal","告警级别":"正常","告警字段":"挂载点->使用率%","告警提示":"磁盘空间使用率超过11%、磁盘空间使用率超过15%"},{"level":"normal","告警级别":"正常","告警字段":"挂载点->使用率%","告警提示":"磁盘空间使用率超过11%"}]}
      * 并且记录jsonpath与告警级别之间的映射
      *
      * @param reportDoc      document
@@ -237,34 +210,16 @@ public class InspectReportExportApi extends PrivateBinaryStreamApiComponentBase 
      * @param inspectStatus  inspectStatus
      * @return
      */
-    private JSONObject getAlert(
-            JSONObject reportDoc,
-            Map<String, String> translationMap,
-            Map<String, String> alertMap,
-            JSONObject inspectStatus,
-            String alertLevelText,
-            String alertFieldText,
-            String alertMessageText,
-            String ruleNameSeparator
-    ) {
+    private JSONObject getAlert(JSONObject reportDoc, Map<String, String> translationMap, Map<String, String> alertMap, JSONObject inspectStatus) {
         JSONObject inspectResult = reportDoc.getJSONObject("_inspect_result");
         if (inspectResult != null) {
             JSONArray alertFields = inspectResult.getJSONArray("alertFields");
             if (CollectionUtils.isNotEmpty(alertFields)) {
                 JSONObject alert = new JSONObject();
                 JSONArray headList = new JSONArray();
-                JSONObject levelHead = new JSONObject();
-                levelHead.put("key", "levelText");
-                levelHead.put("title", alertLevelText);
-                headList.add(levelHead);
-                JSONObject fieldHead = new JSONObject();
-                fieldHead.put("key", "fieldText");
-                fieldHead.put("title", alertFieldText);
-                headList.add(fieldHead);
-                JSONObject messageHead = new JSONObject();
-                messageHead.put("key", "messageText");
-                messageHead.put("title", alertMessageText);
-                headList.add(messageHead);
+                headList.add("告警级别");
+                headList.add("告警字段");
+                headList.add("告警提示");
                 alert.put("headList", headList);
                 JSONArray alertArray = new JSONArray();
                 alert.put("rowList", alertArray);
@@ -294,17 +249,17 @@ public class InspectReportExportApi extends PrivateBinaryStreamApiComponentBase 
                     } else {
                         field = translationMap.get(alertField);
                     }
-                    alertObj.put("fieldText", field);
+                    alertObj.put("告警字段", field);
                     String level = object.getString("alertLevel").toLowerCase(Locale.ROOT);
                     alertObj.put("level", level);
                     JSONObject alertLevel = inspectStatus.getJSONObject(level);
                     if (MapUtils.isNotEmpty(alertLevel)) {
-                        alertObj.put("levelText", alertLevel.getString("text"));
+                        alertObj.put("告警级别", alertLevel.getString("text"));
                     }
                     JSONArray ruleNameArray = object.getJSONArray("ruleNames");
                     if (CollectionUtils.isNotEmpty(ruleNameArray)) {
                         List<String> ruleNames = ruleNameArray.toJavaList(String.class);
-                        alertObj.put("messageText", String.join(ruleNameSeparator, ruleNames));
+                        alertObj.put("告警提示", String.join("、", ruleNames));
                     }
                     alertArray.add(alertObj);
                 }
@@ -323,14 +278,7 @@ public class InspectReportExportApi extends PrivateBinaryStreamApiComponentBase 
      * @param lineList       存储String、int或Array字段的list
      * @param tableList      存储JsonArray字段的list
      */
-    private void getDataMap(
-            JSONObject reportJson,
-            Map<String, String> translationMap,
-            Map<String, String> alertMap,
-            JSONArray lineList,
-            JSONArray tableList,
-            String noDataText
-    ) {
+    private void getDataMap(JSONObject reportJson, Map<String, String> translationMap, Map<String, String> alertMap, JSONArray lineList, JSONArray tableList) {
 
         JSONArray fields = reportJson.getJSONArray("fields");
         for (int i = 0; i < fields.size(); i++) {
@@ -355,7 +303,7 @@ public class InspectReportExportApi extends PrivateBinaryStreamApiComponentBase 
                     } else if (value instanceof Map) {
                         Map<String, Object> map = (Map) value;
                         listValue.add(new JSONObject(map));
-                        recursionForTable(table, translationMap, alertMap, key, listValue, key, fieldObj, noDataText);
+                        recursionForTable(table, translationMap, alertMap, key, listValue, key, fieldObj);
                         tableList.add(table);
                         continue;
                     }
@@ -370,18 +318,18 @@ public class InspectReportExportApi extends PrivateBinaryStreamApiComponentBase 
                             }
                             lineList.add(line);
                         } else {
-                            recursionForTable(table, translationMap, alertMap, key, listValue, key, fieldObj, noDataText);
+                            recursionForTable(table, translationMap, alertMap, key, listValue, key, fieldObj);
                             tableList.add(table);
                         }
                     } else {
                         JSONObject line = new JSONObject();
                         line.put("key", name);
-                        line.put("value", noDataText);
+                        line.put("value", "暂无数据");
                         lineList.add(line);
                     }
                 } else {
                     if (value == null || Objects.equals(StringUtils.EMPTY, value)) {
-                        value = noDataText;
+                        value = "暂无数据";
                     }
                     if (value instanceof Date) {
                         value = TimeUtil.convertDateToString((Date) value, TimeUtil.YYYY_MM_DD_HH_MM_SS);
@@ -409,13 +357,14 @@ public class InspectReportExportApi extends PrivateBinaryStreamApiComponentBase 
      * @param name
      * @param subset
      */
-    private void recursionForTranslation(Map<String, String> translationMap, String name, JSONArray subset, boolean isEnglish) {
+    private void recursionForTranslation(Map<String, String> translationMap, String name, JSONArray subset) {
         if (CollectionUtils.isNotEmpty(subset)) {
             for (int i = 0; i < subset.size(); i++) {
                 JSONObject _obj = subset.getJSONObject(i);
                 String _name = _obj.getString("name");
-                translationMap.put(name + "." + _name, getFieldLabel(_obj, isEnglish));
-                recursionForTranslation(translationMap, name + "." + _name, _obj.getJSONArray("subset"), isEnglish);
+                String _desc = _obj.getString("desc");
+                translationMap.put(name + "." + _name, _desc);
+                recursionForTranslation(translationMap, name + "." + _name, _obj.getJSONArray("subset"));
             }
         }
     }
@@ -432,16 +381,7 @@ public class InspectReportExportApi extends PrivateBinaryStreamApiComponentBase 
      * @param array          待转换的JsonArray字段
      * @param alertKey       jsonpath
      */
-    private void recursionForTable(
-            JSONObject table,
-            Map<String, String> translationMap,
-            Map<String, String> alertMap,
-            String key,
-            JSONArray array,
-            String alertKey,
-            JSONObject fieldObj,
-            String noDataText
-    ) {
+    private void recursionForTable(JSONObject table, Map<String, String> translationMap, Map<String, String> alertMap, String key, JSONArray array, String alertKey, JSONObject fieldObj) {
         Set<String> headSet = new LinkedHashSet<>();
         JSONArray subset = fieldObj.getJSONArray("subset");
         if (CollectionUtils.isEmpty(subset)) {
@@ -478,11 +418,11 @@ public class InspectReportExportApi extends PrivateBinaryStreamApiComponentBase 
                             JSONObject _table = new JSONObject();
                             JSONArray _array = new JSONArray();
                             _array.addAll(list);
-                            recursionForTable(_table, translationMap, alertMap, key + "." + head, _array, (alertKey + "[" + i + "]" + "." + head), fieldObj, noDataText);
+                            recursionForTable(_table, translationMap, alertMap, key + "." + head, _array, (alertKey + "[" + i + "]" + "." + head), fieldObj);
                             _table.remove("key");
                             row.put(headList.get(j), _table);
                         } else {
-                            row.put(headList.get(j), noDataText);
+                            row.put(headList.get(j), "暂无数据");
                         }
                     } else {
                         String alertLevel = alertMap.get(alertKey + "[" + i + "]" + "." + head);
@@ -494,14 +434,14 @@ public class InspectReportExportApi extends PrivateBinaryStreamApiComponentBase 
                                 obj = String.join(",", list);
                             }
                         }
-                        String value = !Objects.equals(obj.toString(), StringUtils.EMPTY) ? obj.toString() : noDataText;
+                        String value = !Objects.equals(obj.toString(), StringUtils.EMPTY) ? obj.toString() : "暂无数据";
                         if (alertLevel != null) {
                             value += ("&=&" + alertLevel); // 如果有告警，则拼接告警级别到末尾，freemarker解析时，按&=&分割正文与告警级别，根据告警级别确定正文的样式
                         }
                         row.put(headList.get(j), value);
                     }
                 } else {
-                    row.put(headList.get(j), noDataText);
+                    row.put(headList.get(j), "暂无数据");
                 }
                 j++;
             }
