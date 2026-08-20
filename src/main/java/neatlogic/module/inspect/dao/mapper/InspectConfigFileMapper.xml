@@ -53,7 +53,7 @@
         FROM @{DATA_SCHEMA}.`scence_ipobject_detail` a
         left join cmdb_resourcecenter_resource_account b on b.resource_id=a.id
         left join cmdb_resourcecenter_account c on c.id=b.account_id
-        left join cmdb_resourcecenter_resource_tag d on d.resource_id = a.id
+        left join cmdb_cientity_tag d on d.cientity_id = a.id
         left join autoexec_job_resource_inspect e on e.resource_id=a.id
         left join autoexec_job_phase_node f on f.job_phase_id =e.phase_id AND f.resource_id = a.id
     </sql>-->
@@ -62,7 +62,7 @@
         FROM @{DATA_SCHEMA}.`scence_ipobject_detail` a
         left join cmdb_resourcecenter_resource_account b on b.resource_id=a.id
         left join cmdb_resourcecenter_account c on c.id=b.account_id
-        left join cmdb_resourcecenter_resource_tag d on d.resource_id = a.id
+        left join cmdb_cientity_tag d on d.cientity_id = a.id
         left join autoexec_job_resource_inspect e on e.resource_id=a.id
         left join autoexec_job_phase_node f on f.job_phase_id =e.phase_id AND f.resource_id = a.id
         <if test="isHasAuth == false">

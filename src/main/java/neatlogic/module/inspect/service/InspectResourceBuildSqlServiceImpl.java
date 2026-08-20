@@ -59,7 +59,7 @@ public class InspectResourceBuildSqlServiceImpl implements InspectResourceBuildS
             $sql.addJoin(plainSelect, $sql.join("left join", "autoexec_job_resource_inspect", "ajri").withOn($sql.exp("ajri.resource_id", "=", idColumn.toString())));
             $sql.addJoin(plainSelect, $sql.join("left join", "cmdb_resourcecenter_resource_account", "crra").withOn($sql.exp("crra.resource_id", "=", idColumn.toString())));
             $sql.addJoin(plainSelect, $sql.join("left join", "cmdb_resourcecenter_account", "cra").withOn($sql.exp("cra.id", "=", "crra.account_id")));
-            $sql.addJoin(plainSelect, $sql.join("left join", "cmdb_resourcecenter_resource_tag", "crrt").withOn($sql.exp("crrt.resource_id", "=", idColumn.toString())));
+            $sql.addJoin(plainSelect, $sql.join("left join", "cmdb_cientity_tag", "crrt").withOn($sql.exp("crrt.cientity_id", "=", idColumn.toString())));
             $sql.addJoin(plainSelect, $sql.join("left join", "autoexec_job_phase_node", "ajpn").withOn($sql.exp(
                     $sql.exp("ajpn.job_phase_id", "=", "ajri.phase_id"),
                     "and",
@@ -313,7 +313,7 @@ public class InspectResourceBuildSqlServiceImpl implements InspectResourceBuildS
             $sql.addJoin(plainSelect, $sql.join("left join", "autoexec_job_resource_inspect", "ajri").withOn($sql.exp("ajri.resource_id", "=", idColumn.toString())));
             $sql.addJoin(plainSelect, $sql.join("left join", "cmdb_resourcecenter_resource_account", "crra").withOn($sql.exp("crra.resource_id", "=", idColumn.toString())));
             $sql.addJoin(plainSelect, $sql.join("left join", "cmdb_resourcecenter_account", "cra").withOn($sql.exp("cra.id", "=", "crra.account_id")));
-            $sql.addJoin(plainSelect, $sql.join("left join", "cmdb_resourcecenter_resource_tag", "crrt").withOn($sql.exp("crrt.resource_id", "=", idColumn.toString())));
+            $sql.addJoin(plainSelect, $sql.join("left join", "cmdb_cientity_tag", "crrt").withOn($sql.exp("crrt.cientity_id", "=", idColumn.toString())));
             $sql.addJoin(plainSelect, $sql.join("left join", "autoexec_job_phase_node", "ajpn").withOn($sql.exp("ajpn.resource_id", "=", idColumn.toString())));
             $sql.addJoin(plainSelect, $sql.join("left join", "cmdb_cientity_inspect", "cci").withOn($sql.exp(
                     $sql.exp("cci.ci_entity_id", "=", idColumn.toString()),
@@ -814,7 +814,7 @@ public class InspectResourceBuildSqlServiceImpl implements InspectResourceBuildS
         }
         /*
         <if test="tagIdList != null and tagIdList.size() > 0">
-            LEFT JOIN `cmdb_resourcecenter_resource_tag` d ON d.`resource_id` = a.`id`
+            LEFT JOIN `cmdb_cientity_tag` d ON d.`cientity_id` = a.`id`
         </if>
 
         <if test="tagIdList != null and tagIdList.size() > 0">
@@ -826,7 +826,7 @@ public class InspectResourceBuildSqlServiceImpl implements InspectResourceBuildS
          */
         if (CollectionUtils.isNotEmpty(queryCriteriaVo.getTagIdList())) {
 //            System.out.println("e");
-            joinList.add($sql.join("left join", "cmdb_resourcecenter_resource_tag", "d").withOn($sql.exp("d.resource_id", "=", fieldName2ColumnMap.get("id").toString())));
+            joinList.add($sql.join("left join", "cmdb_cientity_tag", "d").withOn($sql.exp("d.cientity_id", "=", fieldName2ColumnMap.get("id").toString())));
             whereExpressionList.add($sql.exp("d.tag_id", "in", queryCriteriaVo.getTagIdList()));
         }
         /*
@@ -1081,7 +1081,7 @@ public class InspectResourceBuildSqlServiceImpl implements InspectResourceBuildS
         }
         /*
         <if test="tagIdList != null and tagIdList.size() > 0">
-            LEFT JOIN `cmdb_resourcecenter_resource_tag` d ON d.`resource_id` = a.`id`
+            LEFT JOIN `cmdb_cientity_tag` d ON d.`cientity_id` = a.`id`
         </if>
 
         <if test="tagIdList != null and tagIdList.size() > 0">
@@ -1093,7 +1093,7 @@ public class InspectResourceBuildSqlServiceImpl implements InspectResourceBuildS
          */
         if (CollectionUtils.isNotEmpty(queryCriteriaVo.getTagIdList())) {
 //            System.out.println("e");
-            joinList.add($sql.join("left join", "cmdb_resourcecenter_resource_tag", "d").withOn($sql.exp("d.resource_id", "=", fieldName2ColumnMap.get("id").toString())));
+            joinList.add($sql.join("left join", "cmdb_cientity_tag", "d").withOn($sql.exp("d.cientity_id", "=", fieldName2ColumnMap.get("id").toString())));
             whereExpressionList.add($sql.exp("d.tag_id", "in", queryCriteriaVo.getTagIdList()));
         }
         /*
