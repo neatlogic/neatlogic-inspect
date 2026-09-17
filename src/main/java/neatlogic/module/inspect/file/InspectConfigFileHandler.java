@@ -13,7 +13,6 @@
 package neatlogic.module.inspect.file;
 
 import com.alibaba.fastjson.JSONObject;
-import neatlogic.framework.asynchronization.threadlocal.UserContext;
 import neatlogic.framework.auth.core.AuthActionChecker;
 import neatlogic.framework.file.core.FileTypeHandlerBase;
 import neatlogic.framework.file.dto.FileVo;
@@ -29,7 +28,7 @@ public class InspectConfigFileHandler extends FileTypeHandlerBase {
 
     @Override
     public boolean valid(String userUuid, FileVo fileVo, JSONObject jsonObj) throws Exception {
-        return AuthActionChecker.checkByUserUuid(UserContext.get().getUserUuid(), INSPECT_BASE.class.getSimpleName());
+        return AuthActionChecker.check(INSPECT_BASE.class);
     }
 
     @Override
