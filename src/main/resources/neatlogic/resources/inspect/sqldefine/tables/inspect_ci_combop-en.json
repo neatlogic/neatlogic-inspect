@@ -1,0 +1,30 @@
+{
+  "moduleId": "inspect",
+  "name": "inspect_ci_combop",
+  "label": "Work Order Configuration for Inspection",
+  "description": "The inspection configuration group can be used for related queries and report queries related to inspections.",
+  "fields": [
+    {
+      "name": "ci_id",
+      "type": "bigint",
+      "description": "CiType, used as the primary key or unique identifier for records in this table."
+    },
+    {
+      "name": "combop_id",
+      "type": "bigint",
+      "description": "Generate the ID for the combined tool."
+    }
+  ],
+  "indexes": [
+    {
+      "name": "PRIMARY",
+      "type": "BTREE",
+      "unique": true,
+      "primary": true,
+      "columns": [
+        "ci_id"
+      ],
+      "description": "Primary key index covering the ci_id field, suitable for uniquely identifying records and queries that join the primary table."
+    }
+  ]
+}

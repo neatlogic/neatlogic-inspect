@@ -1,0 +1,110 @@
+{
+  "moduleId": "inspect",
+  "name": "inspect_baseline_schedule",
+  "label": "Baseline Timed Inspection Job",
+  "description": "Baseline periodic inspection jobs are designed for scenarios involving filtering by enabled status for related inspections and statistical time dimensions for reporting.",
+  "fields": [
+    {
+      "name": "id",
+      "type": "bigint",
+      "description": "Unique identifier, used as the primary key or unique identifier for records in this table."
+    },
+    {
+      "name": "type",
+      "type": "varchar(50)",
+      "description": "Timing type: tag/application. A standard index is defined on this field, making it suitable for filtering, join, and sort queries."
+    },
+    {
+      "name": "name",
+      "type": "varchar(100)",
+      "description": "Job name."
+    },
+    {
+      "name": "cron",
+      "type": "varchar(100)",
+      "description": "Cron expression."
+    },
+    {
+      "name": "begin_time",
+      "type": "timestamp(3)",
+      "description": "Plan start time."
+    },
+    {
+      "name": "end_time",
+      "type": "timestamp(3)",
+      "description": "End time of the plan."
+    },
+    {
+      "name": "is_active",
+      "type": "tinyint",
+      "description": "ENABLE/DISABLE. A standard index is defined on this field, making it suitable for filtering, join, and sort queries."
+    },
+    {
+      "name": "config",
+      "type": "longtext",
+      "description": "Scheduled inspection configuration."
+    },
+    {
+      "name": "fcd",
+      "type": "timestamp(3)",
+      "description": "Creation time."
+    },
+    {
+      "name": "fcu",
+      "type": "char(32)",
+      "description": "Creator."
+    },
+    {
+      "name": "lcd",
+      "type": "timestamp(3)",
+      "description": "Update time. A standard index is defined on this field, making it suitable for filtering, join, and sort queries."
+    },
+    {
+      "name": "lcu",
+      "type": "char(32)",
+      "description": "Updated by."
+    }
+  ],
+  "indexes": [
+    {
+      "name": "PRIMARY",
+      "type": "BTREE",
+      "unique": true,
+      "primary": true,
+      "columns": [
+        "id"
+      ],
+      "description": "Primary key index covering the ID field, suitable for uniquely identifying records and queries that join the primary table."
+    },
+    {
+      "name": "idx_active",
+      "type": "BTREE",
+      "unique": false,
+      "primary": false,
+      "columns": [
+        "is_active"
+      ],
+      "description": "Standard index covering the is_active field, suitable for filtering, join, and sort queries."
+    },
+    {
+      "name": "idx_lcd",
+      "type": "BTREE",
+      "unique": false,
+      "primary": false,
+      "columns": [
+        "lcd"
+      ],
+      "description": "Standard index covering the lcd field, suitable for filtering, join, and sort queries."
+    },
+    {
+      "name": "idx_type",
+      "type": "BTREE",
+      "unique": false,
+      "primary": false,
+      "columns": [
+        "type"
+      ],
+      "description": "Standard index covering the type field, suitable for filtering, join, and sort queries."
+    }
+  ]
+}

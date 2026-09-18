@@ -1,0 +1,90 @@
+{
+  "moduleId": "inspect",
+  "name": "inspect_baseline_source",
+  "label": "Work Order Baseline Source",
+  "description": "Baseline source for inspection originates from time dimension statistics and query scenarios related to inspection.",
+  "fields": [
+    {
+      "name": "id",
+      "type": "bigint",
+      "description": "Unique identifier."
+    },
+    {
+      "name": "baseline_id",
+      "type": "bigint",
+      "description": "Baseline ID, used as the primary key or unique identifier for records in this table."
+    },
+    {
+      "name": "template_id",
+      "type": "bigint",
+      "description": "Baseline template ID. A standard index is defined on this field, making it suitable for filtering, join, and sort queries."
+    },
+    {
+      "name": "snapshot_id",
+      "type": "bigint",
+      "description": "Snapshot ID. A standard index is defined on this field, making it suitable for filtering, join, and sort queries."
+    },
+    {
+      "name": "resource_id",
+      "type": "bigint",
+      "description": "Source resource ID. A standard index is defined on this field, making it suitable for filtering, join, and sort queries."
+    },
+    {
+      "name": "sort",
+      "type": "int",
+      "description": "Sort."
+    },
+    {
+      "name": "fcd",
+      "type": "timestamp(3)",
+      "description": "Creation time."
+    },
+    {
+      "name": "fcu",
+      "type": "char(32)",
+      "description": "Creator."
+    }
+  ],
+  "indexes": [
+    {
+      "name": "PRIMARY",
+      "type": "BTREE",
+      "unique": true,
+      "primary": true,
+      "columns": [
+        "baseline_id"
+      ],
+      "description": "Primary key index covering the baseline_id field, suitable for uniquely identifying records and queries that join the primary table."
+    },
+    {
+      "name": "idx_resource_id",
+      "type": "BTREE",
+      "unique": false,
+      "primary": false,
+      "columns": [
+        "resource_id"
+      ],
+      "description": "Standard index covering the resource_id field, suitable for filtering, join, and sort queries."
+    },
+    {
+      "name": "idx_snapshot_id",
+      "type": "BTREE",
+      "unique": false,
+      "primary": false,
+      "columns": [
+        "snapshot_id"
+      ],
+      "description": "Standard index covering the snapshot_id field, suitable for filtering, join, and sort queries."
+    },
+    {
+      "name": "idx_template_id",
+      "type": "BTREE",
+      "unique": false,
+      "primary": false,
+      "columns": [
+        "template_id"
+      ],
+      "description": "Standard index covering the template_id field, suitable for filtering, join, and sort queries."
+    }
+  ]
+}

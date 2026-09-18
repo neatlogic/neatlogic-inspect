@@ -1,0 +1,80 @@
+{
+  "moduleId": "inspect",
+  "name": "inspect_baseline_job",
+  "label": "Work Order Baseline Relationship",
+  "description": "Baseline relationship for inspection jobs can be used for time dimension statistical queries and association queries related to inspection activities.",
+  "fields": [
+    {
+      "name": "id",
+      "type": "bigint",
+      "description": "Unique identifier, used as the primary key or unique identifier for records in this table."
+    },
+    {
+      "name": "job_id",
+      "type": "bigint",
+      "description": "Work order ID for inspection job. This value must be unique in the database and is suitable for exact-match queries and duplicate detection."
+    },
+    {
+      "name": "baseline_id",
+      "type": "bigint",
+      "description": "Baseline ID. A standard index is defined on this field, making it suitable for filtering, join, and sort queries."
+    },
+    {
+      "name": "task_id",
+      "type": "bigint",
+      "description": "Work order ID for inspection. A standard index is defined on this field, making it suitable for filtering, join, and sort queries."
+    },
+    {
+      "name": "fcd",
+      "type": "timestamp(3)",
+      "description": "Creation time."
+    },
+    {
+      "name": "fcu",
+      "type": "char(32)",
+      "description": "Creator."
+    }
+  ],
+  "indexes": [
+    {
+      "name": "PRIMARY",
+      "type": "BTREE",
+      "unique": true,
+      "primary": true,
+      "columns": [
+        "id"
+      ],
+      "description": "Primary key index covering the ID field, suitable for uniquely identifying records and queries that join the primary table."
+    },
+    {
+      "name": "idx_baseline_id",
+      "type": "BTREE",
+      "unique": false,
+      "primary": false,
+      "columns": [
+        "baseline_id"
+      ],
+      "description": "Standard index covering the baseline_id field, suitable for filtering, join, and sort queries."
+    },
+    {
+      "name": "idx_task_id",
+      "type": "BTREE",
+      "unique": false,
+      "primary": false,
+      "columns": [
+        "task_id"
+      ],
+      "description": "Standard index covering the task_id field, suitable for filtering, join, and sort queries."
+    },
+    {
+      "name": "uk_job_id",
+      "type": "BTREE",
+      "unique": true,
+      "primary": false,
+      "columns": [
+        "job_id"
+      ],
+      "description": "Unique index covering the job_id field, suitable for exact-match retrieval, uniqueness checks, and duplicate detection."
+    }
+  ]
+}

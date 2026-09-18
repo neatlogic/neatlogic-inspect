@@ -1,0 +1,56 @@
+{
+  "moduleId": "inspect",
+  "name": "inspect_new_problem_customview",
+  "label": "Work Order Personal View for Inspection Reports",
+  "description": "The personal view of inspection reports allows users to query, filter, and display data related to inspections.",
+  "fields": [
+    {
+      "name": "id",
+      "type": "bigint",
+      "description": "ID, used as the primary key or unique identifier for records in this table."
+    },
+    {
+      "name": "name",
+      "type": "varchar(50)",
+      "description": "Name. A standard index is defined on this field, making it suitable for filtering, join, and sort queries."
+    },
+    {
+      "name": "user_uuid",
+      "type": "char(32)",
+      "description": "Owner."
+    },
+    {
+      "name": "condition_config",
+      "type": "mediumtext",
+      "description": "Search condition configuration."
+    },
+    {
+      "name": "sort",
+      "type": "int",
+      "description": "Sort."
+    }
+  ],
+  "indexes": [
+    {
+      "name": "PRIMARY",
+      "type": "BTREE",
+      "unique": true,
+      "primary": true,
+      "columns": [
+        "id"
+      ],
+      "description": "Primary key index covering the ID field, suitable for uniquely identifying records and queries that join the primary table."
+    },
+    {
+      "name": "idx_name_user",
+      "type": "BTREE",
+      "unique": true,
+      "primary": false,
+      "columns": [
+        "name",
+        "user_uuid"
+      ],
+      "description": "Unique index covering the name, user_uuid fields, suitable for exact-match retrieval, uniqueness checks, and duplicate detection."
+    }
+  ]
+}

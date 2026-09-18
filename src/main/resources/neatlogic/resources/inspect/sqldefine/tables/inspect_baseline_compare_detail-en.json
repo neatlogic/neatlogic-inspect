@@ -1,0 +1,170 @@
+{
+  "moduleId": "inspect",
+  "name": "inspect_baseline_compare_detail",
+  "label": "Work Order Configuration Comparison Details",
+  "description": "The inspection configuration comparison detail can be used for status tracking and query related to inspection activities.",
+  "fields": [
+    {
+      "name": "id",
+      "type": "bigint",
+      "description": "Unique identifier, used as the primary key or unique identifier for records in this table."
+    },
+    {
+      "name": "task_id",
+      "type": "bigint",
+      "description": "Compare task ID. A standard index is defined on this field, making it suitable for filtering, join, and sort queries."
+    },
+    {
+      "name": "layer",
+      "type": "varchar(50)",
+      "description": "Hierarchical: hardware/kernel/OS/application. A standard index is defined on this field, making it suitable for filtering, join, and sort queries."
+    },
+    {
+      "name": "path",
+      "type": "varchar(500)",
+      "description": "Field path. A standard index is defined on this field, making it suitable for filtering, join, and sort queries."
+    },
+    {
+      "name": "label",
+      "type": "varchar(255)",
+      "description": "Field names."
+    },
+    {
+      "name": "compare_mode",
+      "type": "varchar(50)",
+      "description": "Comparison pattern: exact, set, object_by_key, kv_map, regex, range."
+    },
+    {
+      "name": "status",
+      "type": "varchar(50)",
+      "description": "Detail status: different, missing, additional, ignored."
+    },
+    {
+      "name": "risk_level",
+      "type": "varchar(50)",
+      "description": "Risk level. A standard index is defined on this field, making it suitable for filtering, join, and sort queries."
+    },
+    {
+      "name": "is_blocked",
+      "type": "tinyint(1)",
+      "description": "Is blocked."
+    },
+    {
+      "name": "reason",
+      "type": "varchar(500)",
+      "description": "Differential reason."
+    },
+    {
+      "name": "source_value",
+      "type": "mediumtext",
+      "description": "Source value."
+    },
+    {
+      "name": "target_value",
+      "type": "mediumtext",
+      "description": "Target value."
+    },
+    {
+      "name": "ai_analysis",
+      "type": "mediumtext",
+      "description": "AI risk and repair recommendations."
+    },
+    {
+      "name": "ai_status",
+      "type": "varchar(50)",
+      "description": "AI analysis status. A standard index is defined on this field, making it suitable for filtering, join, and sort queries."
+    },
+    {
+      "name": "ai_retry_count",
+      "type": "int",
+      "description": "Retry count for AI."
+    },
+    {
+      "name": "ai_next_retry_time",
+      "type": "timestamp(3)",
+      "description": "AI agent retry time. A standard index is defined on this field, making it suitable for filtering, join, and sort queries."
+    },
+    {
+      "name": "ai_last_error",
+      "type": "mediumtext",
+      "description": "AI last error message."
+    },
+    {
+      "name": "sort",
+      "type": "int",
+      "description": "Sort."
+    }
+  ],
+  "indexes": [
+    {
+      "name": "PRIMARY",
+      "type": "BTREE",
+      "unique": true,
+      "primary": true,
+      "columns": [
+        "id"
+      ],
+      "description": "Primary key index covering the ID field, suitable for uniquely identifying records and queries that join the primary table."
+    },
+    {
+      "name": "idx_ai_next_retry_time",
+      "type": "BTREE",
+      "unique": false,
+      "primary": false,
+      "columns": [
+        "ai_next_retry_time"
+      ],
+      "description": "Standard index covering the ai_next_retry_time field, suitable for filtering, join, and sort queries."
+    },
+    {
+      "name": "idx_ai_status",
+      "type": "BTREE",
+      "unique": false,
+      "primary": false,
+      "columns": [
+        "ai_status"
+      ],
+      "description": "Standard index covering the ai_status field, suitable for filtering, join, and sort queries."
+    },
+    {
+      "name": "idx_layer",
+      "type": "BTREE",
+      "unique": false,
+      "primary": false,
+      "columns": [
+        "layer"
+      ],
+      "description": "Standard index covering the layer field, suitable for filtering, join, and sort queries."
+    },
+    {
+      "name": "idx_path",
+      "type": "BTREE",
+      "unique": false,
+      "primary": false,
+      "columns": [
+        "path"
+      ],
+      "description": "Standard index covering the path field, suitable for filtering, join, and sort queries."
+    },
+    {
+      "name": "idx_risk_level",
+      "type": "BTREE",
+      "unique": false,
+      "primary": false,
+      "columns": [
+        "risk_level"
+      ],
+      "description": "Standard index covering the risk_level field, suitable for filtering, join, and sort queries."
+    },
+    {
+      "name": "idx_task_id",
+      "type": "BTREE",
+      "unique": false,
+      "primary": false,
+      "columns": [
+        "task_id"
+      ],
+      "description": "Standard index covering the task_id field, suitable for filtering, join, and sort queries."
+    }
+  ]
+}

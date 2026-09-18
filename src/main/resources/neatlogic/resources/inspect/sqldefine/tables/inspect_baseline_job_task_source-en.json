@@ -1,0 +1,67 @@
+{
+  "moduleId": "inspect",
+  "name": "inspect_baseline_job_task_source",
+  "label": "Baseline Task Source for Tagging Inspection",
+  "description": "Baseline inspection task source for time dimension statistics and query scenarios related to inspection.",
+  "fields": [
+    {
+      "name": "id",
+      "type": "bigint",
+      "description": "Unique identifier, used as the primary key or unique identifier for records in this table."
+    },
+    {
+      "name": "task_id",
+      "type": "bigint",
+      "description": "Baseline task ID for tag-based inspection. A standard index is defined on this field, making it suitable for filtering, join, and sort queries."
+    },
+    {
+      "name": "tag_id",
+      "type": "bigint",
+      "description": "The ID of the tag. A standard index is defined on this field, making it suitable for filtering, join, and sort queries."
+    },
+    {
+      "name": "fcd",
+      "type": "timestamp(3)",
+      "description": "Creation time."
+    },
+    {
+      "name": "fcu",
+      "type": "char(32)",
+      "description": "Creator."
+    }
+  ],
+  "indexes": [
+    {
+      "name": "PRIMARY",
+      "type": "BTREE",
+      "unique": true,
+      "primary": true,
+      "columns": [
+        "id"
+      ],
+      "description": "Primary key index covering the ID field, suitable for uniquely identifying records and queries that join the primary table."
+    },
+    {
+      "name": "idx_tag_task",
+      "type": "BTREE",
+      "unique": false,
+      "primary": false,
+      "columns": [
+        "tag_id",
+        "task_id"
+      ],
+      "description": "Standard index covering the tag_id, task_id fields, suitable for filtering, join, and sort queries."
+    },
+    {
+      "name": "uk_task_tag",
+      "type": "BTREE",
+      "unique": true,
+      "primary": false,
+      "columns": [
+        "task_id",
+        "tag_id"
+      ],
+      "description": "Unique index covering the task_id, tag_id fields, suitable for exact-match retrieval, uniqueness checks, and duplicate detection."
+    }
+  ]
+}

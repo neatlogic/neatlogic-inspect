@@ -1,0 +1,132 @@
+{
+  "moduleId": "inspect",
+  "name": "inspect_config_rule",
+  "label": "Work Order Configuration Comparison Rules",
+  "description": "Configuration comparison rules for inspections can be used for time dimension statistical queries and association queries related to inspections.",
+  "fields": [
+    {
+      "name": "id",
+      "type": "bigint",
+      "description": "Unique identifier, used as the primary key or unique identifier for records in this table."
+    },
+    {
+      "name": "baseline_id",
+      "type": "bigint",
+      "description": "Baseline ID, 0 represents global rules. A standard index is defined on this field, making it suitable for filtering, join, and sort queries."
+    },
+    {
+      "name": "layer",
+      "type": "varchar(50)",
+      "description": "Hierarchical: hardware/kernel/OS/application. A standard index is defined on this field, making it suitable for filtering, join, and sort queries."
+    },
+    {
+      "name": "path_hash",
+      "type": "char(32)",
+      "description": "Path hash."
+    },
+    {
+      "name": "path",
+      "type": "varchar(500)",
+      "description": "Field path."
+    },
+    {
+      "name": "name",
+      "type": "varchar(255)",
+      "description": "Field names."
+    },
+    {
+      "name": "compare_mode",
+      "type": "varchar(50)",
+      "description": "Comparison pattern: exact, set, object_by_key, kv_map, regex, range, conditional. A standard index is defined on this field, making it suitable for filtering, join, and sort queries."
+    },
+    {
+      "name": "is_required",
+      "type": "tinyint(1)",
+      "description": "Is mandatory."
+    },
+    {
+      "name": "is_ignore",
+      "type": "tinyint(1)",
+      "description": "Ignore."
+    },
+    {
+      "name": "risk_weight",
+      "type": "int",
+      "description": "Risk weight."
+    },
+    {
+      "name": "sort",
+      "type": "int",
+      "description": "Sort."
+    },
+    {
+      "name": "config",
+      "type": "mediumtext",
+      "description": "Rule configuration."
+    },
+    {
+      "name": "fcd",
+      "type": "timestamp(3)",
+      "description": "Creation time."
+    },
+    {
+      "name": "fcu",
+      "type": "char(32)",
+      "description": "Creator."
+    },
+    {
+      "name": "lcd",
+      "type": "timestamp(3)",
+      "description": "Update the timestamp."
+    },
+    {
+      "name": "lcu",
+      "type": "char(32)",
+      "description": "Updated by."
+    }
+  ],
+  "indexes": [
+    {
+      "name": "PRIMARY",
+      "type": "BTREE",
+      "unique": true,
+      "primary": true,
+      "columns": [
+        "id"
+      ],
+      "description": "Primary key index covering the ID field, suitable for uniquely identifying records and queries that join the primary table."
+    },
+    {
+      "name": "idx_compare_mode",
+      "type": "BTREE",
+      "unique": false,
+      "primary": false,
+      "columns": [
+        "compare_mode"
+      ],
+      "description": "Standard index covering the compare_mode field, suitable for filtering, join, and sort queries."
+    },
+    {
+      "name": "idx_layer",
+      "type": "BTREE",
+      "unique": false,
+      "primary": false,
+      "columns": [
+        "layer"
+      ],
+      "description": "Standard index covering the layer field, suitable for filtering, join, and sort queries."
+    },
+    {
+      "name": "uk_baseline_mode_path_hash",
+      "type": "BTREE",
+      "unique": true,
+      "primary": false,
+      "columns": [
+        "baseline_id",
+        "compare_mode",
+        "path_hash"
+      ],
+      "description": "Unique index covering baseline_id, compare_mode, and path_hash fields for precise query by comparison mode, uniqueness checks, and deduplication."
+    }
+  ]
+}

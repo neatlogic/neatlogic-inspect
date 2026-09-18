@@ -1,0 +1,45 @@
+{
+  "moduleId": "inspect",
+  "name": "inspect_config_file_audit",
+  "label": "Work Order Configuration File Record",
+  "description": "Work order configuration file records are used for related queries and report queries related to inspections.",
+  "fields": [
+    {
+      "name": "id",
+      "type": "bigint",
+      "description": "Unique identifier, used as the primary key or unique identifier for records in this table."
+    },
+    {
+      "name": "inspect_time",
+      "type": "timestamp(3)",
+      "description": "Inspection time."
+    },
+    {
+      "name": "path_id",
+      "type": "bigint",
+      "description": "Configuration file path ID. A standard index is defined on this field, making it suitable for filtering, join, and sort queries."
+    }
+  ],
+  "indexes": [
+    {
+      "name": "PRIMARY",
+      "type": "BTREE",
+      "unique": true,
+      "primary": true,
+      "columns": [
+        "id"
+      ],
+      "description": "Primary key index covering the ID field, suitable for uniquely identifying records and queries that join the primary table."
+    },
+    {
+      "name": "idx_path_id",
+      "type": "BTREE",
+      "unique": false,
+      "primary": false,
+      "columns": [
+        "path_id"
+      ],
+      "description": "Standard index covering the path_id field, suitable for filtering, join, and sort queries."
+    }
+  ]
+}

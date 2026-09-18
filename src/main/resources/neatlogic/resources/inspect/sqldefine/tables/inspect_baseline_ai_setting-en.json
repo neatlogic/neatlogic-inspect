@@ -1,0 +1,65 @@
+{
+  "moduleId": "inspect",
+  "name": "inspect_baseline_ai_setting",
+  "label": "Work Order Comparison AI Agent Setup",
+  "description": "The AI agent for inspection configuration comparison can be used for time dimension statistical queries and association queries related to inspection tasks.",
+  "fields": [
+    {
+      "name": "id",
+      "type": "bigint",
+      "description": "Unique identifier, used as the primary key or unique identifier for records in this table."
+    },
+    {
+      "name": "agent_id",
+      "type": "bigint",
+      "description": "AI agent ID. A standard index is defined on this field, making it suitable for filtering, join, and sort queries."
+    },
+    {
+      "name": "additional_prompt",
+      "type": "text",
+      "description": "Add prompt."
+    },
+    {
+      "name": "fcd",
+      "type": "timestamp(3)",
+      "description": "Creation time."
+    },
+    {
+      "name": "fcu",
+      "type": "char(32)",
+      "description": "Creator."
+    },
+    {
+      "name": "lcd",
+      "type": "timestamp(3)",
+      "description": "Update the timestamp."
+    },
+    {
+      "name": "lcu",
+      "type": "char(32)",
+      "description": "Updated by."
+    }
+  ],
+  "indexes": [
+    {
+      "name": "PRIMARY",
+      "type": "BTREE",
+      "unique": true,
+      "primary": true,
+      "columns": [
+        "id"
+      ],
+      "description": "Primary key index covering the ID field, suitable for uniquely identifying records and queries that join the primary table."
+    },
+    {
+      "name": "idx_agent_id",
+      "type": "BTREE",
+      "unique": false,
+      "primary": false,
+      "columns": [
+        "agent_id"
+      ],
+      "description": "Standard index covering the agent_id field, suitable for filtering, join, and sort queries."
+    }
+  ]
+}

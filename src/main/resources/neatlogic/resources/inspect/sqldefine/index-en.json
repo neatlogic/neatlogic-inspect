@@ -1,0 +1,140 @@
+{
+  "moduleId": "inspect",
+  "tables": [
+    {
+      "name": "inspect_accessendpoint_script",
+      "label": "Asset List Script Association Table",
+      "description": "The script for the asset list table is used for related queries in inspection-related scenarios."
+    },
+    {
+      "name": "inspect_alert_everyday",
+      "label": "Alert Statistics for Inspection",
+      "description": "The inspection alert statistics table can be used for related queries in inspection-related reporting scenarios."
+    },
+    {
+      "name": "inspect_appsystem_schedule",
+      "label": "Scheduled Inspection",
+      "description": "Scheduled inspections can be used for reporting scenarios such as filtering on enabled statuses for inspection-related tasks, time dimension statistics, and query associations."
+    },
+    {
+      "name": "inspect_baseline",
+      "label": "Work Order Configuration Baseline Comparison",
+      "description": "The baseline comparison for inspection configurations can be used for tracking the status of inspection-related activities and time dimension statistics."
+    },
+    {
+      "name": "inspect_baseline_ai_setting",
+      "label": "Work Order Comparison AI Agent Setup",
+      "description": "The AI agent for inspection configuration comparison can be used for time dimension statistical queries and association queries related to inspection tasks."
+    },
+    {
+      "name": "inspect_baseline_compare_detail",
+      "label": "Work Order Configuration Comparison Details",
+      "description": "The inspection configuration comparison detail can be used for status tracking and query related to inspection activities."
+    },
+    {
+      "name": "inspect_baseline_compare_task",
+      "label": "Work Order for Configuration Comparison of Inspections",
+      "description": "The inspection configuration comparison task can be used for status tracking, time dimension statistics, and query association in reporting scenarios related to inspections."
+    },
+    {
+      "name": "inspect_baseline_job",
+      "label": "Work Order Baseline Relationship",
+      "description": "Baseline relationship for inspection jobs can be used for time dimension statistical queries and association queries related to inspection activities."
+    },
+    {
+      "name": "inspect_baseline_job_source",
+      "label": "Work Order Source for Inspection",
+      "description": "Inspection jobs are sources for time dimension statistical reports and query scenarios related to inspection."
+    },
+    {
+      "name": "inspect_baseline_job_task",
+      "label": "Baseline Task for Tagging Inspection",
+      "description": "Baseline inspection task is used for reporting scenarios such as tracking the status of related inspections and statistical time dimension."
+    },
+    {
+      "name": "inspect_baseline_job_task_source",
+      "label": "Baseline Task Source for Tagging Inspection",
+      "description": "Baseline inspection task source for time dimension statistics and query scenarios related to inspection."
+    },
+    {
+      "name": "inspect_baseline_schedule",
+      "label": "Baseline Timed Inspection Job",
+      "description": "Baseline periodic inspection jobs are designed for scenarios involving filtering by enabled status for related inspections and statistical time dimensions for reporting."
+    },
+    {
+      "name": "inspect_baseline_snapshot",
+      "label": "Work Order Snapshot for Configuration Comparison",
+      "description": "The snapshot of the inspection configuration can be used for time dimension statistical queries and association queries related to inspection."
+    },
+    {
+      "name": "inspect_baseline_snapshot_source",
+      "label": "Source of the Snapshot for Inspection Configuration",
+      "description": "The source of the inspection configuration snapshot can be used for time dimension statistical queries and association queries related to inspections."
+    },
+    {
+      "name": "inspect_baseline_source",
+      "label": "Work Order Baseline Source",
+      "description": "Baseline source for inspection originates from time dimension statistics and query scenarios related to inspection."
+    },
+    {
+      "name": "inspect_baseline_tag",
+      "label": "Baseline Management Selected Tags",
+      "description": "Baseline management has been tagged for use in time dimension statistical queries and associated queries related to inspections."
+    },
+    {
+      "name": "inspect_baseline_template",
+      "label": "Baseline Template Level",
+      "description": "Baseline template hierarchy is used for time dimension statistical queries and association queries related to inspections."
+    },
+    {
+      "name": "inspect_baseline_template_auth",
+      "label": "Baseline Template Level Authorization",
+      "description": "Baseline template hierarchical editing authorization is used for time dimension statistical queries and association queries related to inspections."
+    },
+    {
+      "name": "inspect_baseline_template_param",
+      "label": "Baseline Template Parameters",
+      "description": "Baseline template parameters can be used for time dimension statistical queries and association queries related to inspections."
+    },
+    {
+      "name": "inspect_ci_combop",
+      "label": "Work Order Configuration for Inspection",
+      "description": "The inspection configuration group can be used for related queries and report queries related to inspections."
+    },
+    {
+      "name": "inspect_config_file_audit",
+      "label": "Work Order Configuration File Record",
+      "description": "Work order configuration file records are used for related queries and report queries related to inspections."
+    },
+    {
+      "name": "inspect_config_file_last_change_time",
+      "label": "Last Time of Asset Change During the Inspection",
+      "description": "The last time the asset was inspected can be used for related queries in inspection-related reports."
+    },
+    {
+      "name": "inspect_config_file_path",
+      "label": "Inspection Resource Configuration File Path",
+      "description": "Inspection resource configuration file path is used for related queries and report queries during inspection tasks."
+    },
+    {
+      "name": "inspect_config_file_version",
+      "label": "Work Order Configuration File Version",
+      "description": "The configuration file version for inspection resource allocation can be used for related queries and report queries in the inspection scenario."
+    },
+    {
+      "name": "inspect_config_rule",
+      "label": "Work Order Configuration Comparison Rules",
+      "description": "Configuration comparison rules for inspections can be used for time dimension statistical queries and association queries related to inspections."
+    },
+    {
+      "name": "inspect_new_problem_customview",
+      "label": "Work Order Personal View for Inspection Reports",
+      "description": "The personal view of inspection reports allows users to query, filter, and display data related to inspections."
+    },
+    {
+      "name": "inspect_schedule",
+      "label": "Scheduled Inspection",
+      "description": "Scheduled inspections can be used for reporting scenarios such as filtering on enabled statuses for inspection-related tasks, time dimension statistics, and query associations."
+    }
+  ]
+}

@@ -1,0 +1,115 @@
+{
+  "moduleId": "inspect",
+  "name": "inspect_baseline",
+  "label": "Work Order Configuration Baseline Comparison",
+  "description": "The baseline comparison for inspection configurations can be used for tracking the status of inspection-related activities and time dimension statistics.",
+  "fields": [
+    {
+      "name": "id",
+      "type": "bigint",
+      "description": "Unique identifier, used as the primary key or unique identifier for records in this table."
+    },
+    {
+      "name": "name",
+      "type": "varchar(100)",
+      "description": "Baseline name."
+    },
+    {
+      "name": "description",
+      "type": "text",
+      "description": "Explanation."
+    },
+    {
+      "name": "status",
+      "type": "varchar(50)",
+      "description": "Status: draft/pending approval/approved/active/rejected/archived. A standard index is defined on this field, making it suitable for filtering, join, and sort queries."
+    },
+    {
+      "name": "baseline_data",
+      "type": "longtext",
+      "description": "Baseline data, in key=value text format."
+    },
+    {
+      "name": "data_hash",
+      "type": "char(32)",
+      "description": "Baseline data hash."
+    },
+    {
+      "name": "submitter",
+      "type": "char(32)",
+      "description": "Submitter."
+    },
+    {
+      "name": "submit_time",
+      "type": "timestamp(3)",
+      "description": "Submission time."
+    },
+    {
+      "name": "approval_status",
+      "type": "varchar(50)",
+      "description": "Approval status: pending, approved, rejected."
+    },
+    {
+      "name": "approver",
+      "type": "char(32)",
+      "description": "Approver."
+    },
+    {
+      "name": "approval_comment",
+      "type": "mediumtext",
+      "description": "Approval opinion."
+    },
+    {
+      "name": "approved_time",
+      "type": "timestamp(3)",
+      "description": "Approval time."
+    },
+    {
+      "name": "activated_time",
+      "type": "timestamp(3)",
+      "description": "Publication date."
+    },
+    {
+      "name": "fcd",
+      "type": "timestamp(3)",
+      "description": "Creation time."
+    },
+    {
+      "name": "fcu",
+      "type": "char(32)",
+      "description": "Creator."
+    },
+    {
+      "name": "lcd",
+      "type": "timestamp(3)",
+      "description": "Update the timestamp."
+    },
+    {
+      "name": "lcu",
+      "type": "char(32)",
+      "description": "Updated by."
+    }
+  ],
+  "indexes": [
+    {
+      "name": "PRIMARY",
+      "type": "BTREE",
+      "unique": true,
+      "primary": true,
+      "columns": [
+        "id"
+      ],
+      "description": "Primary key index covering the ID field, suitable for uniquely identifying records and queries that join the primary table."
+    },
+    {
+      "name": "idx_status",
+      "type": "BTREE",
+      "unique": false,
+      "primary": false,
+      "columns": [
+        "status"
+      ],
+      "description": "Standard index covering the status field, suitable for filtering, join, and sort queries."
+    }
+  ]
+}

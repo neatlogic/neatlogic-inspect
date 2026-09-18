@@ -1,0 +1,67 @@
+{
+  "moduleId": "inspect",
+  "name": "inspect_alert_everyday",
+  "label": "Alert Statistics for Inspection",
+  "description": "The inspection alert statistics table can be used for related queries in inspection-related reporting scenarios.",
+  "fields": [
+    {
+      "name": "report_time",
+      "type": "date",
+      "description": "Inspection time, used as the primary key or unique identifier for records in this table."
+    },
+    {
+      "name": "resource_id",
+      "type": "bigint",
+      "description": "Asset ID, used as the primary key or unique identifier for records in this table."
+    },
+    {
+      "name": "alert_level",
+      "type": "varchar(20)",
+      "description": "Alert level. A standard index is defined on this field, making it suitable for filtering, join, and sort queries."
+    },
+    {
+      "name": "alert_object",
+      "type": "text",
+      "description": "Alert object, used as the primary key or unique identifier for records in this table."
+    },
+    {
+      "name": "alert_rule",
+      "type": "varchar(255)",
+      "description": "Alert rules."
+    },
+    {
+      "name": "alert_tips",
+      "type": "varchar(255)",
+      "description": "Alert notification."
+    },
+    {
+      "name": "alert_value",
+      "type": "varchar(200)",
+      "description": "Alert threshold."
+    }
+  ],
+  "indexes": [
+    {
+      "name": "PRIMARY",
+      "type": "BTREE",
+      "unique": true,
+      "primary": true,
+      "columns": [
+        "resource_id",
+        "report_time",
+        "alert_object"
+      ],
+      "description": "Primary key index covering the resource_id, report_time, alert_object fields, suitable for uniquely identifying records and queries that join the primary table."
+    },
+    {
+      "name": "idx_alertlevel",
+      "type": "BTREE",
+      "unique": false,
+      "primary": false,
+      "columns": [
+        "alert_level"
+      ],
+      "description": "Standard index covering the alert_level field, suitable for filtering, join, and sort queries."
+    }
+  ]
+}

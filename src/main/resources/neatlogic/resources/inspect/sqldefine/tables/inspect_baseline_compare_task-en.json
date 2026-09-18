@@ -1,0 +1,160 @@
+{
+  "moduleId": "inspect",
+  "name": "inspect_baseline_compare_task",
+  "label": "Work Order for Configuration Comparison of Inspections",
+  "description": "The inspection configuration comparison task can be used for status tracking, time dimension statistics, and query association in reporting scenarios related to inspections.",
+  "fields": [
+    {
+      "name": "id",
+      "type": "bigint",
+      "description": "Unique identifier, used as the primary key or unique identifier for records in this table."
+    },
+    {
+      "name": "compare_type",
+      "type": "varchar(50)",
+      "description": "Comparison type: baseline/peer."
+    },
+    {
+      "name": "baseline_id",
+      "type": "bigint",
+      "description": "Baseline version ID. A standard index is defined on this field, making it suitable for filtering, join, and sort queries."
+    },
+    {
+      "name": "source_snapshot_id",
+      "type": "bigint",
+      "description": "Source snapshot ID. A standard index is defined on this field, making it suitable for filtering, join, and sort queries."
+    },
+    {
+      "name": "target_snapshot_id",
+      "type": "bigint",
+      "description": "Target snapshot ID. A standard index is defined on this field, making it suitable for filtering, join, and sort queries."
+    },
+    {
+      "name": "source_data_hash",
+      "type": "char(32)",
+      "description": "Source data hash."
+    },
+    {
+      "name": "target_data_hash",
+      "type": "char(32)",
+      "description": "Target data HASH."
+    },
+    {
+      "name": "status",
+      "type": "varchar(50)",
+      "description": "Task status: pending/running/succeed/failed. A standard index is defined on this field, making it suitable for filtering, join, and sort queries."
+    },
+    {
+      "name": "compare_result",
+      "type": "varchar(50)",
+      "description": "Result: compliant/noncompliant."
+    },
+    {
+      "name": "risk_level",
+      "type": "varchar(50)",
+      "description": "Risk level."
+    },
+    {
+      "name": "is_blocked",
+      "type": "tinyint(1)",
+      "description": "Is blocked."
+    },
+    {
+      "name": "total_count",
+      "type": "int",
+      "description": "Total count."
+    },
+    {
+      "name": "diff_count",
+      "type": "int",
+      "description": "Difference count."
+    },
+    {
+      "name": "high_count",
+      "type": "int",
+      "description": "High-risk outliers."
+    },
+    {
+      "name": "medium_count",
+      "type": "int",
+      "description": "High-risk deviation."
+    },
+    {
+      "name": "low_count",
+      "type": "int",
+      "description": "Low-risk deviation numbers."
+    },
+    {
+      "name": "fcd",
+      "type": "timestamp(3)",
+      "description": "Creation time."
+    },
+    {
+      "name": "fcu",
+      "type": "char(32)",
+      "description": "Creator."
+    },
+    {
+      "name": "lcd",
+      "type": "timestamp(3)",
+      "description": "Update the timestamp."
+    },
+    {
+      "name": "lcu",
+      "type": "char(32)",
+      "description": "Updated by."
+    }
+  ],
+  "indexes": [
+    {
+      "name": "PRIMARY",
+      "type": "BTREE",
+      "unique": true,
+      "primary": true,
+      "columns": [
+        "id"
+      ],
+      "description": "Primary key index covering the ID field, suitable for uniquely identifying records and queries that join the primary table."
+    },
+    {
+      "name": "idx_baseline_version_id",
+      "type": "BTREE",
+      "unique": false,
+      "primary": false,
+      "columns": [
+        "baseline_id"
+      ],
+      "description": "Standard index covering the baseline_id field, suitable for filtering, join, and sort queries."
+    },
+    {
+      "name": "idx_source_snapshot_id",
+      "type": "BTREE",
+      "unique": false,
+      "primary": false,
+      "columns": [
+        "source_snapshot_id"
+      ],
+      "description": "Standard index covering the source_snapshot_id field, suitable for filtering, join, and sort queries."
+    },
+    {
+      "name": "idx_status",
+      "type": "BTREE",
+      "unique": false,
+      "primary": false,
+      "columns": [
+        "status"
+      ],
+      "description": "Standard index covering the status field, suitable for filtering, join, and sort queries."
+    },
+    {
+      "name": "idx_target_snapshot_id",
+      "type": "BTREE",
+      "unique": false,
+      "primary": false,
+      "columns": [
+        "target_snapshot_id"
+      ],
+      "description": "Standard index covering the target_snapshot_id field, suitable for filtering, join, and sort queries."
+    }
+  ]
+}

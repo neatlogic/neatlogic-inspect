@@ -1,0 +1,40 @@
+{
+  "moduleId": "inspect",
+  "name": "inspect_config_file_last_change_time",
+  "label": "Last Time of Asset Change During the Inspection",
+  "description": "The last time the asset was inspected can be used for related queries in inspection-related reports.",
+  "fields": [
+    {
+      "name": "resource_id",
+      "type": "bigint",
+      "description": "Asset ID, used as the primary key or unique identifier for records in this table."
+    },
+    {
+      "name": "last_change_time",
+      "type": "timestamp(3)",
+      "description": "Last change time. A standard index is defined on this field, making it suitable for filtering, join, and sort queries."
+    }
+  ],
+  "indexes": [
+    {
+      "name": "PRIMARY",
+      "type": "BTREE",
+      "unique": true,
+      "primary": true,
+      "columns": [
+        "resource_id"
+      ],
+      "description": "Primary key index covering the resource_id field, suitable for uniquely identifying records and queries that join the primary table."
+    },
+    {
+      "name": "idx_last_change_time",
+      "type": "BTREE",
+      "unique": false,
+      "primary": false,
+      "columns": [
+        "last_change_time"
+      ],
+      "description": "Standard index covering the last_change_time field, suitable for filtering, join, and sort queries."
+    }
+  ]
+}

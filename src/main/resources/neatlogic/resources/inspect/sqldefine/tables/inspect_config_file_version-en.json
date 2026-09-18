@@ -1,0 +1,75 @@
+{
+  "moduleId": "inspect",
+  "name": "inspect_config_file_version",
+  "label": "Work Order Configuration File Version",
+  "description": "The configuration file version for inspection resource allocation can be used for related queries and report queries in the inspection scenario.",
+  "fields": [
+    {
+      "name": "id",
+      "type": "bigint",
+      "description": "Unique identifier, used as the primary key or unique identifier for records in this table."
+    },
+    {
+      "name": "md5",
+      "type": "varchar(100)",
+      "description": "MD5."
+    },
+    {
+      "name": "inspect_time",
+      "type": "timestamp(3)",
+      "description": "Inspection time."
+    },
+    {
+      "name": "file_id",
+      "type": "bigint",
+      "description": "Configuration file ID."
+    },
+    {
+      "name": "audit_id",
+      "type": "bigint",
+      "description": "Work order ID. A standard index is defined on this field, making it suitable for filtering, join, and sort queries."
+    },
+    {
+      "name": "path_id",
+      "type": "bigint",
+      "description": "Path_id. A standard index is defined on this field, making it suitable for filtering, join, and sort queries."
+    },
+    {
+      "name": "job_id",
+      "type": "bigint",
+      "description": "Job ID."
+    }
+  ],
+  "indexes": [
+    {
+      "name": "PRIMARY",
+      "type": "BTREE",
+      "unique": true,
+      "primary": true,
+      "columns": [
+        "id"
+      ],
+      "description": "Primary key index covering the ID field, suitable for uniquely identifying records and queries that join the primary table."
+    },
+    {
+      "name": "idx_path_id",
+      "type": "BTREE",
+      "unique": false,
+      "primary": false,
+      "columns": [
+        "path_id"
+      ],
+      "description": "Standard index covering the path_id field, suitable for filtering, join, and sort queries."
+    },
+    {
+      "name": "idx_record_id",
+      "type": "BTREE",
+      "unique": false,
+      "primary": false,
+      "columns": [
+        "audit_id"
+      ],
+      "description": "Standard index covering the audit_id field, suitable for filtering, join, and sort queries."
+    }
+  ]
+}

@@ -1,0 +1,90 @@
+{
+  "moduleId": "inspect",
+  "name": "inspect_baseline_job_task",
+  "label": "Baseline Task for Tagging Inspection",
+  "description": "Baseline inspection task is used for reporting scenarios such as tracking the status of related inspections and statistical time dimension.",
+  "fields": [
+    {
+      "name": "id",
+      "type": "bigint",
+      "description": "Unique identifier, used as the primary key or unique identifier for records in this table."
+    },
+    {
+      "name": "status",
+      "type": "varchar(50)",
+      "description": "Task status. A standard index is defined on this field, making it suitable for filtering, join, and sort queries."
+    },
+    {
+      "name": "param",
+      "type": "mediumtext",
+      "description": "Request parameters."
+    },
+    {
+      "name": "result",
+      "type": "mediumtext",
+      "description": "Execution result."
+    },
+    {
+      "name": "error",
+      "type": "text",
+      "description": "Alert information."
+    },
+    {
+      "name": "resource_count",
+      "type": "int",
+      "description": "Resource count."
+    },
+    {
+      "name": "target_count",
+      "type": "int",
+      "description": "Number of inspection objects."
+    },
+    {
+      "name": "group_count",
+      "type": "int",
+      "description": "Group count of type."
+    },
+    {
+      "name": "fcd",
+      "type": "timestamp(3)",
+      "description": "Creation time. A standard index is defined on this field, making it suitable for filtering, join, and sort queries."
+    },
+    {
+      "name": "fcu",
+      "type": "char(32)",
+      "description": "Creator."
+    }
+  ],
+  "indexes": [
+    {
+      "name": "PRIMARY",
+      "type": "BTREE",
+      "unique": true,
+      "primary": true,
+      "columns": [
+        "id"
+      ],
+      "description": "Primary key index covering the ID field, suitable for uniquely identifying records and queries that join the primary table."
+    },
+    {
+      "name": "idx_fcd",
+      "type": "BTREE",
+      "unique": false,
+      "primary": false,
+      "columns": [
+        "fcd"
+      ],
+      "description": "Standard index covering the fcd field, suitable for filtering, join, and sort queries."
+    },
+    {
+      "name": "idx_status",
+      "type": "BTREE",
+      "unique": false,
+      "primary": false,
+      "columns": [
+        "status"
+      ],
+      "description": "Standard index covering the status field, suitable for filtering, join, and sort queries."
+    }
+  ]
+}

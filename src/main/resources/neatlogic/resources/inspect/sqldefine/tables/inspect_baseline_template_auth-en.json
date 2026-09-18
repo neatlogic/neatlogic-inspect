@@ -1,0 +1,82 @@
+{
+  "moduleId": "inspect",
+  "name": "inspect_baseline_template_auth",
+  "label": "Baseline Template Level Authorization",
+  "description": "Baseline template hierarchical editing authorization is used for time dimension statistical queries and association queries related to inspections.",
+  "fields": [
+    {
+      "name": "id",
+      "type": "bigint",
+      "description": "Unique identifier, used as the primary key or unique identifier for records in this table."
+    },
+    {
+      "name": "template_id",
+      "type": "bigint",
+      "description": "Template level ID. A standard index is defined on this field, making it suitable for filtering, join, and sort queries."
+    },
+    {
+      "name": "auth_type",
+      "type": "varchar(50)",
+      "description": "Authorization type: user/team/role/common."
+    },
+    {
+      "name": "auth_uuid",
+      "type": "varchar(100)",
+      "description": "Authorization UUID."
+    },
+    {
+      "name": "fcd",
+      "type": "timestamp(3)",
+      "description": "Creation time."
+    },
+    {
+      "name": "fcu",
+      "type": "char(32)",
+      "description": "Creator."
+    },
+    {
+      "name": "lcd",
+      "type": "timestamp(3)",
+      "description": "Update the timestamp."
+    },
+    {
+      "name": "lcu",
+      "type": "char(32)",
+      "description": "Updated by."
+    }
+  ],
+  "indexes": [
+    {
+      "name": "PRIMARY",
+      "type": "BTREE",
+      "unique": true,
+      "primary": true,
+      "columns": [
+        "id"
+      ],
+      "description": "Primary key index covering the ID field, suitable for uniquely identifying records and queries that join the primary table."
+    },
+    {
+      "name": "idx_template_id",
+      "type": "BTREE",
+      "unique": false,
+      "primary": false,
+      "columns": [
+        "template_id"
+      ],
+      "description": "Standard index covering the template_id field, suitable for filtering, join, and sort queries."
+    },
+    {
+      "name": "uk_template_auth",
+      "type": "BTREE",
+      "unique": true,
+      "primary": false,
+      "columns": [
+        "template_id",
+        "auth_type",
+        "auth_uuid"
+      ],
+      "description": "Unique index covering the template_id, auth_type, auth_uuid fields, suitable for exact-match retrieval, uniqueness checks, and duplicate detection."
+    }
+  ]
+}

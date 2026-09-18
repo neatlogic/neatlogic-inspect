@@ -1,0 +1,100 @@
+{
+  "moduleId": "inspect",
+  "name": "inspect_baseline_snapshot",
+  "label": "Work Order Snapshot for Configuration Comparison",
+  "description": "The snapshot of the inspection configuration can be used for time dimension statistical queries and association queries related to inspection.",
+  "fields": [
+    {
+      "name": "id",
+      "type": "bigint",
+      "description": "Unique identifier, used as the primary key or unique identifier for records in this table."
+    },
+    {
+      "name": "resource_id",
+      "type": "bigint",
+      "description": "Resource ID. A standard index is defined on this field, making it suitable for filtering, join, and sort queries."
+    },
+    {
+      "name": "type_id",
+      "type": "bigint",
+      "description": "Resource model ID."
+    },
+    {
+      "name": "job_id",
+      "type": "bigint",
+      "description": "Collect the job ID. A standard index is defined on this field, making it suitable for filtering, join, and sort queries."
+    },
+    {
+      "name": "collect_time",
+      "type": "timestamp(3)",
+      "description": "Collection time. A standard index is defined on this field, making it suitable for filtering, join, and sort queries."
+    },
+    {
+      "name": "raw_data",
+      "type": "longtext",
+      "description": "Original data collection."
+    },
+    {
+      "name": "normalized_data",
+      "type": "longtext",
+      "description": "Normalize snapshot data."
+    },
+    {
+      "name": "data_hash",
+      "type": "char(32)",
+      "description": "Snapshot data HASH."
+    },
+    {
+      "name": "fcd",
+      "type": "timestamp(3)",
+      "description": "Creation time."
+    },
+    {
+      "name": "fcu",
+      "type": "char(32)",
+      "description": "Creator."
+    }
+  ],
+  "indexes": [
+    {
+      "name": "PRIMARY",
+      "type": "BTREE",
+      "unique": true,
+      "primary": true,
+      "columns": [
+        "id"
+      ],
+      "description": "Primary key index covering the ID field, suitable for uniquely identifying records and queries that join the primary table."
+    },
+    {
+      "name": "idx_collect_time",
+      "type": "BTREE",
+      "unique": false,
+      "primary": false,
+      "columns": [
+        "collect_time"
+      ],
+      "description": "Standard index covering the collect_time field, suitable for filtering, join, and sort queries."
+    },
+    {
+      "name": "idx_job_id",
+      "type": "BTREE",
+      "unique": false,
+      "primary": false,
+      "columns": [
+        "job_id"
+      ],
+      "description": "Standard index covering the job_id field, suitable for filtering, join, and sort queries."
+    },
+    {
+      "name": "idx_resource_id",
+      "type": "BTREE",
+      "unique": false,
+      "primary": false,
+      "columns": [
+        "resource_id"
+      ],
+      "description": "Standard index covering the resource_id field, suitable for filtering, join, and sort queries."
+    }
+  ]
+}

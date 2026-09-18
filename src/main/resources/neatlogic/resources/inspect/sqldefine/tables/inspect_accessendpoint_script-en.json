@@ -1,0 +1,35 @@
+{
+  "moduleId": "inspect",
+  "name": "inspect_accessendpoint_script",
+  "label": "Asset List Script Association Table",
+  "description": "The script for the asset list table is used for related queries in inspection-related scenarios.",
+  "fields": [
+    {
+      "name": "resource_id",
+      "type": "bigint",
+      "description": "Resource ID, used as the primary key or unique identifier for records in this table."
+    },
+    {
+      "name": "script_id",
+      "type": "bigint",
+      "description": "Script ID."
+    },
+    {
+      "name": "config",
+      "type": "text",
+      "description": "Expand the configuration."
+    }
+  ],
+  "indexes": [
+    {
+      "name": "PRIMARY",
+      "type": "BTREE",
+      "unique": true,
+      "primary": true,
+      "columns": [
+        "resource_id"
+      ],
+      "description": "Primary key index covering the resource_id field, suitable for uniquely identifying records and queries that join the primary table."
+    }
+  ]
+}

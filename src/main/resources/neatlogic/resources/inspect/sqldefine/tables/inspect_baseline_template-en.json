@@ -1,0 +1,137 @@
+{
+  "moduleId": "inspect",
+  "name": "inspect_baseline_template",
+  "label": "Baseline Template Level",
+  "description": "Baseline template hierarchy is used for time dimension statistical queries and association queries related to inspections.",
+  "fields": [
+    {
+      "name": "id",
+      "type": "bigint",
+      "description": "Unique identifier, used as the primary key or unique identifier for records in this table."
+    },
+    {
+      "name": "parent_id",
+      "type": "bigint",
+      "description": "Parent_id. A standard index is defined on this field, making it suitable for filtering, join, and sort queries."
+    },
+    {
+      "name": "name",
+      "type": "varchar(100)",
+      "description": "Hierarchy name."
+    },
+    {
+      "name": "description",
+      "type": "text",
+      "description": "Hierarchical description."
+    },
+    {
+      "name": "sort",
+      "type": "int",
+      "description": "Sort. A standard index is defined on this field, making it suitable for filtering, join, and sort queries."
+    },
+    {
+      "name": "lft",
+      "type": "int",
+      "description": "Left encoding. A standard index is defined on this field, making it suitable for filtering, join, and sort queries."
+    },
+    {
+      "name": "rht",
+      "type": "int",
+      "description": "Right encoding. A standard index is defined on this field, making it suitable for filtering, join, and sort queries."
+    },
+    {
+      "name": "upward_id_path",
+      "type": "varchar(768)",
+      "description": "All parent node IDs."
+    },
+    {
+      "name": "upward_name_path",
+      "type": "varchar(768)",
+      "description": "All parent node names and paths. A standard index is defined on this field, making it suitable for filtering, join, and sort queries."
+    },
+    {
+      "name": "fcd",
+      "type": "timestamp(3)",
+      "description": "Creation time."
+    },
+    {
+      "name": "fcu",
+      "type": "char(32)",
+      "description": "Creator."
+    },
+    {
+      "name": "lcd",
+      "type": "timestamp(3)",
+      "description": "Update the timestamp."
+    },
+    {
+      "name": "lcu",
+      "type": "char(32)",
+      "description": "Updated by."
+    }
+  ],
+  "indexes": [
+    {
+      "name": "PRIMARY",
+      "type": "BTREE",
+      "unique": true,
+      "primary": true,
+      "columns": [
+        "id"
+      ],
+      "description": "Primary key index covering the ID field, suitable for uniquely identifying records and queries that join the primary table."
+    },
+    {
+      "name": "idx_lftrht",
+      "type": "BTREE",
+      "unique": false,
+      "primary": false,
+      "columns": [
+        "lft",
+        "rht"
+      ],
+      "description": "Standard index covering the lft, rht fields, suitable for filtering, join, and sort queries."
+    },
+    {
+      "name": "idx_parent_id",
+      "type": "BTREE",
+      "unique": false,
+      "primary": false,
+      "columns": [
+        "parent_id"
+      ],
+      "description": "Standard index covering the parent_id field, suitable for filtering, join, and sort queries."
+    },
+    {
+      "name": "idx_rhtlft",
+      "type": "BTREE",
+      "unique": false,
+      "primary": false,
+      "columns": [
+        "rht",
+        "lft"
+      ],
+      "description": "Standard index covering the rht, lft fields, suitable for filtering, join, and sort queries."
+    },
+    {
+      "name": "idx_sort",
+      "type": "BTREE",
+      "unique": false,
+      "primary": false,
+      "columns": [
+        "sort"
+      ],
+      "description": "Standard index covering the sort field, suitable for filtering, join, and sort queries."
+    },
+    {
+      "name": "idx_upwardnamepath",
+      "type": "BTREE",
+      "unique": false,
+      "primary": false,
+      "columns": [
+        "upward_name_path"
+      ],
+      "description": "Standard index covering the upward_name_path field, suitable for filtering, join, and sort queries."
+    }
+  ]
+}

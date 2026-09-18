@@ -1,0 +1,94 @@
+{
+  "moduleId": "inspect",
+  "name": "inspect_baseline_job_source",
+  "label": "Work Order Source for Inspection",
+  "description": "Inspection jobs are sources for time dimension statistical reports and query scenarios related to inspection.",
+  "fields": [
+    {
+      "name": "id",
+      "type": "bigint",
+      "description": "Unique identifier, used as the primary key or unique identifier for records in this table."
+    },
+    {
+      "name": "job_id",
+      "type": "bigint",
+      "description": "Work order ID for inspection job. A standard index is defined on this field, making it suitable for filtering, join, and sort queries."
+    },
+    {
+      "name": "app_system_id",
+      "type": "bigint",
+      "description": "Application ID. A standard index is defined on this field, making it suitable for filtering, join, and sort queries."
+    },
+    {
+      "name": "app_module_id",
+      "type": "bigint",
+      "description": "Module ID."
+    },
+    {
+      "name": "env_id",
+      "type": "bigint",
+      "description": "Environment ID."
+    },
+    {
+      "name": "tag_id",
+      "type": "bigint",
+      "description": "The ID of the tag. A standard index is defined on this field, making it suitable for filtering, join, and sort queries."
+    },
+    {
+      "name": "fcd",
+      "type": "timestamp(3)",
+      "description": "Creation time."
+    },
+    {
+      "name": "fcu",
+      "type": "char(32)",
+      "description": "Creator."
+    }
+  ],
+  "indexes": [
+    {
+      "name": "PRIMARY",
+      "type": "BTREE",
+      "unique": true,
+      "primary": true,
+      "columns": [
+        "id"
+      ],
+      "description": "Primary key index covering the ID field, suitable for uniquely identifying records and queries that join the primary table."
+    },
+    {
+      "name": "idx_app",
+      "type": "BTREE",
+      "unique": false,
+      "primary": false,
+      "columns": [
+        "app_system_id",
+        "app_module_id",
+        "env_id"
+      ],
+      "description": "Standard index covering the app_system_id, app_module_id, env_id fields, suitable for filtering, join, and sort queries."
+    },
+    {
+      "name": "idx_tag_job",
+      "type": "BTREE",
+      "unique": false,
+      "primary": false,
+      "columns": [
+        "tag_id",
+        "job_id"
+      ],
+      "description": "Standard index covering the tag_id, job_id fields, suitable for filtering, join, and sort queries."
+    },
+    {
+      "name": "uk_job_tag",
+      "type": "BTREE",
+      "unique": true,
+      "primary": false,
+      "columns": [
+        "job_id",
+        "tag_id"
+      ],
+      "description": "Unique index covering the job_id, tag_id fields, suitable for exact-match retrieval, uniqueness checks, and duplicate detection."
+    }
+  ]
+}

@@ -1,0 +1,60 @@
+{
+  "moduleId": "inspect",
+  "name": "inspect_config_file_path",
+  "label": "Inspection Resource Configuration File Path",
+  "description": "Inspection resource configuration file path is used for related queries and report queries during inspection tasks.",
+  "fields": [
+    {
+      "name": "id",
+      "type": "bigint",
+      "description": "Unique identifier, used as the primary key or unique identifier for records in this table."
+    },
+    {
+      "name": "resource_id",
+      "type": "bigint",
+      "description": "Resource ID. A standard index is defined on this field, making it suitable for filtering, join, and sort queries."
+    },
+    {
+      "name": "path",
+      "type": "text",
+      "description": "Path."
+    },
+    {
+      "name": "md5",
+      "type": "varchar(100)",
+      "description": "Latest configuration file MD5."
+    },
+    {
+      "name": "inspect_time",
+      "type": "timestamp(3)",
+      "description": "Last modified time."
+    },
+    {
+      "name": "file_id",
+      "type": "bigint",
+      "description": "File ID."
+    }
+  ],
+  "indexes": [
+    {
+      "name": "PRIMARY",
+      "type": "BTREE",
+      "unique": true,
+      "primary": true,
+      "columns": [
+        "id"
+      ],
+      "description": "Primary key index covering the ID field, suitable for uniquely identifying records and queries that join the primary table."
+    },
+    {
+      "name": "idx_resource_id",
+      "type": "BTREE",
+      "unique": false,
+      "primary": false,
+      "columns": [
+        "resource_id"
+      ],
+      "description": "Standard index covering the resource_id field, suitable for filtering, join, and sort queries."
+    }
+  ]
+}

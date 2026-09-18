@@ -1,0 +1,85 @@
+{
+  "moduleId": "inspect",
+  "name": "inspect_schedule",
+  "label": "Scheduled Inspection",
+  "description": "Scheduled inspections can be used for reporting scenarios such as filtering on enabled statuses for inspection-related tasks, time dimension statistics, and query associations.",
+  "fields": [
+    {
+      "name": "id",
+      "type": "bigint",
+      "description": "ID, used as the primary key or unique identifier for records in this table."
+    },
+    {
+      "name": "uuid",
+      "type": "varchar(50)",
+      "description": "UUID."
+    },
+    {
+      "name": "ci_id",
+      "type": "bigint",
+      "description": "Model ID. This value must be unique in the database and is suitable for exact-match queries and duplicate detection."
+    },
+    {
+      "name": "cron",
+      "type": "varchar(100)",
+      "description": "Cron."
+    },
+    {
+      "name": "begin_time",
+      "type": "timestamp(3)",
+      "description": "Plan start time."
+    },
+    {
+      "name": "end_time",
+      "type": "timestamp(3)",
+      "description": "End time of the plan."
+    },
+    {
+      "name": "is_active",
+      "type": "tinyint(1)",
+      "description": "ENABLED."
+    },
+    {
+      "name": "fcd",
+      "type": "timestamp(3)",
+      "description": "Creation time."
+    },
+    {
+      "name": "fcu",
+      "type": "char(32)",
+      "description": "Creator."
+    },
+    {
+      "name": "lcd",
+      "type": "timestamp(3)",
+      "description": "Update the timestamp."
+    },
+    {
+      "name": "lcu",
+      "type": "char(32)",
+      "description": "Updated by."
+    }
+  ],
+  "indexes": [
+    {
+      "name": "PRIMARY",
+      "type": "BTREE",
+      "unique": true,
+      "primary": true,
+      "columns": [
+        "id"
+      ],
+      "description": "Primary key index covering the ID field, suitable for uniquely identifying records and queries that join the primary table."
+    },
+    {
+      "name": "idx_ci_id",
+      "type": "BTREE",
+      "unique": true,
+      "primary": false,
+      "columns": [
+        "ci_id"
+      ],
+      "description": "Unique index covering the ci_id field, suitable for exact-match retrieval, uniqueness checks, and duplicate detection."
+    }
+  ]
+}
