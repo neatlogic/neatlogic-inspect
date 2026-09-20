@@ -1,0 +1,52 @@
+{
+  "nmiad": {
+    "getinspectcollectapi": {
+      "getname": "Obtain the inspection definition corresponding to the model"
+    },
+    "inspectcombopsearchapi": {
+      "getname": "Query the list of inspection combination tools"
+    }
+  },
+  "nmiaj": {
+    "inspectautoexecjobnodesearchapi": {
+      "getname": "Querying patrol job node assets"
+    }
+  },
+  "nmian": {
+    "getinspectnewproblemcustomviewapi": {
+      "getname": "Obtain personal view classification of the latest inspection issues"
+    }
+  },
+  "nmiar": {
+    "exportinspectresourcereportapi": {
+      "getname": "Export inspection asset report list"
+    },
+    "inspectreportexportapi": {
+      "text": {
+        "alert": "Alert",
+        "alertfield": "Alert Field",
+        "alertlevel": "Alert Level",
+        "alertmessage": "Alert Message",
+        "nodata": "No Data",
+        "reportfilesuffix": "Inspection_Report",
+        "reporttitle": "Inspection Report"
+      }
+    },
+    "inspectschedulesearchapi": {
+      "getname": "Query the list of scheduled inspection tasks"
+    },
+    "listinspectappenvapi": {
+      "getname": "Obtain a list of environments that initiate application patrols"
+    }
+  },
+  "term": {
+    "inspect": {
+      "fields": "Data Structure List",
+      "groupdesc": "Inspection platform",
+      "groupname": "Inspection",
+      "inspectjobphasenodestatuslist": "Inspection job status list",
+      "name": "Inspection",
+      "thresholds": "Threshold Rule List"
+    }
+  }
+}

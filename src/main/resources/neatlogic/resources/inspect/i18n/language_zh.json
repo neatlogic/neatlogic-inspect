@@ -1,0 +1,52 @@
+{
+  "nmiad": {
+    "getinspectcollectapi": {
+      "getname": "获取模型对应的巡检定义"
+    },
+    "inspectcombopsearchapi": {
+      "getname": "查询巡检组合工具列表"
+    }
+  },
+  "nmiaj": {
+    "inspectautoexecjobnodesearchapi": {
+      "getname": "查询巡检作业节点资产"
+    }
+  },
+  "nmian": {
+    "getinspectnewproblemcustomviewapi": {
+      "getname": "获取巡检最新问题个人视图分类"
+    }
+  },
+  "nmiar": {
+    "exportinspectresourcereportapi": {
+      "getname": "导出巡检资产报告列表"
+    },
+    "inspectreportexportapi": {
+      "text": {
+        "alert": "告警",
+        "alertfield": "告警字段",
+        "alertlevel": "告警级别",
+        "alertmessage": "告警提示",
+        "nodata": "暂无数据",
+        "reportfilesuffix": "巡检报告",
+        "reporttitle": "巡检报告"
+      }
+    },
+    "inspectschedulesearchapi": {
+      "getname": "查询巡检定时任务列表"
+    },
+    "listinspectappenvapi": {
+      "getname": "获取发起应用巡检的环境列表"
+    }
+  },
+  "term": {
+    "inspect": {
+      "fields": "数据结构列表",
+      "groupdesc": "巡检平台",
+      "groupname": "巡检",
+      "inspectjobphasenodestatuslist": "巡检作业状态列表",
+      "name": "巡检模块",
+      "thresholds": "阈值规则列表"
+    }
+  }
+}
