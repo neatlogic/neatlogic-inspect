@@ -8,6 +8,15 @@
     }
   },
   "nmiaj": {
+    "createinspectappjobapi": {
+      "cinotfound": "Configuration item model not found: {0}",
+      "combopinvalid": "The combination tool configured in the inspection definition is no longer valid. Configure it again.",
+      "combopnotconfigured": "No combination tool is configured in the inspection definition.",
+      "createfailed": "Failed to create job",
+      "createfaileddetail": "Failed to create inspection job: {0}",
+      "getname": "Create Application Inspection Job",
+      "resourcenotfound": "No matching assets were found. No job was started."
+    },
     "inspectautoexecjobnodesearchapi": {
       "getname": "Querying patrol job node assets"
     }
@@ -17,7 +26,44 @@
       "getname": "Obtain personal view classification of the latest inspection issues"
     }
   },
+  "nmis": {
+    "inspectappsystemschedulejob": {
+      "name": "Scheduled Application Inspection Execution"
+    }
+  },
   "nmiar": {
+    "exportinspectappreportapi": {
+      "getname": "Export Application Inspection Report",
+      "text": {
+        "alertlevel": "Alert Level",
+        "all": "All",
+        "application": "Application",
+        "asset": "Asset",
+        "assetname": "Asset Name",
+        "content": "Content",
+        "endtime": "End Time",
+        "environment": "Inspection Environment",
+        "filename": "Application Inspection Report",
+        "healthstatus": "Health Status",
+        "initiator": "Initiator",
+        "inspectionitem": "Inspection Item",
+        "inspectiontimeorremark": "Inspection Time/Remarks",
+        "ipport": "IP/Port",
+        "item": "Item",
+        "jobnotcreated": "Inspection Job Not Created",
+        "jobstatus": "Job Status",
+        "module": "Module",
+        "noproblem": "No inspection issues were found in this category.",
+        "noresult": "No Valid Result",
+        "parentjobid": "Parent Job ID",
+        "problemdescription": "Issue Description",
+        "problemdetail": "Issue Details",
+        "reportnotgenerated": "This job did not generate a valid inspection report.",
+        "starttime": "Start Time",
+        "title": "Application Inspection Report",
+        "uninspected": "Not Inspected"
+      }
+    },
     "exportinspectresourcereportapi": {
       "getname": "Export inspection asset report list"
     },
@@ -37,15 +83,26 @@
     },
     "listinspectappenvapi": {
       "getname": "Obtain a list of environments that initiate application patrols"
+    },
+    "searchinspectappjobapi": {
+      "getname": "Search Application Inspection Records"
     }
   },
   "term": {
     "inspect": {
+      "appmoduleid": "Application Module ID",
+      "appsystemid": "Application ID",
+      "envlist": "Environment List",
       "fields": "Data Structure List",
       "groupdesc": "Inspection platform",
       "groupname": "Inspection",
       "inspectjobphasenodestatuslist": "Inspection job status list",
+      "inspectionrecordlist": "Application Inspection Record List",
+      "jobcreateresultlist": "Inspection Job Creation Result List",
       "name": "Inspection",
+      "parentjobid": "Parent Job ID",
+      "unconfiguredenvironment": "Unconfigured Environment",
+      "viewname": "Resource View Name",
       "thresholds": "Threshold Rule List"
     }
   }

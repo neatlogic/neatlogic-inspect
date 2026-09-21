@@ -8,6 +8,15 @@
     }
   },
   "nmiaj": {
+    "createinspectappjobapi": {
+      "cinotfound": "找不到模型：{0}",
+      "combopinvalid": "巡检定义中配置的组合工具已失效，请重新配置",
+      "combopnotconfigured": "巡检定义中未配置组合工具",
+      "createfailed": "创建作业失败",
+      "createfaileddetail": "创建巡检作业失败：{0}",
+      "getname": "创建应用巡检作业",
+      "resourcenotfound": "未找到符合条件的资产，不发起作业"
+    },
     "inspectautoexecjobnodesearchapi": {
       "getname": "查询巡检作业节点资产"
     }
@@ -17,7 +26,44 @@
       "getname": "获取巡检最新问题个人视图分类"
     }
   },
+  "nmis": {
+    "inspectappsystemschedulejob": {
+      "name": "应用巡检定时执行"
+    }
+  },
   "nmiar": {
+    "exportinspectappreportapi": {
+      "getname": "导出应用巡检报告",
+      "text": {
+        "alertlevel": "告警级别",
+        "all": "全部",
+        "application": "应用",
+        "asset": "资产",
+        "assetname": "资产名称",
+        "content": "内容",
+        "endtime": "结束时间",
+        "environment": "巡检环境",
+        "filename": "应用巡检报告",
+        "healthstatus": "健康状态",
+        "initiator": "发起人",
+        "inspectionitem": "巡检项",
+        "inspectiontimeorremark": "巡检时间/说明",
+        "ipport": "IP/端口",
+        "item": "项目",
+        "jobnotcreated": "未创建巡检作业",
+        "jobstatus": "作业状态",
+        "module": "模块",
+        "noproblem": "本分类未发现巡检问题",
+        "noresult": "无有效结果",
+        "parentjobid": "父作业 ID",
+        "problemdescription": "问题描述",
+        "problemdetail": "问题明细",
+        "reportnotgenerated": "本次作业未生成有效巡检报告",
+        "starttime": "开始时间",
+        "title": "应用巡检报告",
+        "uninspected": "未巡检"
+      }
+    },
     "exportinspectresourcereportapi": {
       "getname": "导出巡检资产报告列表"
     },
@@ -37,15 +83,26 @@
     },
     "listinspectappenvapi": {
       "getname": "获取发起应用巡检的环境列表"
+    },
+    "searchinspectappjobapi": {
+      "getname": "查询应用巡检记录"
     }
   },
   "term": {
     "inspect": {
+      "appmoduleid": "应用模块 ID",
+      "appsystemid": "应用 ID",
+      "envlist": "环境列表",
       "fields": "数据结构列表",
       "groupdesc": "巡检平台",
       "groupname": "巡检",
       "inspectjobphasenodestatuslist": "巡检作业状态列表",
+      "inspectionrecordlist": "应用巡检记录列表",
+      "jobcreateresultlist": "巡检作业创建结果列表",
       "name": "巡检模块",
+      "parentjobid": "父作业 ID",
+      "unconfiguredenvironment": "未配置环境",
+      "viewname": "资源视图名称",
       "thresholds": "阈值规则列表"
     }
   }

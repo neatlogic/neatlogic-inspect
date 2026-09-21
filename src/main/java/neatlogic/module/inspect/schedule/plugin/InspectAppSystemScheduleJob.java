@@ -12,11 +12,15 @@
 
 package neatlogic.module.inspect.schedule.plugin;
 
+import com.alibaba.fastjson.JSONArray;
+import com.alibaba.fastjson.JSONObject;
 import neatlogic.framework.asynchronization.threadlocal.TenantContext;
 import neatlogic.framework.asynchronization.threadlocal.UserContext;
 import neatlogic.framework.autoexec.constvalue.CombopOperationType;
 import neatlogic.framework.autoexec.constvalue.JobAction;
+import neatlogic.framework.autoexec.constvalue.JobStatus;
 import neatlogic.framework.autoexec.crossover.IAutoexecJobActionCrossoverService;
+import neatlogic.framework.autoexec.dao.mapper.AutoexecJobMapper;
 import neatlogic.framework.autoexec.dto.combop.AutoexecCombopExecuteConfigVo;
 import neatlogic.framework.autoexec.dto.combop.AutoexecCombopExecuteNodeConfigVo;
 import neatlogic.framework.autoexec.dto.job.AutoexecJobVo;
@@ -24,7 +28,9 @@ import neatlogic.framework.autoexec.dto.node.AutoexecNodeVo;
 import neatlogic.framework.autoexec.job.action.core.AutoexecJobActionHandlerFactory;
 import neatlogic.framework.autoexec.job.action.core.IAutoexecJobActionHandler;
 import neatlogic.framework.cmdb.crossover.ICiCrossoverMapper;
+import neatlogic.framework.cmdb.crossover.IResourceCrossoverMapper;
 import neatlogic.framework.cmdb.dto.ci.CiVo;
+import neatlogic.framework.cmdb.dto.resourcecenter.AppModuleVo;
 import neatlogic.framework.cmdb.dto.resourcecenter.ResourceSearchVo;
 import neatlogic.framework.cmdb.dto.resourcecenter.ResourceVo;
 import neatlogic.framework.cmdb.resourcecenter.datasource.core.IResourceCenterDataSource;
@@ -43,6 +49,9 @@ import neatlogic.framework.scheduler.core.JobBase;
 import neatlogic.framework.scheduler.dto.JobObject;
 import neatlogic.framework.scheduler.enums.JobLoadTriggerType;
 import neatlogic.framework.service.AuthenticationInfoService;
+import neatlogic.framework.util.$;
+import neatlogic.module.inspect.job.source.InspectAppJobRouteKey;
+import neatlogic.module.inspect.service.InspectAppJobService;
 import org.apache.commons.lang3.StringUtils;
 import org.quartz.DisallowConcurrentExecution;
 import org.quartz.JobExecutionContext;
@@ -52,6 +61,7 @@ import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * @author laiwt
@@ -62,7 +72,7 @@ import java.util.*;
 public class InspectAppSystemScheduleJob extends JobBase {
     @Override
     public String getName() {
-        return "应用巡检定时执行";
+        return "nmis.inspectappsystemschedulejob.name";
     }
 
 
@@ -79,6 +89,10 @@ public class InspectAppSystemScheduleJob extends JobBase {
 
     @Resource
     private AuthenticationInfoService authenticationInfoService;
+    @Resource
+    private InspectAppJobService inspectAppJobService;
+    @Resource
+    private AutoexecJobMapper autoexecJobMapper;
 
     @Override
     public String getGroupName() {
@@ -136,6 +150,9 @@ public class InspectAppSystemScheduleJob extends JobBase {
     }
 
     @Override
+    /**
+     * 执行一次定时应用巡检，并归集到独立父作业。
+     */
     public void executeInternal(JobExecutionContext context, JobObject jobObject) throws Exception {
         String idStr = jobObject.getJobName();
         Long id = Long.parseLong(idStr);
@@ -145,16 +162,33 @@ public class InspectAppSystemScheduleJob extends JobBase {
         }
         String userUuid = scheduleVo.getFcu();
         Long appSystemId = scheduleVo.getAppSystemId();
+        UserVo fcuVo = userMapper.getUserByUuid(userUuid);
+        AuthenticationInfoVo authenticationInfoVo = authenticationInfoService.getAuthenticationInfo(userUuid);
+        UserContext.init(fcuVo, authenticationInfoVo, SystemUser.SYSTEM.getTimezone());
+        UserContext.get().setToken("GZIP_" + LoginAuthHandlerBase.buildJwt(fcuVo).getCc());
+        IResourceCrossoverMapper resourceCrossoverMapper = CrossoverServiceFactory.getApi(IResourceCrossoverMapper.class);
+        ResourceVo appSystemVo = resourceCrossoverMapper.getAppSystemById(appSystemId);
+        String appSystemName = appSystemVo == null ? appSystemId.toString() : appSystemVo.getName();
+        AutoexecJobVo parentJob = inspectAppJobService.createParentJob(appSystemId, appSystemName, JobSource.SCHEDULE_INSPECT_APP, id);
+        JSONArray snapshotAssetList = new JSONArray();
         Map<Long, List<AutoexecNodeVo>> typeId2NodeListMap = new HashMap<>();
+        Map<Long, String> typeId2CategoryMap = new HashMap<>();
         ResourceSearchVo searchVo = new ResourceSearchVo();
         searchVo.setAppSystemId(appSystemId);
         IResourceCenterDataSource resourceCenterDataSource = ResourceCenterDataSourceFactory.getResourceCenterDataSource();
+        Map<String, String> viewNameToLabelMap = new HashMap<>();
+        JSONArray viewTableList = resourceCenterDataSource.getAppResourceList(appSystemId, null, null, null, null, 1, 1);
+        for (int i = 0; i < viewTableList.size(); i++) {
+            JSONObject table = viewTableList.getJSONObject(i);
+            viewNameToLabelMap.put(table.getString("viewName"), table.getString("viewLabel"));
+        }
         Map<String, List<Long>> viewName2TypeIdListMap = resourceCenterDataSource.getAppResourceTypeIdListByAppSystemId(appSystemId);
         for (Map.Entry<String, List<Long>> entry : viewName2TypeIdListMap.entrySet()) {
             String viewName = entry.getKey();
             searchVo.setViewName(viewName);
             List<Long> typeIdList = entry.getValue();
             for (Long typeId : typeIdList) {
+                typeId2CategoryMap.putIfAbsent(typeId, viewName);
                 searchVo.setTypeId(typeId);
                 List<ResourceVo> resourceList = resourceCenterDataSource.getAppResourceList(searchVo, false);
                 for (ResourceVo resourceVo : resourceList) {
@@ -176,44 +210,77 @@ public class InspectAppSystemScheduleJob extends JobBase {
             Long typeId = entry.getKey();
             List<AutoexecNodeVo> selectNodeList = entry.getValue();
             Long combopId = inspectMapper.getCombopIdByCiId(typeId);
+            AutoexecJobVo childJob = null;
+            String uninspectedReason = null;
             if (combopId == null) {
-                continue;
+                uninspectedReason = $.t("nmiaj.createinspectappjobapi.combopnotconfigured");
             }
             ICiCrossoverMapper ciCrossoverMapper = CrossoverServiceFactory.getApi(ICiCrossoverMapper.class);
             CiVo ci = ciCrossoverMapper.getCiById(typeId);
             if (ci == null) {
-                continue;
+                uninspectedReason = $.t("nmiaj.createinspectappjobapi.cinotfound", typeId);
             }
-            String name = ci.getLabel() + (ci.getName() != null ? "(" + ci.getName() + ")" : StringUtils.EMPTY) + " 巡检";
-            try {
-                createAndFireJob(combopId, id, name, userUuid, selectNodeList);
-            } catch (Exception e) {
-                logger.error(e.getMessage(), e);
+            if (combopId != null && ci != null) {
+                String name = ci.getLabel() + (ci.getName() != null ? "(" + ci.getName() + ")" : StringUtils.EMPTY) + " 巡检";
+                try {
+                    childJob = createAndFireJob(combopId, id, typeId, name, userUuid, selectNodeList, parentJob.getId());
+                } catch (Exception e) {
+                    logger.error(e.getMessage(), e);
+                    uninspectedReason = $.t("nmiaj.createinspectappjobapi.createfaileddetail", StringUtils.defaultIfBlank(e.getMessage(), e.getClass().getName()));
+                }
             }
+            for (AutoexecNodeVo nodeVo : selectNodeList) {
+                JSONObject asset = new JSONObject(new LinkedHashMap<>());
+                String categoryName = typeId2CategoryMap.get(typeId);
+                asset.put("category", StringUtils.defaultIfBlank(viewNameToLabelMap.get(categoryName), categoryName));
+                asset.put("resourceId", nodeVo.getId());
+                asset.put("name", nodeVo.getName());
+                asset.put("ip", nodeVo.getIp());
+                asset.put("port", nodeVo.getPort());
+                asset.put("typeId", typeId);
+                asset.put("typeLabel", nodeVo.getTypeLabel());
+                asset.put("jobId", childJob == null ? null : childJob.getId());
+                asset.put("uninspectedReason", uninspectedReason);
+                snapshotAssetList.add(asset);
+            }
+        }
+        JSONObject snapshot = new JSONObject(new LinkedHashMap<>());
+        snapshot.put("parentJobId", parentJob.getId());
+        snapshot.put("appSystemId", appSystemId);
+        snapshot.put("appSystemName", appSystemName);
+        snapshot.put("source", JobSource.SCHEDULE_INSPECT_APP.getValue());
+        snapshot.put("scheduleId", id);
+        List<AppModuleVo> appModuleList = resourceCenterDataSource.getAppModuleListForTree(appSystemId);
+        snapshot.put("appModuleIdList", appModuleList.stream().map(AppModuleVo::getId).filter(Objects::nonNull).collect(Collectors.toList()));
+        snapshot.put("assetList", snapshotAssetList);
+        inspectAppJobService.saveSnapshot(snapshot);
+        if (autoexecJobMapper.getJobIdListByParentId(parentJob.getId()).isEmpty()) {
+            autoexecJobMapper.updateJobStatus(new AutoexecJobVo(parentJob.getId(), JobStatus.FAILED.getValue()));
         }
     }
 
-    private void createAndFireJob(Long combopId, Long invokeId, String name, String userUuid, List<AutoexecNodeVo> selectNodeList) throws Exception {
+    /**
+     * 创建并触发一个资产类型子作业。
+     */
+    private AutoexecJobVo createAndFireJob(Long combopId, Long invokeId, Long typeId, String name, String userUuid, List<AutoexecNodeVo> selectNodeList, Long parentJobId) throws Exception {
         AutoexecJobVo jobVo = new AutoexecJobVo();
         jobVo.setOperationId(combopId);
         jobVo.setSource(JobSource.SCHEDULE_INSPECT_APP.getValue());
         jobVo.setInvokeId(invokeId);
-        jobVo.setRouteId(invokeId.toString());
+        jobVo.setRouteId(InspectAppJobRouteKey.ci(typeId));
         jobVo.setOperationType(CombopOperationType.COMBOP.getValue());
         jobVo.setName(name);
+        jobVo.setParentId(parentJobId);
         AutoexecCombopExecuteNodeConfigVo executeNodeConfig = new AutoexecCombopExecuteNodeConfigVo();
         executeNodeConfig.setSelectNodeList(selectNodeList);
         AutoexecCombopExecuteConfigVo executeConfig = new AutoexecCombopExecuteConfigVo();
         executeConfig.setExecuteNodeConfig(executeNodeConfig);
         jobVo.setExecuteConfig(executeConfig);
-        UserVo fcuVo = userMapper.getUserByUuid(userUuid);
-        AuthenticationInfoVo authenticationInfoVo = authenticationInfoService.getAuthenticationInfo(userUuid);
-        UserContext.init(fcuVo, authenticationInfoVo, SystemUser.SYSTEM.getTimezone());
-        UserContext.get().setToken("GZIP_" + LoginAuthHandlerBase.buildJwt(fcuVo).getCc());
         IAutoexecJobActionCrossoverService autoexecJobActionCrossoverService = CrossoverServiceFactory.getApi(IAutoexecJobActionCrossoverService.class);
         autoexecJobActionCrossoverService.validateAndCreateJobFromCombop(jobVo);
         jobVo.setAction(JobAction.FIRE.getValue());
         IAutoexecJobActionHandler fireAction = AutoexecJobActionHandlerFactory.getAction(JobAction.FIRE.getValue());
         fireAction.doService(jobVo);
+        return jobVo;
     }
 }
