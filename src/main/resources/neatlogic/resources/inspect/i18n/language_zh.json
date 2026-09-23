@@ -17,6 +17,9 @@
       "getname": "创建应用巡检作业",
       "resourcenotfound": "未找到符合条件的资产，不发起作业"
     },
+    "getinspectappjobdetailapi": {
+      "getname": "获取应用巡检父作业详情"
+    },
     "inspectautoexecjobnodesearchapi": {
       "getname": "查询巡检作业节点资产"
     }
@@ -92,18 +95,25 @@
     "inspect": {
       "appmoduleid": "应用模块 ID",
       "appsystemid": "应用 ID",
+      "childjoblist": "子作业列表",
       "envlist": "环境列表",
       "fields": "数据结构列表",
       "groupdesc": "巡检平台",
       "groupname": "巡检",
-      "inspectjobphasenodestatuslist": "巡检作业状态列表",
       "inspectionrecordlist": "应用巡检记录列表",
+      "inspectjobphasenodestatuslist": "巡检作业状态列表",
+      "iscanabort": "是否可终止",
+      "iscancheck": "是否可验证",
+      "iscanexecute": "是否可执行",
       "jobcreateresultlist": "巡检作业创建结果列表",
+      "jobsummary": "作业汇总",
       "name": "巡检模块",
+      "parentjob": "父作业",
       "parentjobid": "父作业 ID",
+      "reportready": "报告是否可下载",
+      "thresholds": "阈值规则列表",
       "unconfiguredenvironment": "未配置环境",
-      "viewname": "资源视图名称",
-      "thresholds": "阈值规则列表"
+      "viewname": "资源视图名称"
     }
   }
 }

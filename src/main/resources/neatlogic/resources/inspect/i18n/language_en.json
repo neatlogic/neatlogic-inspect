@@ -17,6 +17,9 @@
       "getname": "Create Application Inspection Job",
       "resourcenotfound": "No matching assets were found. No job was started."
     },
+    "getinspectappjobdetailapi": {
+      "getname": "Get Application Inspection Parent Job Details"
+    },
     "inspectautoexecjobnodesearchapi": {
       "getname": "Querying patrol job node assets"
     }
@@ -92,18 +95,25 @@
     "inspect": {
       "appmoduleid": "Application Module ID",
       "appsystemid": "Application ID",
+      "childjoblist": "Child Job List",
       "envlist": "Environment List",
       "fields": "Data Structure List",
       "groupdesc": "Inspection platform",
       "groupname": "Inspection",
-      "inspectjobphasenodestatuslist": "Inspection job status list",
       "inspectionrecordlist": "Application Inspection Record List",
+      "inspectjobphasenodestatuslist": "Inspection job status list",
+      "iscanabort": "Whether the Job Can Be Aborted",
+      "iscancheck": "Whether the Job Can Be Verified",
+      "iscanexecute": "Whether the Job Can Be Executed",
       "jobcreateresultlist": "Inspection Job Creation Result List",
+      "jobsummary": "Job Summary",
       "name": "Inspection",
+      "parentjob": "Parent Job",
       "parentjobid": "Parent Job ID",
+      "reportready": "Whether the Report Is Available",
+      "thresholds": "Threshold Rule List",
       "unconfiguredenvironment": "Unconfigured Environment",
-      "viewname": "Resource View Name",
-      "thresholds": "Threshold Rule List"
+      "viewname": "Resource View Name"
     }
   }
 }

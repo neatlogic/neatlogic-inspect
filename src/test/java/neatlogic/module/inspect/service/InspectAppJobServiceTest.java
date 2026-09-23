@@ -26,6 +26,24 @@ public class InspectAppJobServiceTest {
         Assert.assertEquals(JobStatus.COMPLETED.getValue(), parentJob.getStatus());
     }
 
+    /** 全部直属子作业完成验证后，父作业同步汇总为已验证。 */
+    @Test
+    public void allCheckedChildrenMarkParentChecked() throws Exception {
+        ParentJobStore store = new ParentJobStore(JobStatus.COMPLETED.getValue(),
+                JobStatus.CHECKED.getValue(), JobStatus.CHECKED.getValue());
+        AutoexecJobVo parentJob = service(store).refreshParentStatus(store.parentJob.getId());
+        Assert.assertEquals(JobStatus.CHECKED.getValue(), parentJob.getStatus());
+    }
+
+    /** 父作业完成验证后保持已验证，不再由未验证的子作业状态覆盖。 */
+    @Test
+    public void checkedParentKeepsCheckedStatus() throws Exception {
+        ParentJobStore store = new ParentJobStore(JobStatus.CHECKED.getValue(),
+                JobStatus.COMPLETED.getValue(), JobStatus.COMPLETED.getValue());
+        AutoexecJobVo parentJob = service(store).refreshParentStatus(store.parentJob.getId());
+        Assert.assertEquals(JobStatus.CHECKED.getValue(), parentJob.getStatus());
+    }
+
     /** 任一子作业处于执行中状态时，父作业优先显示运行中。 */
     @Test
     public void runningChildTakesPriority() throws Exception {
@@ -80,6 +98,15 @@ public class InspectAppJobServiceTest {
         Assert.assertTrue(handler.getIsNeedCallback(completedJob));
         handler.doService(null, completedJob);
         Assert.assertEquals(4, service.refreshCount);
+    }
+
+    /** 仅手动和定时应用巡检来源声明为批量父作业。 */
+    @Test
+    public void marksOnlyApplicationInspectionSourcesAsBatch() {
+        Assert.assertFalse(JobSource.INSPECT.isBatch());
+        Assert.assertTrue(JobSource.INSPECT_APP.isBatch());
+        Assert.assertFalse(JobSource.SCHEDULE_INSPECT.isBatch());
+        Assert.assertTrue(JobSource.SCHEDULE_INSPECT_APP.isBatch());
     }
 
     /** 创建注入内存 Mapper 的服务，不配置 MongoDB 以验证状态汇总不读取快照。 */

@@ -6,12 +6,19 @@ package neatlogic.module.inspect.service;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import neatlogic.framework.asynchronization.threadlocal.UserContext;
+import neatlogic.framework.auth.core.AuthActionChecker;
 import neatlogic.framework.autoexec.constvalue.JobStatus;
+import neatlogic.framework.autoexec.crossover.IAutoexecJobCrossoverService;
 import neatlogic.framework.autoexec.dao.mapper.AutoexecJobMapper;
 import neatlogic.framework.autoexec.dto.job.AutoexecJobInvokeVo;
+import neatlogic.framework.autoexec.dto.job.AutoexecJobPhaseVo;
 import neatlogic.framework.autoexec.dto.job.AutoexecJobVo;
 import neatlogic.framework.autoexec.source.IAutoexecJobSource;
+import neatlogic.framework.crossover.CrossoverServiceFactory;
 import neatlogic.framework.inspect.constvalue.JobSource;
+import neatlogic.framework.inspect.auth.INSPECT_EXECUTE;
+import neatlogic.framework.inspect.auth.INSPECT_SCHEDULE_EXECUTE;
+import neatlogic.framework.inspect.exception.InspectAppParentJobInvalidException;
 import neatlogic.module.inspect.job.source.InspectAppJobRouteKey;
 import org.apache.commons.collections4.CollectionUtils;
 import org.bson.Document;
@@ -24,8 +31,11 @@ import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
 import javax.annotation.PostConstruct;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 /**
@@ -104,6 +114,133 @@ public class InspectAppJobService {
     }
 
     /**
+     * 获取应用巡检父作业及直属子作业详情。
+     *
+     * @param parentJobId 父作业ID
+     * @return 父作业详情
+     */
+    public JSONObject getDetail(Long parentJobId) {
+        AutoexecJobVo parentJob = validateParentJob(parentJobId);
+        parentJob = refreshParentStatus(parentJobId);
+        List<Long> childJobIdList = autoexecJobMapper.getJobIdListByParentId(parentJobId);
+        List<AutoexecJobVo> childJobList = getChildJobList(childJobIdList);
+        fillChildJobPhaseList(childJobIdList, childJobList);
+        Map<Long, Integer> childAssetCountMap = getChildAssetCountMap(parentJobId);
+
+        int runningCount = 0;
+        int completedCount = 0;
+        int failedCount = 0;
+        JSONObject snapshot = getSnapshot(parentJobId);
+        JSONArray snapshotAssetList = snapshot == null ? null : snapshot.getJSONArray("assetList");
+        int assetCount = snapshotAssetList == null ? 0 : snapshotAssetList.size();
+        JSONArray childJobArray = new JSONArray();
+        for (AutoexecJobVo childJob : childJobList) {
+            if (JobStatus.isRunningStatus(childJob.getStatus())) {
+                runningCount++;
+            } else if (JobStatus.isCompletedStatus(childJob.getStatus())) {
+                completedCount++;
+            } else {
+                failedCount++;
+            }
+            int childAssetCount = childAssetCountMap.getOrDefault(childJob.getId(), 0);
+            JSONObject childJobJson = (JSONObject) JSONObject.toJSON(childJob);
+            childJobJson.put("assetCount", childAssetCount);
+            childJobArray.add(childJobJson);
+        }
+
+        JSONObject summary = new JSONObject();
+        summary.put("total", childJobList.size());
+        summary.put("running", runningCount);
+        summary.put("completed", completedCount);
+        summary.put("failed", failedCount);
+        summary.put("assetCount", assetCount);
+
+        JSONObject result = new JSONObject();
+        result.put("parentJob", parentJob);
+        result.put("childJobList", childJobArray);
+        result.put("summary", summary);
+        boolean hasExecuteAuth = hasExecuteAuth(parentJob.getSource());
+        boolean isExecUser = Objects.equals(parentJob.getExecUser(), UserContext.get().getUserUuid());
+        boolean isChecked = Objects.equals(parentJob.getStatus(), JobStatus.CHECKED.getValue());
+        result.put("isCanCheck", hasExecuteAuth && !isChecked
+                && childJobList.stream().anyMatch(job -> Objects.equals(job.getStatus(), JobStatus.COMPLETED.getValue())));
+        result.put("isCanExecute", hasExecuteAuth && isExecUser && !isChecked
+                && !JobStatus.isRunningStatus(parentJob.getStatus()));
+        result.put("isCanAbort", hasExecuteAuth && isExecUser && !isChecked);
+        result.put("reportReady", !JobStatus.isRunningStatus(parentJob.getStatus()));
+        return result;
+    }
+
+    /** 根据父作业来源校验对应的巡检执行权限。 */
+    private boolean hasExecuteAuth(String source) {
+        if (Objects.equals(source, JobSource.SCHEDULE_INSPECT_APP.getValue())) {
+            return Boolean.TRUE.equals(AuthActionChecker.check(INSPECT_SCHEDULE_EXECUTE.class));
+        }
+        return Boolean.TRUE.equals(AuthActionChecker.check(INSPECT_EXECUTE.class));
+    }
+
+    /** 查询并补充直属子作业的模型路由及完成率。 */
+    private List<AutoexecJobVo> getChildJobList(List<Long> childJobIdList) {
+        if (CollectionUtils.isEmpty(childJobIdList)) {
+            return List.of();
+        }
+        AutoexecJobVo searchVo = new AutoexecJobVo();
+        searchVo.setIdList(childJobIdList);
+        searchVo.setNeedPage(false);
+        return getAutoexecJobService().searchJob(searchVo);
+    }
+
+    /** 获取自动化模块提供的跨模块作业服务。 */
+    private IAutoexecJobCrossoverService getAutoexecJobService() {
+        return CrossoverServiceFactory.getApi(IAutoexecJobCrossoverService.class);
+    }
+
+    /** 批量补充子作业步骤状态，避免详情页按卡片逐个查询。 */
+    private void fillChildJobPhaseList(List<Long> childJobIdList, List<AutoexecJobVo> childJobList) {
+        if (CollectionUtils.isEmpty(childJobIdList) || CollectionUtils.isEmpty(childJobList)) {
+            return;
+        }
+        Map<Long, List<AutoexecJobPhaseVo>> jobPhaseListMap = new HashMap<>();
+        List<AutoexecJobPhaseVo> phaseList = autoexecJobMapper.getJobPhaseListWithGroupByJobIdList(childJobIdList);
+        if (CollectionUtils.isNotEmpty(phaseList)) {
+            for (AutoexecJobPhaseVo phase : phaseList) {
+                jobPhaseListMap.computeIfAbsent(phase.getJobId(), key -> new ArrayList<>()).add(phase);
+            }
+        }
+        for (AutoexecJobVo childJob : childJobList) {
+            childJob.setPhaseList(jobPhaseListMap.get(childJob.getId()));
+        }
+    }
+
+    /** 根据报告快照统计每个子作业关联的资产数量。 */
+    private Map<Long, Integer> getChildAssetCountMap(Long parentJobId) {
+        Map<Long, Integer> childAssetCountMap = new HashMap<>();
+        JSONObject snapshot = getSnapshot(parentJobId);
+        JSONArray assetList = snapshot == null ? null : snapshot.getJSONArray("assetList");
+        if (CollectionUtils.isNotEmpty(assetList)) {
+            for (int i = 0; i < assetList.size(); i++) {
+                Long childJobId = assetList.getJSONObject(i).getLong("childJobId");
+                if (childJobId != null) {
+                    childAssetCountMap.merge(childJobId, 1, Integer::sum);
+                }
+            }
+        }
+        return childAssetCountMap;
+    }
+
+    /** 校验父作业类型。 */
+    private AutoexecJobVo validateParentJob(Long parentJobId) {
+        AutoexecJobVo parentJob = autoexecJobMapper.getJobInfo(parentJobId);
+        if (parentJob == null
+                || !Objects.equals(parentJob.getParentId(), -1L)
+                || (!Objects.equals(parentJob.getSource(), JobSource.INSPECT_APP.getValue())
+                && !Objects.equals(parentJob.getSource(), JobSource.SCHEDULE_INSPECT_APP.getValue()))) {
+            throw new InspectAppParentJobInvalidException(parentJobId);
+        }
+        return parentJob;
+    }
+
+    /**
      * 查询应用或模块的巡检父作业记录。
      *
      * @param appSystemId 应用ID
@@ -159,14 +296,20 @@ public class InspectAppJobService {
         if (parentJob == null) {
             return null;
         }
+        // 验证是父作业自身的终态，不能再由仍为 completed 的子作业覆盖。
+        if (Objects.equals(parentJob.getStatus(), JobStatus.CHECKED.getValue())) {
+            return parentJob;
+        }
         List<Long> childJobIdList = autoexecJobMapper.getJobIdListByParentId(parentJobId);
         boolean hasRunning = false;
         boolean hasFailed = false;
         boolean allCompleted = CollectionUtils.isNotEmpty(childJobIdList);
+        boolean allChecked = allCompleted;
         if (allCompleted) {
             List<AutoexecJobVo> childJobList = autoexecJobMapper.getJobListByIdList(childJobIdList);
             if (CollectionUtils.isEmpty(childJobList) || childJobList.size() != childJobIdList.size()) {
                 allCompleted = false;
+                allChecked = false;
                 hasFailed = true;
             } else {
                 for (AutoexecJobVo childJob : childJobList) {
@@ -174,19 +317,25 @@ public class InspectAppJobService {
                     if (JobStatus.isRunningStatus(childStatus)) {
                         hasRunning = true;
                         allCompleted = false;
+                        allChecked = false;
                     } else if (JobStatus.isFailedStatus(childStatus)) {
                         hasFailed = true;
                         allCompleted = false;
+                        allChecked = false;
                     } else if (!JobStatus.isCompletedStatus(childStatus)) {
                         // 未知状态不能被误判为完成，按失败处理以便及时暴露数据异常。
                         hasFailed = true;
                         allCompleted = false;
+                        allChecked = false;
+                    } else if (!Objects.equals(childStatus, JobStatus.CHECKED.getValue())) {
+                        allChecked = false;
                     }
                 }
             }
         }
         String status = hasRunning ? JobStatus.RUNNING.getValue()
-                : hasFailed || !allCompleted ? JobStatus.FAILED.getValue() : JobStatus.COMPLETED.getValue();
+                : hasFailed || !allCompleted ? JobStatus.FAILED.getValue()
+                : allChecked ? JobStatus.CHECKED.getValue() : JobStatus.COMPLETED.getValue();
         if (!Objects.equals(status, parentJob.getStatus())) {
             AutoexecJobVo updateJob = new AutoexecJobVo(parentJobId, status);
             autoexecJobMapper.updateJobStatus(updateJob);
