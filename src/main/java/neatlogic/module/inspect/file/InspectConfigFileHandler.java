@@ -15,6 +15,7 @@ package neatlogic.module.inspect.file;
 import com.alibaba.fastjson.JSONObject;
 import neatlogic.framework.auth.core.AuthActionChecker;
 import neatlogic.framework.file.core.FileTypeHandlerBase;
+import neatlogic.framework.util.$;
 import neatlogic.framework.file.dto.FileVo;
 import neatlogic.framework.inspect.auth.INSPECT_BASE;
 import org.springframework.stereotype.Component;
@@ -36,8 +37,9 @@ public class InspectConfigFileHandler extends FileTypeHandlerBase {
         return "INSPECTCONFIGFILE";
     }
 
+    /** 返回当前语言环境下的文件类型显示名称。 */
     @Override
     public String getDisplayName() {
-        return "巡检资源配置文件备份";
+        return $.t("file.handler.inspectconfigfilehandler.displayname");
     }
 }

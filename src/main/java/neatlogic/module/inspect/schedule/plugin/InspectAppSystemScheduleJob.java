@@ -35,7 +35,6 @@ import neatlogic.framework.cmdb.dto.resourcecenter.ResourceSearchVo;
 import neatlogic.framework.cmdb.dto.resourcecenter.ResourceVo;
 import neatlogic.framework.cmdb.resourcecenter.datasource.core.IResourceCenterDataSource;
 import neatlogic.framework.cmdb.resourcecenter.datasource.core.ResourceCenterDataSourceFactory;
-import neatlogic.framework.common.constvalue.systemuser.SystemUser;
 import neatlogic.framework.crossover.CrossoverServiceFactory;
 import neatlogic.framework.dao.mapper.UserMapper;
 import neatlogic.framework.dto.AuthenticationInfoVo;
@@ -164,7 +163,8 @@ public class InspectAppSystemScheduleJob extends JobBase {
         Long appSystemId = scheduleVo.getAppSystemId();
         UserVo fcuVo = userMapper.getUserByUuid(userUuid);
         AuthenticationInfoVo authenticationInfoVo = authenticationInfoService.getAuthenticationInfo(userUuid);
-        UserContext.init(fcuVo, authenticationInfoVo, SystemUser.SYSTEM.getTimezone());
+        // 后台任务使用当前租户默认时区初始化。
+        UserContext.init(fcuVo, authenticationInfoVo);
         UserContext.get().setToken("GZIP_" + LoginAuthHandlerBase.buildJwt(fcuVo).getCc());
         IResourceCrossoverMapper resourceCrossoverMapper = CrossoverServiceFactory.getApi(IResourceCrossoverMapper.class);
         ResourceVo appSystemVo = resourceCrossoverMapper.getAppSystemById(appSystemId);

@@ -1,4 +1,11 @@
 {
+  "file": {
+    "handler": {
+      "inspectconfigfilehandler": {
+        "displayname": "巡检资源配置文件备份"
+      }
+    }
+  },
   "nmiad": {
     "getinspectcollectapi": {
       "getname": "获取模型对应的巡检定义"

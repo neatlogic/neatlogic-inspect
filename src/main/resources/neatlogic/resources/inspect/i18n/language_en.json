@@ -1,4 +1,11 @@
 {
+  "file": {
+    "handler": {
+      "inspectconfigfilehandler": {
+        "displayname": "Inspection Resource Configuration Backup"
+      }
+    }
+  },
   "nmiad": {
     "getinspectcollectapi": {
       "getname": "Obtain the inspection definition corresponding to the model"

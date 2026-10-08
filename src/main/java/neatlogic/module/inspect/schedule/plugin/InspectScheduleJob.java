@@ -25,7 +25,6 @@ import neatlogic.framework.autoexec.job.action.core.AutoexecJobActionHandlerFact
 import neatlogic.framework.autoexec.job.action.core.IAutoexecJobActionHandler;
 import neatlogic.framework.cmdb.crossover.ICiCrossoverMapper;
 import neatlogic.framework.cmdb.dto.ci.CiVo;
-import neatlogic.framework.common.constvalue.systemuser.SystemUser;
 import neatlogic.framework.crossover.CrossoverServiceFactory;
 import neatlogic.framework.dao.mapper.UserMapper;
 import neatlogic.framework.dto.AuthenticationInfoVo;
@@ -143,7 +142,8 @@ public class InspectScheduleJob extends JobBase {
             jobVo.setExecuteConfig(executeConfig);
             UserVo fcuVo = userMapper.getUserByUuid(inspectScheduleVo.getFcu());
             AuthenticationInfoVo authenticationInfoVo = authenticationInfoService.getAuthenticationInfo(inspectScheduleVo.getFcu());
-            UserContext.init(fcuVo, authenticationInfoVo, SystemUser.SYSTEM.getTimezone());
+            // 后台任务使用当前租户默认时区初始化。
+            UserContext.init(fcuVo, authenticationInfoVo);
             UserContext.get().setToken("GZIP_" + LoginAuthHandlerBase.buildJwt(fcuVo).getCc());
             IAutoexecJobActionCrossoverService autoexecJobActionCrossoverService = CrossoverServiceFactory.getApi(IAutoexecJobActionCrossoverService.class);
             autoexecJobActionCrossoverService.validateAndCreateJobFromCombop(jobVo);
