@@ -30,7 +30,6 @@ import neatlogic.framework.cmdb.exception.ci.CiNotFoundException;
 import neatlogic.framework.common.config.Config;
 import neatlogic.framework.common.constvalue.ApiParamType;
 import neatlogic.framework.common.constvalue.GroupSearch;
-import neatlogic.framework.common.constvalue.systemuser.SystemUser;
 import neatlogic.framework.crossover.CrossoverServiceFactory;
 import neatlogic.framework.dao.mapper.RoleMapper;
 import neatlogic.framework.dao.mapper.TeamMapper;
@@ -68,7 +67,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
-@AuthUser(SystemUser.AUTOEXEC)
+
 @AuthAction(action = INSPECT_SCHEDULE_EXECUTE.class)
 @AuthAction(action = INSPECT_EXECUTE.class)
 @OperationType(type = OperationTypeEnum.SEARCH)
