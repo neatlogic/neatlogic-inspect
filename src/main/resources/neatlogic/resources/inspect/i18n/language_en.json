@@ -36,11 +36,6 @@
       "getname": "Obtain personal view classification of the latest inspection issues"
     }
   },
-  "nmis": {
-    "inspectappsystemschedulejob": {
-      "name": "Scheduled Application Inspection Execution"
-    }
-  },
   "nmiar": {
     "exportinspectappreportapi": {
       "getname": "Export Application Inspection Report",
@@ -96,6 +91,11 @@
     },
     "searchinspectappjobapi": {
       "getname": "Search Application Inspection Records"
+    }
+  },
+  "nmis": {
+    "inspectappsystemschedulejob": {
+      "name": "Scheduled Application Inspection Execution"
     }
   },
   "term": {

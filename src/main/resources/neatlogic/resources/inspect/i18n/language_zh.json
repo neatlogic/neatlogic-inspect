@@ -36,11 +36,6 @@
       "getname": "获取巡检最新问题个人视图分类"
     }
   },
-  "nmis": {
-    "inspectappsystemschedulejob": {
-      "name": "应用巡检定时执行"
-    }
-  },
   "nmiar": {
     "exportinspectappreportapi": {
       "getname": "导出应用巡检报告",
@@ -96,6 +91,11 @@
     },
     "searchinspectappjobapi": {
       "getname": "查询应用巡检记录"
+    }
+  },
+  "nmis": {
+    "inspectappsystemschedulejob": {
+      "name": "应用巡检定时执行"
     }
   },
   "term": {
